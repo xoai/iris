@@ -20,6 +20,10 @@ export type EffectKind =
   | "random"
   | "echo"
   | "signal_recv"
+  // a user message delivered into an interactive (chat) session — the value is
+  // supplied per-turn by the channel/client performer (ADR-0007 interactive mode),
+  // so it is journaled and replay never re-reads a live input.
+  | "user_recv"
   | "model_call"
   | "tool_call"
   | "tactic"
