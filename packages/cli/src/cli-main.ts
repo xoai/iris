@@ -9,7 +9,7 @@ import { defaultBundle } from "@iris/core";
 import type { Performer } from "@iris/core";
 import { makeToolPerformer, makeToolRegistry, makeToolInvoker } from "@iris/tools";
 import type { ToolContract } from "@iris/tools";
-import { cmdInit, cmdBuild, cmdInspect, cmdVerify, cmdPush, cmdPull, cmdRun, cmdServe } from "./iris.ts";
+import { cmdInit, cmdBuild, cmdInspect, cmdVerify, cmdPush, cmdPull, cmdRun, cmdServe, cmdDeploy } from "./iris.ts";
 import { echoStreamingPerformer } from "./echo.ts";
 import { runChat, wrapModelForImage, makeChatStreamingFakeModel, makeStreamSink } from "./chat.ts";
 
@@ -46,12 +46,13 @@ async function serveCommand(argv: string[]): Promise<void> {
   const layout = argv[1];
   if (!layout)
     throw new Error(
-      "usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--model auto|anthropic|echo]",
+      "usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--model auto|anthropic|echo] [--web]",
     );
   const port = Number(flag(argv, "--port") ?? 8787);
   const host = flag(argv, "--host") ?? "127.0.0.1";
   const db = flag(argv, "--db") ?? "./iris-serve.sqlite"; // a server wants durability (cf. run's :memory:)
   const modelOpt = flag(argv, "--model") ?? "auto";
+  const web = argv.includes("--web"); // serve the web chat UI at GET /
 
   const sqlite = await import("@iris/store-sqlite");
   const handle = sqlite.openDatabase(db);
@@ -78,8 +79,10 @@ async function serveCommand(argv: string[]): Promise<void> {
     makeModelPerformer,
     port,
     host,
+    web,
   });
-  console.log(`iris serve: listening on ${serve.url} (model=${resolved})`);
+  console.log(`iris serve: listening on ${serve.url} (model=${resolved}${web ? ", web=on" : ""})`);
+  if (web) console.log("  GET  /                       — web chat UI (open in a browser)");
   console.log("  POST /v1/session            — start (buffered; add Accept: text/event-stream for SSE)");
   console.log("  POST /v1/session/<id>/message — continue");
   console.log("  ws://<host>/v1/ws            — WebSocket (held connection)");
@@ -204,6 +207,60 @@ async function chatCommand(argv: string[]): Promise<void> {
   }
 }
 
+// `iris deploy <layoutdir> [--out dir] [--name n] [--deploy]` — scaffold a Cloudflare
+// Worker + Durable Object project (runs the capability-diff gate first). Scaffold-only
+// by default; `--deploy` runs `wrangler deploy` but ONLY with IRIS_DEPLOY=1 (the real
+// network egress is env-gated). Host-side.
+async function deployCommand(argv: string[]): Promise<void> {
+  const layout = argv[1];
+  if (!layout) {
+    throw new Error("usage: iris deploy <layoutdir> [--out dir] [--name n] [--deploy]");
+  }
+  const outDir = flag(argv, "--out") ?? "./iris-edge";
+  const name = flag(argv, "--name");
+  const wantDeploy = argv.includes("--deploy");
+
+  let deploy: { run: (args: string[], cwd: string) => Promise<number> } | undefined;
+  if (wantDeploy) {
+    if (process.env.IRIS_DEPLOY !== "1") {
+      throw new Error(
+        "iris deploy --deploy: refusing to run `wrangler deploy` without IRIS_DEPLOY=1 — the real Cloudflare egress is env-gated. Omit --deploy to scaffold only.",
+      );
+    }
+    const { spawn } = await import("node:child_process");
+    // Pre-flight: refuse BEFORE cmdDeploy writes the scaffold if wrangler is absent
+    // (strict gate-before-write, spec §3.2). The runner's onerror stays as a backstop.
+    const wranglerAvailable = await new Promise<boolean>((resolve) => {
+      const probe = spawn("wrangler", ["--version"], { stdio: "ignore" });
+      probe.on("error", () => resolve(false));
+      probe.on("close", (code) => resolve(code === 0));
+    });
+    if (!wranglerAvailable) {
+      throw new Error(
+        "iris deploy --deploy: `wrangler` not found on PATH — install it (npm i -g wrangler) or omit --deploy to scaffold only.",
+      );
+    }
+    deploy = {
+      run: (args: string[], cwd: string): Promise<number> =>
+        new Promise<number>((resolve, reject) => {
+          const child = spawn("wrangler", args, { cwd, stdio: "inherit" });
+          child.on("error", (e) =>
+            reject(new Error(`iris deploy: cannot run wrangler (${e.message}); install it (npm i -g wrangler)`)),
+          );
+          child.on("close", (code) => resolve(code ?? 1));
+        }),
+    };
+  }
+
+  const result = await cmdDeploy(layout, {
+    outDir,
+    ...(name ? { name } : {}),
+    ...(deploy ? { deploy } : {}),
+  });
+  for (const f of result.files) console.log(`iris deploy: wrote ${outDir}/${f}`);
+  console.log(result.plan);
+}
+
 async function main(argv: string[]): Promise<void> {
   const cmd = argv[0];
   switch (cmd) {
@@ -244,8 +301,11 @@ async function main(argv: string[]): Promise<void> {
     case "chat":
       await chatCommand(argv);
       break;
+    case "deploy":
+      await deployCommand(argv);
+      break;
     default:
-      console.error("usage: iris <init|build|inspect|verify|push|pull|run|serve|chat>");
+      console.error("usage: iris <init|build|inspect|verify|push|pull|run|serve|chat|deploy>");
       process.exit(2);
   }
 }

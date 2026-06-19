@@ -29,6 +29,9 @@ import {
 } from "@iris/agent";
 import type { AgentImage, ImageInspection, RegistryResolver, CapabilityProfile } from "@iris/agent";
 import { makeRestChannel, type StreamEvent } from "@iris/channel-rest";
+import { makeWebHandler } from "@iris/channel-web";
+import { assertDeployable, type HostAdapter } from "@iris/host";
+import { edgeHost, type DoStorage } from "@iris/store-do";
 
 // --- 9a: init / build / inspect / verify -------------------------------------
 
@@ -174,6 +177,7 @@ export interface CliServeOptions {
   host?: string; // default 127.0.0.1
   clock?: LogicalClock; // default { now: () => 0 }
   onWarn?: (message: string) => void;
+  web?: boolean; // serve the @iris/channel-web chat UI at GET / (same port)
 }
 
 export interface ServeHandle {
@@ -210,6 +214,9 @@ export async function cmdServe(layoutdir: string, opts: CliServeOptions): Promis
       store: opts.store,
       scheduler: opts.scheduler,
     },
+    // Serve the web chat UI at GET / when requested (the channel-web seam); the API
+    // (POST /v1/*) and the WS upgrade are untouched.
+    ...(opts.web ? { webHandler: makeWebHandler() } : {}),
     makeTurnInputs: async (sessionId: string, body: Json, emit?: (ev: StreamEvent) => void) => {
       // Resolve the HELD pin per turn (never silently override it — same posture as
       // cmdRun); the channel is multi-session so this is per-(session, turn).
@@ -236,4 +243,203 @@ export async function cmdServe(layoutdir: string, opts: CliServeOptions): Promis
 
   const url = await channel.listen(opts.port ?? 8787, opts.host ?? "127.0.0.1");
   return { url, close: (): Promise<void> => channel.close() };
+}
+
+// --- 9e: deploy (Cloudflare Durable Objects — the supported one-command path) -------
+//
+// Promotes the edge target from a hand-edited manual smoke
+// (manual/cloudflare-workers-smoke.ts) to a turnkey, TESTED command: read the image,
+// run the M6 capability-diff gate (assertDeployable) and refuse an over-capable image
+// LOUDLY (ADR-0008) BEFORE writing anything, then scaffold a self-contained Worker
+// project (wrangler.toml + worker.mjs generalizing the smoke's inline DO class).
+// The terminal `wrangler deploy` network egress stays ENV-GATED (operator-installed
+// wrangler + a real Cloudflare account) — like push/pull's "real registry = manual" —
+// so the install-free / zero-runtime-dep invariant holds.
+
+export interface CliDeployOptions {
+  // The edge target (capabilities + name). Defaults to the canonical Cloudflare DO
+  // profile via edgeHost; the gate reads only .name/.capabilities (never the store).
+  host?: HostAdapter;
+  outDir: string;
+  name?: string; // wrangler worker name (default: the image's agent name, sanitized)
+  compatibilityDate?: string;
+  writeFile?: (path: string, data: string) => Promise<void>; // injected; default fs
+  mkdir?: (path: string) => Promise<void>;
+  // env-gated wrangler runner; absent = scaffold-only (print the plan, don't deploy).
+  deploy?: { run: (args: string[], cwd: string) => Promise<number> };
+}
+
+export interface DeployResult {
+  outDir: string;
+  files: string[];
+  deployed: boolean;
+  plan: string;
+}
+
+const DEFAULT_COMPAT_DATE = "2026-01-01";
+
+// A DoStorage that THROWS if used — edgeHost wires it into a DoStateStore/DoScheduler
+// the deploy gate never touches (it reads only host.name/.capabilities). Refuse
+// loudly if any path actually reaches it (no silent fake storage).
+function noopDoStorage(): DoStorage {
+  const fail = (): never => {
+    throw new Error("iris deploy: edge storage is not available at scaffold time");
+  };
+  const s = {
+    get: fail,
+    put: fail,
+    delete: fail,
+    list: fail,
+    transaction: fail,
+    setAlarm: fail,
+    getAlarm: fail,
+  };
+  return s as unknown as DoStorage;
+}
+
+// Strip a leading `<provider>/` segment from a model id ("anthropic/claude-x" →
+// "claude-x"); idempotent for an already-bare id.
+function stripModelPrefix(id: string): string {
+  const slash = id.indexOf("/");
+  return slash >= 0 ? id.slice(slash + 1) : id;
+}
+
+// wrangler worker names: lowercase alphanumerics + hyphens.
+function sanitizeName(name: string): string {
+  const s = name.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "");
+  return s === "" ? "iris-agent" : s;
+}
+
+function wranglerToml(name: string, compatDate: string): string {
+  return [
+    `name = "${name}"`,
+    `main = "worker.mjs"`,
+    `compatibility_date = "${compatDate}"`,
+    ``,
+    `# The agent's durable state lives in this Durable Object (single-writer lease +`,
+    `# transactional storage + alarms = sleepUntil). @iris/core + @iris/store-do are`,
+    `# edge-native (node:-free, Web btoa/atob), so no nodejs_compat flag is needed.`,
+    `[[durable_objects.bindings]]`,
+    `name = "AGENT"`,
+    `class_name = "AgentDO"`,
+    ``,
+    `[[migrations]]`,
+    `tag = "v1"`,
+    `new_classes = ["AgentDO"]`,
+    ``,
+  ].join("\n");
+}
+
+function workerMjs(model: string, defDigest: string): string {
+  const M = JSON.stringify(model);
+  const D = JSON.stringify(defDigest);
+  return `// GENERATED by \`iris deploy\` — a Cloudflare Worker + Durable Object running the
+// SAME @iris/core unchanged on workerd (generalizes manual/cloudflare-workers-smoke.ts).
+// Bundled by wrangler/esbuild on deploy; core is node:-free so it targets the isolate.
+import { edgeHost } from "@iris/store-do";
+import { harnessProgram, defaultBundle } from "@iris/core";
+import { runTurnOn } from "@iris/host";
+
+const MODEL = ${M};
+const DEF_DIGEST = ${D};
+
+// Adapt a real Cloudflare DurableObjectStorage to @iris/store-do's narrow DoStorage
+// (inlined from the smoke's doStorageAdapter so the worker is self-contained).
+function doStorageAdapter(storage) {
+  const wrap = (s) => ({
+    async get(key) { return (await s.get(key, { allowConcurrency: false })) ?? undefined; },
+    async put(key, value) { await s.put(key, value); },
+    async delete(key) { return await s.delete(key); },
+    async list(opts) { return await s.list(opts && opts.prefix ? { prefix: opts.prefix } : undefined); },
+    transaction(fn) { return s.transaction((txn) => fn(wrap(txn))); },
+    async setAlarm(t) { await s.setAlarm(t); },
+    async getAlarm() { return await s.getAlarm(); },
+  });
+  return wrap(storage);
+}
+
+async function runOneTurn(state, env, sessionId, input) {
+  const host = edgeHost(doStorageAdapter(state.storage));
+  const bundle = defaultBundle({ safeTools: [] });
+  const program = harnessProgram(input, { invariants: bundle.invariants });
+  // A real model when ANTHROPIC_API_KEY is set (provider-anthropic is fetch-based;
+  // dynamic import keeps it out of the no-key path), else an inline echo.
+  let model_call;
+  if (env && env.ANTHROPIC_API_KEY) {
+    const { anthropicModelPerformer } = await import("@iris/provider-anthropic");
+    model_call = anthropicModelPerformer({ apiKey: env.ANTHROPIC_API_KEY, model: MODEL });
+  } else {
+    model_call = async () => ({ ok: true, value: { role: "assistant", content: "echo (set ANTHROPIC_API_KEY for a real model)", stopReason: "end_turn" } });
+  }
+  const performers = { tactic: bundle.tacticPerformer, model_call };
+  return runTurnOn(host, { sessionId, defDigest: DEF_DIGEST, program, performers, clock: { now: () => Date.now() }, assertReplay: true });
+}
+
+export class AgentDO {
+  constructor(state, env) { this.state = state; this.env = env; }
+  async fetch(req) {
+    const url = new URL(req.url);
+    const sessionId = url.searchParams.get("session") || "default";
+    let input = { messages: [{ role: "user", content: "hi" }] };
+    if (req.method === "POST") {
+      try { const b = await req.json(); if (b && Array.isArray(b.messages) && b.messages.length) input = { messages: b.messages }; } catch {}
+    }
+    const out = await runOneTurn(this.state, this.env, sessionId, input);
+    return new Response(JSON.stringify(out), { headers: { "content-type": "application/json" } });
+  }
+  // A DO alarm IS sleepUntil: on a scheduled wake, run a turn so the engine resumes a
+  // parked timer-wait. Best-effort — the durable timer records remain authoritative.
+  async alarm() { await runOneTurn(this.state, this.env, "default", { messages: [] }); }
+}
+
+export default {
+  async fetch(req, env) {
+    const url = new URL(req.url);
+    const session = url.searchParams.get("session") || "default";
+    const id = env.AGENT.idFromName(session);
+    return env.AGENT.get(id).fetch(req);
+  },
+};
+`;
+}
+
+export async function cmdDeploy(layoutdir: string, opts: CliDeployOptions): Promise<DeployResult> {
+  const image = await readOciLayout(layoutdir);
+  const host = opts.host ?? edgeHost(noopDoStorage());
+
+  // GATE (ADR-0008): refuse an over-capable image LOUDLY, BEFORE writing anything.
+  assertDeployable(image.lock.capabilities, host);
+
+  const name = sanitizeName(opts.name ?? image.agentfile.name ?? "iris-agent");
+  const compatDate = opts.compatibilityDate ?? DEFAULT_COMPAT_DATE;
+  // Strip the `<provider>/` prefix: image.lock.model.id is e.g. "anthropic/claude-x",
+  // but the Anthropic API wants the bare "claude-x" (cf. wrapModelForImage). The
+  // worker bakes this into anthropicModelPerformer({ model }) for the real-key path.
+  const model = stripModelPrefix(image.lock.model.id);
+  const defDigest = image.lock.imageDigest;
+
+  const writeFileImpl = opts.writeFile ?? ((p: string, d: string): Promise<void> => writeFile(p, d));
+  const mkdirImpl =
+    opts.mkdir ??
+    (async (p: string): Promise<void> => {
+      await mkdir(p, { recursive: true });
+    });
+
+  await mkdirImpl(opts.outDir);
+  await writeFileImpl(join(opts.outDir, "wrangler.toml"), wranglerToml(name, compatDate));
+  await writeFileImpl(join(opts.outDir, "worker.mjs"), workerMjs(model, defDigest));
+  const files = ["wrangler.toml", "worker.mjs"];
+
+  let deployed = false;
+  if (opts.deploy) {
+    const code = await opts.deploy.run(["deploy"], opts.outDir);
+    if (code !== 0) throw new Error(`iris deploy: \`wrangler deploy\` exited with code ${code}`);
+    deployed = true;
+  }
+
+  const plan = deployed
+    ? `iris deploy: deployed '${name}' to ${host.name} (wrangler deploy)`
+    : `iris deploy: scaffolded a ${host.name} Worker for '${name}' in ${opts.outDir}.\n` +
+      `  To deploy: cd ${opts.outDir} && wrangler deploy  (needs a Cloudflare account + wrangler; set ANTHROPIC_API_KEY as a secret for a real model)`;
+  return { outDir: opts.outDir, files, deployed, plan };
 }

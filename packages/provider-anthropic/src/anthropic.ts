@@ -11,6 +11,12 @@ export interface AnthropicOptions {
   fetchImpl?: typeof fetch;
   version?: string;
   baseUrl?: string;
+  // A fallback model id when the request carries none. The harness `model_call`
+  // request is `{ messages }` (no model), so a STANDALONE caller (e.g. an edge
+  // worker without wrapModelForImage) must bake the model in here. The request's
+  // own `model` still wins. (The streaming variant has had this; the buffered one
+  // now matches it — symmetry.)
+  model?: string;
 }
 
 const DEFAULT_VERSION = "2023-06-01";
@@ -75,6 +81,18 @@ export function anthropicModelPerformer(
 
   return async (request: Json): Promise<Outcome> => {
     const req = request as unknown as ModelCallRequest;
+    const model = req.model ?? opts.model;
+    if (!model) {
+      // Loud, never a silent body that 400s at the API (no-silent-failures) —
+      // matches anthropicStreamingModelPerformer.
+      return {
+        ok: false,
+        error: {
+          message:
+            "anthropicModelPerformer: no model id (request.model and opts.model both absent)",
+        },
+      };
+    }
     try {
       const res = await doFetch(url, {
         method: "POST",
@@ -86,7 +104,7 @@ export function anthropicModelPerformer(
           "content-type": "application/json",
         },
         body: JSON.stringify({
-          model: req.model,
+          model,
           ...(req.system !== undefined ? { system: req.system } : {}),
           messages: req.messages,
           max_tokens: req.maxTokens ?? 1024,

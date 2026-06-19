@@ -10,7 +10,10 @@
     "@iris/core": "*",
     "@iris/tools": "*",
     "@iris/agent": "*",
+    "@iris/host": "*",
     "@iris/channel-rest": "*",
+    "@iris/channel-web": "*",
+    "@iris/store-do": "*",
     "@iris/store-sqlite": "*",
     "@iris/provider-anthropic": "*"
   }
