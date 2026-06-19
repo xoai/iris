@@ -51,6 +51,12 @@ export interface RestChannelOptions<S extends Json> {
   ) => TurnInputs<S> | Promise<TurnInputs<S>>;
   mintSessionId?: () => string; // default: a random UUID
   mintToken?: () => string; // default: a random UUID (the channel owns this)
+  // Optional PRE-POST GET hook (the web channel mounts here, ADR-0009 / spec §2.1).
+  // It is consulted BEFORE the POST-only guard; it owns only GET asset routes and
+  // MUST return false for anything it does not serve, so the `/v1/*` POST routes and
+  // the WebSocket upgrade path (a separate `upgrade` listener) are untouched. When
+  // undefined, the channel behaves byte-identically to before (purely additive).
+  webHandler?: (req: IncomingMessage, res: ServerResponse) => boolean; // true = handled
 }
 
 export interface RestChannel {
@@ -165,6 +171,10 @@ export function makeRestChannel<S extends Json>(opts: RestChannelOptions<S>): Re
     const rawUrl = req.url ?? "";
     const url = rawUrl.split("?")[0];
     const stream = wantsStream(req, rawUrl);
+
+    // The optional web channel claims its GET routes BEFORE the POST-only guard.
+    // It returns false for non-asset paths, so `/v1/*` POST falls through unchanged.
+    if (opts.webHandler && opts.webHandler(req, res)) return;
 
     if (req.method !== "POST") {
       send(res, 405, { error: `method ${req.method} not allowed` });

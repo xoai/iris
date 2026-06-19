@@ -14,7 +14,7 @@ import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
 
 const tmp = (p: string): Promise<string> => mkdtemp(join(tmpdir(), p));
 
-async function buildAndServe(): Promise<ServeHandle> {
+async function buildAndServe(web = false): Promise<ServeHandle> {
   const src = await tmp("iris-serve-src-");
   await cmdInit(src);
   const out = await tmp("iris-serve-out-");
@@ -25,6 +25,7 @@ async function buildAndServe(): Promise<ServeHandle> {
     capabilities: { long_running: true, filesystem: true, websockets: true },
     makeModelPerformer: (_model, onDelta) => echoStreamingPerformer(onDelta),
     port: 0,
+    web,
   });
 }
 
@@ -100,6 +101,27 @@ test("cmdServe: a BUFFERED POST works on the same server (no Accept header → n
     const json2 = (await res2.json()) as { status: string; continuationToken: string };
     assert.equal(json2.status, "finished");
     assert.notEqual(json2.continuationToken, json.continuationToken);
+  } finally {
+    await serve.close();
+  }
+});
+
+test("cmdServe({web:true}): GET / serves the web chat UI; POST /v1/session still works (B3)", async () => {
+  const serve = await buildAndServe(true);
+  try {
+    const page = await fetch(`${serve.url}/`);
+    assert.equal(page.status, 200);
+    assert.match(page.headers.get("content-type") ?? "", /text\/html/);
+    assert.match(await page.text(), /iris — web chat/);
+
+    // the API still works on the same port (the web seam did not shadow it)
+    const start = await fetch(`${serve.url}/v1/session`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{}",
+    });
+    assert.equal(start.status, 200);
+    assert.equal(((await start.json()) as { status: string }).status, "finished");
   } finally {
     await serve.close();
   }

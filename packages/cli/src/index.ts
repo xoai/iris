@@ -10,8 +10,16 @@ export {
   cmdPull,
   cmdRun,
   cmdServe,
+  cmdDeploy,
 } from "./iris.ts";
-export type { CliBuildOptions, CliRunOptions, CliServeOptions, ServeHandle } from "./iris.ts";
+export type {
+  CliBuildOptions,
+  CliRunOptions,
+  CliServeOptions,
+  ServeHandle,
+  CliDeployOptions,
+  DeployResult,
+} from "./iris.ts";
 export { echoStreamingPerformer } from "./echo.ts";
 export {
   wrapModelForImage,
