@@ -56,6 +56,14 @@ export interface EngineDeps<S extends Json> {
   keepHistory?: boolean; // if true, do not truncate the journal after a snapshot
   maxStepsPerTurn?: number; // default 10000 — safety guard (kernel cap lands in M2)
   onWarn?: (message: string) => void; // surfaces retry-unsafe recovery, etc.
+  // Read-only, post-commit observer. Fires once per NEWLY committed journal
+  // record, in seq order, with a DEEP COPY (never the live `tail` reference) so a
+  // consumer cannot mutate the record the assertion folds. Never fires for
+  // replayed history (replay does not commit). A throw is swallowed + warned —
+  // the record already committed durably, so a buggy observer must not abort the
+  // turn. Same best-effort side-channel posture as `onWarn`. Used by streaming
+  // channels (SSE/WS) to surface the turn's journal timeline live.
+  onRecord?: (record: JournalRecord) => void;
 }
 
 export type TurnOutcome<S> =
@@ -169,6 +177,17 @@ export async function runTurn<S extends Json>(
       }
       seq = r.seq;
       tail.push(record);
+      if (deps.onRecord) {
+        // Deep copy: a consumer must not be able to mutate `tail` (which the
+        // replay assertion folds). structuredClone is total over a JournalRecord
+        // (every field is Json) and avoids re-canonicalizing. Guarded: a throwing
+        // observer must NOT abort a turn whose record already durably committed.
+        try {
+          deps.onRecord(structuredClone(record));
+        } catch (e) {
+          warn(deps, `onRecord observer threw (ignored): ${e instanceof Error ? e.message : String(e)}`);
+        }
+      }
       return record;
     };
 

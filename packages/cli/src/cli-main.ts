@@ -4,7 +4,9 @@
 // uses the SQLite store + the Anthropic provider (needs a key) — the real path,
 // exercised manually. Host-side.
 import { makeLocalResolver } from "@iris/agent";
-import { cmdInit, cmdBuild, cmdInspect, cmdVerify, cmdPush, cmdPull, cmdRun } from "./iris.ts";
+import type { Performer } from "@iris/core";
+import { cmdInit, cmdBuild, cmdInspect, cmdVerify, cmdPush, cmdPull, cmdRun, cmdServe } from "./iris.ts";
+import { echoStreamingPerformer } from "./echo.ts";
 
 function flag(argv: string[], name: string): string | undefined {
   const i = argv.indexOf(name);
@@ -30,6 +32,55 @@ async function runCommand(argv: string[]): Promise<void> {
     modelPerformer: provider.anthropicModelPerformer({}),
   });
   console.log(JSON.stringify({ status: outcome.status }));
+}
+
+async function serveCommand(argv: string[]): Promise<void> {
+  const layout = argv[1];
+  if (!layout)
+    throw new Error(
+      "usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--model auto|anthropic|echo]",
+    );
+  const port = Number(flag(argv, "--port") ?? 8787);
+  const host = flag(argv, "--host") ?? "127.0.0.1";
+  const db = flag(argv, "--db") ?? "./iris-serve.sqlite"; // a server wants durability (cf. run's :memory:)
+  const modelOpt = flag(argv, "--model") ?? "auto";
+
+  const sqlite = await import("@iris/store-sqlite");
+  const handle = sqlite.openDatabase(db);
+  const store = new sqlite.SqliteStateStore(handle);
+  const scheduler = new sqlite.SqliteScheduler(handle);
+
+  const hasKey =
+    typeof process.env.ANTHROPIC_API_KEY === "string" && process.env.ANTHROPIC_API_KEY !== "";
+  const resolved = modelOpt === "auto" ? (hasKey ? "anthropic" : "echo") : modelOpt;
+
+  let makeModelPerformer: (model: string, onDelta?: (t: string) => void) => Performer;
+  if (resolved === "anthropic") {
+    const provider = await import("@iris/provider-anthropic");
+    makeModelPerformer = (model, onDelta): Performer =>
+      provider.anthropicStreamingModelPerformer({ model, onDelta });
+  } else {
+    makeModelPerformer = (_model, onDelta): Performer => echoStreamingPerformer(onDelta);
+  }
+
+  const serve = await cmdServe(layout, {
+    store,
+    scheduler,
+    capabilities: { long_running: true, filesystem: true, websockets: true },
+    makeModelPerformer,
+    port,
+    host,
+  });
+  console.log(`iris serve: listening on ${serve.url} (model=${resolved})`);
+  console.log("  POST /v1/session            — start (buffered; add Accept: text/event-stream for SSE)");
+  console.log("  POST /v1/session/<id>/message — continue");
+  console.log("  ws://<host>/v1/ws            — WebSocket (held connection)");
+
+  const shutdown = (): void => {
+    serve.close().finally(() => process.exit(0));
+  };
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
 }
 
 async function main(argv: string[]): Promise<void> {
@@ -66,8 +117,11 @@ async function main(argv: string[]): Promise<void> {
     case "run":
       await runCommand(argv);
       break;
+    case "serve":
+      await serveCommand(argv);
+      break;
     default:
-      console.error("usage: iris <init|build|inspect|verify|push|pull|run>");
+      console.error("usage: iris <init|build|inspect|verify|push|pull|run|serve>");
       process.exit(2);
   }
 }

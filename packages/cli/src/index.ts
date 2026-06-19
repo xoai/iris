@@ -9,5 +9,7 @@ export {
   cmdPush,
   cmdPull,
   cmdRun,
+  cmdServe,
 } from "./iris.ts";
-export type { CliBuildOptions, CliRunOptions } from "./iris.ts";
+export type { CliBuildOptions, CliRunOptions, CliServeOptions, ServeHandle } from "./iris.ts";
+export { echoStreamingPerformer } from "./echo.ts";

@@ -13,6 +13,7 @@ import type {
   Program,
   PerformerRegistry,
   TurnOutcome,
+  JournalRecord,
   Json,
 } from "@iris/core";
 import type { CapabilityProfile } from "@iris/agent";
@@ -36,6 +37,10 @@ export interface RunTurnOnOptions<S extends Json> {
   keepHistory?: boolean;
   maxStepsPerTurn?: number;
   onWarn?: (message: string) => void;
+  // Per-REQUEST read-only observer of committed journal records (forwarded to the
+  // engine). Threaded here, NOT via TurnInputs — TurnInputs is per-session-static
+  // while onRecord binds to one response stream. Streaming channels set it per turn.
+  onRecord?: (record: JournalRecord) => void;
 }
 
 /** Run one turn on `adapter`'s store + scheduler. Same image (defDigest) + program
@@ -58,6 +63,7 @@ export async function runTurnOn<S extends Json>(
       keepHistory: opts.keepHistory,
       maxStepsPerTurn: opts.maxStepsPerTurn,
       onWarn: opts.onWarn,
+      onRecord: opts.onRecord,
     },
     opts.sessionId,
   );

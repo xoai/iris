@@ -13,6 +13,7 @@ import type {
   HarnessInput,
   HarnessState,
   TurnOutcome,
+  Json,
 } from "@iris/core";
 import { makeToolPerformer, makeToolRegistry, makeToolInvoker } from "@iris/tools";
 import type { ToolContract } from "@iris/tools";
@@ -26,7 +27,8 @@ import {
   verifyImage,
   governingDigest,
 } from "@iris/agent";
-import type { AgentImage, ImageInspection, RegistryResolver } from "@iris/agent";
+import type { AgentImage, ImageInspection, RegistryResolver, CapabilityProfile } from "@iris/agent";
+import { makeRestChannel, type StreamEvent } from "@iris/channel-rest";
 
 // --- 9a: init / build / inspect / verify -------------------------------------
 
@@ -150,4 +152,88 @@ export async function cmdRun(
     },
     opts.sessionId,
   );
+}
+
+// --- 9d: serve (turnkey HTTP server: buffered REST + streaming SSE + WS) -------
+
+function bodyToInput(body: Json): HarnessInput {
+  const b = body as { messages?: { role: string; content: string }[] };
+  return Array.isArray(b.messages) && b.messages.length > 0
+    ? { messages: b.messages }
+    : { messages: [{ role: "user", content: "hi" }] };
+}
+
+export interface CliServeOptions {
+  store: StateStore;
+  scheduler: Scheduler;
+  capabilities: CapabilityProfile; // a real server: long_running + filesystem + websockets
+  // Builds the model_call performer per turn, bound to that request's delta sink.
+  // `model` is the image's pinned model id (the harness request carries none).
+  makeModelPerformer: (model: string, onDelta?: (t: string) => void) => Performer;
+  port?: number; // default 8787
+  host?: string; // default 127.0.0.1
+  clock?: LogicalClock; // default { now: () => 0 }
+  onWarn?: (message: string) => void;
+}
+
+export interface ServeHandle {
+  url: string;
+  close(): Promise<void>;
+}
+
+// Assemble a host + the streaming channel from an image and listen. The channel
+// MINTS sessionIds and OWNS the rotating single-use continuationToken; a turn's
+// journal records stream as SSE/WS `record` events and the model's tokens as
+// `delta` events (host-side; the real sqlite + Anthropic path is a manual smoke).
+export async function cmdServe(layoutdir: string, opts: CliServeOptions): Promise<ServeHandle> {
+  const image = await readOciLayout(layoutdir);
+  const modelId = image.lock.model.id; // the harness model_call request has no model
+  const bundle = defaultBundle();
+  const onWarn = opts.onWarn ?? ((m: string) => console.warn(m));
+  const clock = opts.clock ?? { now: (): number => 0 };
+
+  // Reconstruct tool contracts from the lock for dispatch (same as cmdRun).
+  const contracts: ToolContract[] = image.lock.tools.map((t) => ({
+    name: t.name,
+    description: "",
+    inputSchema: {},
+    transport: t.transport,
+    location: t.location,
+    retrySafe: t.retrySafe,
+  }));
+  const toolPerformer = makeToolPerformer(makeToolRegistry(contracts), makeToolInvoker({}));
+
+  const channel = makeRestChannel<HarnessState>({
+    adapter: {
+      name: "iris-serve",
+      capabilities: opts.capabilities,
+      store: opts.store,
+      scheduler: opts.scheduler,
+    },
+    makeTurnInputs: async (sessionId: string, body: Json, emit?: (ev: StreamEvent) => void) => {
+      // Resolve the HELD pin per turn (never silently override it — same posture as
+      // cmdRun); the channel is multi-session so this is per-(session, turn).
+      const held = await governingDigest(opts.store, sessionId);
+      if (held !== null && held !== image.lock.imageDigest) {
+        onWarn(
+          `iris serve: session '${sessionId}' holds pin ${held} ≠ layout ${image.lock.imageDigest}; running under the HELD pin (use a definition migration to change it)`,
+        );
+      }
+      const defDigest = held ?? image.lock.imageDigest;
+      const onDelta = emit ? (t: string): void => emit({ type: "delta", text: t }) : undefined;
+      return {
+        program: harnessProgram(bodyToInput(body)),
+        performers: {
+          tactic: bundle.tacticPerformer,
+          model_call: opts.makeModelPerformer(modelId, onDelta),
+          tool_call: toolPerformer,
+        },
+        clock,
+        defDigest,
+      };
+    },
+  });
+
+  const url = await channel.listen(opts.port ?? 8787, opts.host ?? "127.0.0.1");
+  return { url, close: (): Promise<void> => channel.close() };
 }
