@@ -22,7 +22,8 @@
     "@iris/channel-web": "^0.1.0",
     "@iris/store-do": "^0.1.0",
     "@iris/store-sqlite": "^0.1.0",
-    "@iris/provider-anthropic": "^0.1.0"
+    "@iris/provider-anthropic": "^0.1.0",
+    "@iris/auth": "^0.1.0"
   },
   "license": "MIT",
   "engines": {

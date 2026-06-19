@@ -38,6 +38,19 @@ import {
   stripModelPrefix,
   type ProviderDescriptor,
 } from "./providers.ts";
+import { makeGovernedApprovalPerformer } from "@iris/auth";
+import type { ApprovalPolicy, ApprovalInbox } from "@iris/auth";
+
+// Opt-in governance (roadmap P1-5): when a policy + inbox are configured, register the
+// governed `signal_recv` performer so the HITL gate becomes policy-checked and
+// identity-stamped, and every approval is journaled for audit. Zero-value-off: absent
+// governance → {} → the performer registry is BYTE-IDENTICAL to the ungoverned default
+// (no `signal_recv` key). Shared by cmdRun + cmdServe.
+export function governancePerformers(
+  governance?: { policy: ApprovalPolicy; inbox: ApprovalInbox },
+): { signal_recv?: Performer } {
+  return governance ? { signal_recv: makeGovernedApprovalPerformer(governance) } : {};
+}
 
 // --- 9a: init / build / inspect / verify -------------------------------------
 
@@ -193,6 +206,13 @@ export interface CliRunOptions {
   toolInvoker?: ToolInvoker;
   // Names of tools allowed without an approval gate (the bundled retrySafe tools).
   safeTools?: string[];
+  // Opt-in governance: a who-may-approve policy + the approval inbox the channel/UI
+  // submits decisions to. Absent → ungoverned (existing behavior, byte-identical).
+  governance?: { policy: ApprovalPolicy; inbox: ApprovalInbox };
+  // Retain the full journal (no truncation after a snapshot) so the governance audit
+  // trail (auditApprovals) stays COMPLETE across long sessions. Default undefined →
+  // false → the engine truncates as before (existing behavior, byte-identical).
+  keepHistory?: boolean;
 }
 
 export async function cmdRun(
@@ -238,10 +258,12 @@ export async function cmdRun(
         tactic: bundle.tacticPerformer,
         model_call: opts.modelPerformer,
         tool_call: toolPerformer,
+        ...governancePerformers(opts.governance),
       },
       defDigest,
       holderId: "iris-run",
       assertReplay: true,
+      ...(opts.keepHistory !== undefined ? { keepHistory: opts.keepHistory } : {}),
     },
     opts.sessionId,
   );
@@ -270,6 +292,8 @@ export interface CliServeOptions {
   web?: boolean; // serve the @iris/channel-web chat UI at GET / (same port)
   toolInvoker?: ToolInvoker; // default: an empty invoker (no transport configured)
   safeTools?: string[]; // tools allowed without an approval gate (bundled retrySafe)
+  // Opt-in governance (same shape as cmdRun): policy + inbox. Absent → ungoverned.
+  governance?: { policy: ApprovalPolicy; inbox: ApprovalInbox };
 }
 
 export interface ServeHandle {
@@ -330,6 +354,7 @@ export async function cmdServe(layoutdir: string, opts: CliServeOptions): Promis
           tactic: bundle.tacticPerformer,
           model_call: opts.makeModelPerformer(modelId, onDelta),
           tool_call: toolPerformer,
+          ...governancePerformers(opts.governance),
         },
         clock,
         defDigest,
