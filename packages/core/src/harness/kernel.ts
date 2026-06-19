@@ -35,6 +35,9 @@ export type Phase =
   | "tool_error"
   | "parked_hitl"
   | "recv_hitl"
+  // interactive (chat) mode only: ingest the next user message via a user_recv
+  // effect, then enter `assemble`. Initial phase when `config.interactive`.
+  | "recv_user"
   | "decide_next"
   | "decide_wait"
   | "done";
@@ -60,6 +63,12 @@ export interface HarnessInput {
 
 export interface HarnessConfig {
   budget?: Budget;
+  // Interactive (chat) mode (ADR-0007). When true the loop ingests each user
+  // message via a `user_recv` effect, threads the conversation into `ctx`, appends
+  // the assistant reply, and PARKS on a `{kind:"user"}` wait instead of finishing —
+  // so the next message resumes the same durable session. Zero-value-off: absent/
+  // false → the kernel is byte-identical to the non-interactive default path.
+  interactive?: boolean;
   invariants?: Invariants; // when set, the kernel enforces caps via a reducer override
   // Per-tool idempotency posture (ADR-0003). The AUTHORITATIVE source for the
   // tool_call effect's retry posture (the ToolContract's own `retrySafe` is
@@ -148,7 +157,21 @@ function advanceTool(state: HarnessState): HarnessState {
   return { ...state, toolCursor: next, phase: remaining ? "tool_gate" : "decide_next" };
 }
 
-function foldModel(state: HarnessState, value: Json): HarnessState {
+function foldModel(state: HarnessState, value: Json, interactive: boolean): HarnessState {
+  // Interactive mode, no more tools: append the assistant reply to the durable
+  // conversation before deciding next (the conversation grows in `ctx`, which is
+  // journaled via this fold → replay rebuilds it identically). Tool-call rounds
+  // are unchanged (threading tool outputs back into ctx is a separate refinement).
+  if (interactive && !modelHasToolCalls(value)) {
+    const content =
+      value !== null && typeof value === "object" && !Array.isArray(value) &&
+      typeof (value as { content?: Json }).content === "string"
+        ? (value as { content: string }).content
+        : "";
+    const ctx = state.ctx ?? { messages: [] };
+    const nextCtx: ModelContext = { ...ctx, messages: [...ctx.messages, { role: "assistant", content }] };
+    return { ...state, modelOut: value, ctx: nextCtx, toolCursor: 0, phase: "decide_next" };
+  }
   return {
     ...state,
     modelOut: value,
@@ -202,7 +225,7 @@ function foldToolError(state: HarnessState, choice: Json): HarnessState {
   return advanceTool({ ...state, attempt: 0, lastError: null, toolPatch: null });
 }
 
-function foldTactic(state: HarnessState, seam: string, choice: Json): HarnessState {
+function foldTactic(state: HarnessState, seam: string, choice: Json, interactive: boolean): HarnessState {
   switch (seam) {
     case "assembleContext":
       return { ...state, ctx: choice as unknown as ModelContext, phase: "maybe_compact" };
@@ -215,6 +238,11 @@ function foldTactic(state: HarnessState, seam: string, choice: Json): HarnessSta
     case "decideNext": {
       const decision = choice as DecideNext;
       if (decision === "finish") {
+        // Interactive: a "finished" reply PARKS the session on a user wait so the
+        // next message resumes it (durable multi-turn). Non-interactive: finish.
+        if (interactive) {
+          return { ...state, phase: "decide_wait", pendingWait: { kind: "user" } };
+        }
         return { ...state, phase: "done", output: { reply: state.modelOut } };
       }
       if (decision === "continue") {
@@ -230,7 +258,7 @@ function foldTactic(state: HarnessState, seam: string, choice: Json): HarnessSta
 
 // Route an effect_result by the phase that emitted it: the engine is strictly
 // one-effect-at-a-time, so the current phase identifies which effect this is for.
-function foldResult(state: HarnessState, result: EffectResult): HarnessState {
+function foldResult(state: HarnessState, result: EffectResult, interactive: boolean): HarnessState {
   if (!result.outcome.ok) {
     if (state.phase === "tool_exec") {
       // a tool failure routes to the onToolError seam, carrying the error + the
@@ -249,11 +277,26 @@ function foldResult(state: HarnessState, result: EffectResult): HarnessState {
   const value = result.outcome.value;
   switch (state.phase) {
     case "assemble":
-      return foldTactic(state, "assembleContext", tacticChoice(value, "assembleContext"));
+      return foldTactic(state, "assembleContext", tacticChoice(value, "assembleContext"), interactive);
     case "maybe_compact":
-      return foldTactic(state, "shouldCompact", tacticChoice(value, "shouldCompact"));
+      return foldTactic(state, "shouldCompact", tacticChoice(value, "shouldCompact"), interactive);
     case "await_model":
-      return foldModel(state, value);
+      return foldModel(state, value, interactive);
+    case "recv_user": {
+      // The user_recv value is { content: string }, supplied by the per-turn
+      // performer. Append it to the conversation and assemble. A malformed value
+      // fails LOUDLY (no silent skip) — the channel/client contract is broken.
+      if (
+        value === null || typeof value !== "object" || Array.isArray(value) ||
+        typeof (value as { content?: Json }).content !== "string"
+      ) {
+        throw new Error(`harness: user_recv expected { content: string }, got ${JSON.stringify(value)}`);
+      }
+      const content = (value as { content: string }).content;
+      const ctx = state.ctx ?? { messages: [] };
+      const nextCtx: ModelContext = { ...ctx, messages: [...ctx.messages, { role: "user", content }] };
+      return { ...state, ctx: nextCtx, phase: "assemble" };
+    }
     case "tool_gate":
       return foldGate(state, tacticChoice(value, "gateAction"));
     case "tool_exec":
@@ -263,7 +306,7 @@ function foldResult(state: HarnessState, result: EffectResult): HarnessState {
     case "recv_hitl":
       return foldApproval(state, value);
     case "decide_next":
-      return foldTactic(state, "decideNext", tacticChoice(value, "decideNext"));
+      return foldTactic(state, "decideNext", tacticChoice(value, "decideNext"), interactive);
     default:
       throw new Error(`harness: effect result in unwired phase '${state.phase}'`);
   }
@@ -271,11 +314,11 @@ function foldResult(state: HarnessState, result: EffectResult): HarnessState {
 
 // The base reducer: fold a record and advance the phase. Pure; the program's
 // reducer applies the invariant override on top of this.
-function reduceRecord(state: HarnessState, r: JournalRecord): HarnessState {
+function reduceRecord(state: HarnessState, r: JournalRecord, interactive: boolean): HarnessState {
   if (r.kind === "effect_result") {
     // every effect result is ONE loop step — this is the cap input that bounds
     // EVERY runaway (assemble loops AND tool-error retry storms).
-    return foldResult({ ...state, steps: state.steps + 1 }, r.payload as EffectResult);
+    return foldResult({ ...state, steps: state.steps + 1 }, r.payload as EffectResult, interactive);
   }
   if (r.kind === "marker") {
     const m = r.payload as Marker;
@@ -285,8 +328,15 @@ function reduceRecord(state: HarnessState, r: JournalRecord): HarnessState {
     if (m.marker === "wait" && state.phase === "parked_hitl") {
       return { ...state, phase: "recv_hitl" };
     }
-    // a decideNext-requested wait resumes the loop (back to assemble).
     if (m.marker === "wait" && state.phase === "decide_wait") {
+      // Interactive: a user-wait resumes by INGESTING the next message (recv_user).
+      // This branch is gated on `interactive` AND `wait.kind === "user"` so a
+      // NON-interactive user-wait (e.g. migrate-definition / session-pin tests)
+      // still resumes to `assemble` exactly as before — byte-identity guard.
+      if (interactive && m.wait.kind === "user") {
+        return { ...state, phase: "recv_user", pendingWait: null };
+      }
+      // a decideNext-requested wait resumes the loop (back to assemble).
       return { ...state, phase: "assemble", pendingWait: null };
     }
   }
@@ -297,11 +347,15 @@ export function harnessProgram(
   input: HarnessInput,
   config: HarnessConfig = {},
 ): Program<HarnessState> {
+  const interactive = config.interactive === true;
   return {
     initial: {
-      phase: "assemble",
+      // Interactive: start by ingesting the first user message (recv_user) with an
+      // EMPTY ctx — messages arrive via user_recv, never from `input`, so `initial`
+      // is identical across every turn of a session (required for stable replay).
+      phase: interactive ? "recv_user" : "assemble",
       input: { messages: input.messages },
-      ctx: { messages: input.messages },
+      ctx: interactive ? { messages: [] } : { messages: input.messages },
       modelOut: null,
       toolCursor: 0,
       steps: 0,
@@ -313,7 +367,7 @@ export function harnessProgram(
       output: null,
     },
     reducer: (state, r: JournalRecord): HarnessState => {
-      const next = reduceRecord(state, r);
+      const next = reduceRecord(state, r, interactive);
       const inv = config.invariants;
       if (inv) {
         // runtime kernel override: a journaled-counter breach forces the loop to
@@ -396,6 +450,10 @@ export function harnessProgram(
           if (call === null) throw new Error("harness: recv_hitl with no current tool call");
           return { type: "effect", effectKind: "signal_recv", request: { name: `hitl:${call.callId}` } };
         }
+        case "recv_user":
+          // interactive mode: pull the next user message via a user_recv effect
+          // (its value supplied by the per-turn channel/client performer).
+          return { type: "effect", effectKind: "user_recv", request: {} };
         case "decide_next":
           return tacticEffect("decideNext", { state: view(state) });
         case "decide_wait": {

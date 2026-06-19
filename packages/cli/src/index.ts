@@ -11,3 +11,5 @@ export {
   cmdRun,
 } from "./iris.ts";
 export type { CliBuildOptions, CliRunOptions } from "./iris.ts";
+export { wrapModelForImage, makeChatFakeModel, renderOutcome, chatTurn, runChat } from "./chat.ts";
+export type { ChatDeps } from "./chat.ts";
