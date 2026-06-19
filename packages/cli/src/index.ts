@@ -13,5 +13,13 @@ export {
 } from "./iris.ts";
 export type { CliBuildOptions, CliRunOptions, CliServeOptions, ServeHandle } from "./iris.ts";
 export { echoStreamingPerformer } from "./echo.ts";
-export { wrapModelForImage, makeChatFakeModel, renderOutcome, chatTurn, runChat } from "./chat.ts";
-export type { ChatDeps } from "./chat.ts";
+export {
+  wrapModelForImage,
+  makeChatFakeModel,
+  makeChatStreamingFakeModel,
+  makeStreamSink,
+  renderOutcome,
+  chatTurn,
+  runChat,
+} from "./chat.ts";
+export type { ChatDeps, StreamSink } from "./chat.ts";

@@ -167,7 +167,7 @@ iris inspect ./image                                      # the image at the int
 iris verify  ./image                                      # loud failure on any tamper or pin mismatch
 iris run     ./image --session s1 --db /tmp/s1.sqlite     # run a turn under the session's held pin
 iris serve   ./image --port 8787                          # turnkey HTTP server: REST + SSE + WS streaming
-iris chat    ./image --session s1 --db /tmp/s1.sqlite     # talk to the agent — a durable, resumable chat
+iris chat    ./image --session s1 --db /tmp/s1.sqlite     # talk to the agent — durable, resumable, streaming chat
 ```
 
 (Before `npm link`, invoke the bin directly: `node packages/cli/src/cli-main.ts <cmd> …`.) `iris run` performs a real model call, so it needs `ANTHROPIC_API_KEY` — for a no-key run, use the demo below. `iris serve` defaults to a **no-key echo model** (set `--model anthropic` with a key for the real provider), so streaming is demoable immediately: `POST /v1/session` (add `Accept: text/event-stream` for SSE), `POST /v1/session/<id>/message` to continue, or connect a WebSocket to `ws://<host>/v1/ws`.
@@ -194,25 +194,66 @@ conversation **is** the session journal, so it survives the process and resumes
 later (and, like any Iris session, can migrate across hosts mid-chat). Between
 messages the session simply *parks* on a user wait; the next message resumes it.
 
+Replies **stream live**, token by token, as the model produces them — each
+`agent>` line fills in as the tokens arrive rather than appearing all at once
+(the keyless `--fake` echo streams in word chunks, so you can see it without a
+key). Streaming is a non-journaled side-channel: the durable journal still
+records the whole reply, so resuming a session replays from the journal **without
+re-streaming** earlier turns.
+
 ```sh
 # No key needed: pass --fake to use the deterministic echo model (what the suite uses).
 printf 'hello\nwhat can you do?\n/exit\n' \
   | iris chat ./image --session s1 --db /tmp/s1.sqlite --fake
-# agent> echo:hello
+# agent> echo:hello              ← printed token-by-token as it streams
 # agent> echo:what can you do?
 
 # A BRAND-NEW process resumes the SAME conversation from /tmp/s1.sqlite:
 printf 'still there?\n/exit\n' \
   | iris chat ./image --session s1 --db /tmp/s1.sqlite --fake
-# agent> echo:still there?      ← continues turn 3 of the same durable session
+# agent> echo:still there?      ← continues turn 3; earlier turns are NOT re-streamed
 ```
 
 Set `ANTHROPIC_API_KEY` (and drop `--fake`) for real model replies — the chat
-wraps the model call with the image's model + instructions. `--db :memory:` works
-for a throwaway session; pass a file path to make it durable. `/exit`, `/quit`, or
-Ctrl-D leaves; the session stays put. (Token streaming and an in-terminal
-human-in-the-loop approval prompt are on the roadmap — today a reply prints when
-its turn parks.)
+wraps the **streaming** model call with the image's model + instructions, and a
+provider error surfaces as the agent's reply rather than poisoning the session.
+`--db :memory:` works for a throwaway session; pass a file path to make it
+durable. `/exit`, `/quit`, or Ctrl-D leaves; the session stays put. (An
+in-terminal human-in-the-loop approval prompt is still on the roadmap.)
+
+### Serve it over HTTP — SSE or WebSocket streaming
+
+`iris serve` boots the same image as a one-command HTTP server: buffered REST
+plus a **live token stream** over SSE or WebSocket. It defaults to the no-key
+echo model (so it streams immediately); pass `--model anthropic` with
+`ANTHROPIC_API_KEY` for the real provider.
+
+```sh
+iris serve ./image --port 8787
+# → iris serve: listening on http://127.0.0.1:8787 (model=echo)
+
+# Start a session and stream the turn as Server-Sent Events (Accept: text/event-stream):
+curl -N -H 'accept: text/event-stream' -H 'content-type: application/json' \
+  -d '{"messages":[{"role":"user","content":"hello"}]}' \
+  http://127.0.0.1:8787/v1/session
+# event: delta    data: {"type":"delta","text":"echo:"}      ← one event per model token
+# event: delta    data: {"type":"delta","text":" hello"}
+# event: outcome  data: {"type":"outcome","sessionId":"…","status":"parked","continuationToken":"…"}
+
+# Continue the SAME session — present the rotated single-use token (a body field,
+# or the x-continuation-token header). The path carries the minted sessionId:
+curl -N -H 'accept: text/event-stream' -H 'content-type: application/json' \
+  -d '{"continuationToken":"<token>","messages":[{"role":"user","content":"more"}]}' \
+  http://127.0.0.1:8787/v1/session/<sessionId>/message
+```
+
+Drop `Accept: text/event-stream` for a single buffered JSON reply
+(`{sessionId, continuationToken, status, …}`). A WebSocket client can hold one
+connection for the whole conversation at `ws://127.0.0.1:8787/v1/ws` (same
+`record` / `delta` / `outcome` event model, gated on the `websockets`
+capability). The channel rotates the single-use `continuationToken` every
+committed turn; a stale or missing token is refused loudly (4xx), never a silent
+200.
 
 ### The headline — resume on a *different* host
 
