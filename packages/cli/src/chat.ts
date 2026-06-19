@@ -90,31 +90,90 @@ export function makeChatFakeModel(): Performer {
   };
 }
 
+/**
+ * STREAMING variant of the keyless fake: same `echo:<content>` reply as
+ * `makeChatFakeModel`, but emitted in word chunks via `onDelta` so the no-key
+ * `iris chat` path demonstrates live token streaming. `onDelta` is optional
+ * (mirrors `echoStreamingPerformer`); absent → deltas are dropped and only the
+ * buffered result is returned. The returned `content` always equals the
+ * concatenation of the deltas (reconcile invariant). Pure: no env/network.
+ */
+export function makeChatStreamingFakeModel(onDelta?: (text: string) => void): Performer {
+  return async (request: Json): Promise<Outcome> => {
+    const req = request as { messages?: Array<{ role?: string; content?: string }> };
+    const lastUser = [...(req.messages ?? [])].reverse().find((m) => m.role === "user");
+    const reply = `echo:${lastUser?.content ?? ""}`;
+    const words = reply.split(" ");
+    for (let i = 0; i < words.length; i++) onDelta?.(i === 0 ? words[i] : ` ${words[i]}`);
+    return {
+      ok: true,
+      value: { role: "assistant", content: reply, stopReason: "end_turn" },
+    };
+  };
+}
+
 // --- rendering ---------------------------------------------------------------
 
 /** What `runChat` prints for a turn outcome, and whether the loop should stop.
  *  PURE — every TurnOutcome variant is testable from a hand-built literal. The
  *  `contended` variant carries NO `state` (engine TurnOutcome), so this MUST NOT
- *  read `outcome.state` on that branch. */
+ *  read `outcome.state` on that branch.
+ *
+ *  `opts.streamed` is set by `runChat` to `streamSink.wroteAny()` — i.e. the
+ *  reply text was ALREADY written live to the output by the delta sink. In that
+ *  case we must NOT print the reply again (no double-print): we emit only the
+ *  closing newline + session markers. The buffered (non-streamed) path is
+ *  unchanged. `contended`/`aborted` never run the model, so they ignore
+ *  `streamed` and never read `state`. */
 export function renderOutcome(
   outcome: TurnOutcome<HarnessState>,
+  opts: { streamed?: boolean } = {},
 ): { text: string; shouldBreak: boolean } {
-  const replyText = (state: HarnessState): string => {
-    const mo = state.modelOut as { content?: Json } | null;
-    return mo !== null && typeof mo === "object" && typeof mo.content === "string" ? mo.content : "";
+  const streamed = opts.streamed === true;
+  const modelOut = (state: HarnessState): { content: string; stopReason?: string } => {
+    const mo = state.modelOut as { content?: Json; stopReason?: Json } | null;
+    const content =
+      mo !== null && typeof mo === "object" && typeof mo.content === "string" ? mo.content : "";
+    const stopReason =
+      mo !== null && typeof mo === "object" && typeof mo.stopReason === "string"
+        ? mo.stopReason
+        : undefined;
+    return { content, stopReason };
   };
   switch (outcome.status) {
     case "parked": {
       const wait = outcome.wait;
       if (wait.kind === "user") {
-        return { text: `agent> ${replyText(outcome.state)}\n`, shouldBreak: false };
+        if (streamed) {
+          // Reply already streamed live → just close the line. The only way we
+          // reach the error branch with `streamed` true is a MID-stream failure:
+          // the streaming performer fired some deltas, then the stream threw, so
+          // wrapModelForImage absorbed the ok:false into a synthetic error reply
+          // (Finding B). The streamed tokens are partial, so surface the error
+          // text on its own line — never hide a failure behind partial output.
+          // (A PRE-stream failure fires no delta → wroteAny() is false → streamed
+          // is false → the buffered branch below shows the error instead.)
+          const { content, stopReason } = modelOut(outcome.state);
+          const tail = stopReason === "error" ? `${content}\n` : "";
+          return { text: `\n${tail}`, shouldBreak: false };
+        }
+        return { text: `agent> ${modelOut(outcome.state).content}\n`, shouldBreak: false };
       }
       // a timer/signal park is not a chat turn boundary — surface it, keep going.
+      // A leading newline closes the streamed line first when streaming.
       const detail = wait.kind === "timer" ? `timer@${wait.at}` : `signal:${wait.name}`;
-      return { text: `… agent parked (${detail}); not resumable from chat yet\n`, shouldBreak: false };
+      const lead = streamed ? "\n" : "";
+      return {
+        text: `${lead}… agent parked (${detail}); not resumable from chat yet\n`,
+        shouldBreak: false,
+      };
     }
     case "finished":
-      return { text: `agent> ${replyText(outcome.state)}\n(session complete)\n`, shouldBreak: true };
+      if (streamed) return { text: `\n(session complete)\n`, shouldBreak: true };
+      return {
+        text: `agent> ${modelOut(outcome.state).content}\n(session complete)\n`,
+        shouldBreak: true,
+      };
     case "contended":
       return {
         text: `iris chat: another runner holds this session (current fence ${outcome.current}); exiting\n`,
@@ -123,6 +182,48 @@ export function renderOutcome(
     case "aborted":
       return { text: `iris chat: turn aborted (${outcome.reason}); exiting\n`, shouldBreak: true };
   }
+}
+
+// --- streaming sink ----------------------------------------------------------
+
+/** A live token sink for the chat REPL. `onDelta` is handed to the streaming
+ *  model performer (a NON-journaled side-channel — live UX only); `begin` resets
+ *  per-turn state; `wroteAny` tells `runChat`/`renderOutcome` whether the reply
+ *  already streamed (so it is not printed a second time). */
+export interface StreamSink {
+  onDelta(text: string): void;
+  begin(): void;
+  wroteAny(): boolean;
+}
+
+/** Build a `StreamSink` over an output sink. On the FIRST non-empty delta of a
+ *  turn it writes `prefix` (e.g. "agent> ") then the token; later non-empty
+ *  deltas write just the token. An EMPTY delta is ignored — it never emits a
+ *  spurious prefix and never flips `wroteAny`. Deltas are written WHOLE and
+ *  verbatim — never re-sliced (UTF-8 rune-boundary safety lives in the SSE
+ *  parser, which already snaps deltas to rune starts). `output` is typed exactly
+ *  like `ChatDeps.output`, which already accepts `process.stdout` structurally. */
+export function makeStreamSink(
+  output: { write(s: string): void },
+  prefix = "agent> ",
+): StreamSink {
+  let wrote = false;
+  return {
+    begin(): void {
+      wrote = false;
+    },
+    onDelta(text: string): void {
+      if (text === "") return;
+      if (!wrote) {
+        output.write(prefix);
+        wrote = true;
+      }
+      output.write(text);
+    },
+    wroteAny(): boolean {
+      return wrote;
+    },
+  };
 }
 
 // --- REPL --------------------------------------------------------------------
@@ -140,6 +241,11 @@ export interface ChatDeps {
   output: { write(s: string): void };
   isInteractive?: boolean; // write the `you>` prompt (TTY)
   banner?: string; // printed once at start
+  // When present, the model performer streams tokens to this sink's `onDelta`
+  // (which writes to the SAME `output`). `runChat` resets it per turn and tells
+  // `renderOutcome` the reply already streamed, so it is not printed twice.
+  // Absent → buffered behavior (reply printed once after the turn parks).
+  streamSink?: StreamSink;
 }
 
 /** Run ONE user message as a turn against the durable session. The message is
@@ -189,6 +295,10 @@ export async function runChat(deps: ChatDeps): Promise<void> {
     }
     let outcome: TurnOutcome<HarnessState>;
     try {
+      // Reset the sink BEFORE the turn so `wroteAny()` reflects only this turn's
+      // live deltas (replay re-folds journaled history but never re-fires the
+      // model performer, so older turns do not re-stream).
+      deps.streamSink?.begin();
       outcome = await chatTurn(deps, line);
     } catch (e) {
       // Isolate a single failing turn — a tactic/tool throw must not kill the
@@ -199,7 +309,9 @@ export async function runChat(deps: ChatDeps): Promise<void> {
       prompt();
       continue;
     }
-    const { text, shouldBreak } = renderOutcome(outcome);
+    const { text, shouldBreak } = renderOutcome(outcome, {
+      streamed: deps.streamSink?.wroteAny() === true,
+    });
     deps.output.write(text);
     if (shouldBreak) return; // finished / contended / aborted — a terminal outcome
     prompt();

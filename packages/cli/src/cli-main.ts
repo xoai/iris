@@ -11,7 +11,7 @@ import { makeToolPerformer, makeToolRegistry, makeToolInvoker } from "@iris/tool
 import type { ToolContract } from "@iris/tools";
 import { cmdInit, cmdBuild, cmdInspect, cmdVerify, cmdPush, cmdPull, cmdRun, cmdServe } from "./iris.ts";
 import { echoStreamingPerformer } from "./echo.ts";
-import { runChat, wrapModelForImage, makeChatFakeModel } from "./chat.ts";
+import { runChat, wrapModelForImage, makeChatStreamingFakeModel, makeStreamSink } from "./chat.ts";
 
 function flag(argv: string[], name: string): string | undefined {
   const i = argv.indexOf(name);
@@ -142,6 +142,10 @@ async function chatCommand(argv: string[]): Promise<void> {
 
   const hasKey = typeof process.env.ANTHROPIC_API_KEY === "string" && process.env.ANTHROPIC_API_KEY !== "";
   const useFake = forceFake || !hasKey;
+  // The streaming sink writes live tokens to the SAME stdout the REPL renders to.
+  // The model performer streams into `sink.onDelta`; `runChat` resets the sink per
+  // turn and renders the streamed reply without re-printing it.
+  const sink = makeStreamSink(process.stdout);
   let modelPerformer: Performer;
   if (useFake) {
     console.warn(
@@ -149,10 +153,16 @@ async function chatCommand(argv: string[]): Promise<void> {
         ? "iris chat: --fake — using the deterministic (fake model); replies echo your input"
         : "iris chat: no ANTHROPIC_API_KEY — using the deterministic (fake model); replies echo your input",
     );
-    modelPerformer = makeChatFakeModel();
+    modelPerformer = makeChatStreamingFakeModel(sink.onDelta);
   } else {
     const provider = await import("@iris/provider-anthropic");
-    modelPerformer = wrapModelForImage(provider.anthropicModelPerformer({}), image);
+    // Stream tokens live; `wrapModelForImage` still injects model/system/maxTokens
+    // and absorbs a provider error into a synthetic reply (Finding B) so a failed
+    // model_call never poisons the durable journal.
+    modelPerformer = wrapModelForImage(
+      provider.anthropicStreamingModelPerformer({ onDelta: sink.onDelta }),
+      image,
+    );
   }
 
   const rl = createInterface({ input: process.stdin });
@@ -185,6 +195,7 @@ async function chatCommand(argv: string[]): Promise<void> {
       output: process.stdout,
       isInteractive,
       banner,
+      streamSink: sink,
     });
   } finally {
     process.off("SIGINT", onSigint);
