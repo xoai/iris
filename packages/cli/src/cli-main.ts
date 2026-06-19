@@ -15,6 +15,12 @@ import { cmdInit, cmdBuild, cmdInspect, cmdVerify, cmdPush, cmdPull, cmdRun, cmd
 import { loadBundledTools } from "./tools.ts";
 import { echoStreamingPerformer } from "./echo.ts";
 import { runChat, wrapModelForImage, makeChatStreamingFakeModel, makeStreamSink } from "./chat.ts";
+import {
+  providerNameForModel,
+  providerDescriptor,
+  stripModelPrefix,
+  loadModelProvider,
+} from "./providers.ts";
 
 function flag(argv: string[], name: string): string | undefined {
   const i = argv.indexOf(name);
@@ -43,9 +49,13 @@ async function runCommand(argv: string[]): Promise<void> {
   if (!layout) throw new Error("usage: iris run <layoutdir> --session <id> [--db <path>] [--tools <dir>]");
   const session = flag(argv, "--session") ?? "default";
   const db = flag(argv, "--db") ?? ":memory:";
-  // Real path (manual): SQLite store + Anthropic provider (needs ANTHROPIC_API_KEY).
+  // Real path (manual): SQLite store + the provider selected from the image's
+  // model-id prefix (needs that provider's API key, e.g. ANTHROPIC_API_KEY /
+  // OPENAI_API_KEY). The bare (prefix-stripped) model id is baked into the
+  // performer since the harness model_call request carries no model.
   const sqlite = await import("@iris/store-sqlite");
-  const provider = await import("@iris/provider-anthropic");
+  const image = await readOciLayout(layout);
+  const provider = await loadModelProvider(providerNameForModel(image.lock.model.id));
   const handle = sqlite.openDatabase(db);
   const store = new sqlite.SqliteStateStore(handle);
   const scheduler = new sqlite.SqliteScheduler(handle);
@@ -55,7 +65,7 @@ async function runCommand(argv: string[]): Promise<void> {
     store,
     scheduler,
     clock: { now: () => 0 },
-    modelPerformer: provider.anthropicModelPerformer({}),
+    modelPerformer: provider.buffered({ model: stripModelPrefix(image.lock.model.id) }),
     toolInvoker,
     safeTools,
   });
@@ -69,7 +79,7 @@ async function serveCommand(argv: string[]): Promise<void> {
   const layout = argv[1];
   if (!layout)
     throw new Error(
-      "usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--model auto|anthropic|echo] [--web]",
+      "usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--model auto|anthropic|openai|echo] [--web]",
     );
   const port = Number(flag(argv, "--port") ?? 8787);
   const host = flag(argv, "--host") ?? "127.0.0.1";
@@ -82,17 +92,31 @@ async function serveCommand(argv: string[]): Promise<void> {
   const store = new sqlite.SqliteStateStore(handle);
   const scheduler = new sqlite.SqliteScheduler(handle);
 
-  const hasKey =
-    typeof process.env.ANTHROPIC_API_KEY === "string" && process.env.ANTHROPIC_API_KEY !== "";
-  const resolved = modelOpt === "auto" ? (hasKey ? "anthropic" : "echo") : modelOpt;
+  // The image's model-id prefix names the pinned provider (anthropic | openai).
+  const image = await readOciLayout(layout);
+  const pinned = providerNameForModel(image.lock.model.id);
+
+  // Resolve which backend to serve. `auto` (default) uses the pinned provider when
+  // its API key is present, else the no-key echo model so it is demoable.
+  let resolved: "anthropic" | "openai" | "echo";
+  if (modelOpt === "echo") {
+    resolved = "echo";
+  } else if (modelOpt === "anthropic" || modelOpt === "openai") {
+    resolved = modelOpt;
+  } else {
+    const envKey = providerDescriptor(pinned).envKey;
+    const hasKey = typeof process.env[envKey] === "string" && process.env[envKey] !== "";
+    resolved = hasKey ? pinned : "echo";
+  }
 
   let makeModelPerformer: (model: string, onDelta?: (t: string) => void) => Performer;
-  if (resolved === "anthropic") {
-    const provider = await import("@iris/provider-anthropic");
-    makeModelPerformer = (model, onDelta): Performer =>
-      provider.anthropicStreamingModelPerformer({ model, onDelta });
-  } else {
+  if (resolved === "echo") {
     makeModelPerformer = (_model, onDelta): Performer => echoStreamingPerformer(onDelta);
+  } else {
+    const provider = await loadModelProvider(resolved);
+    // cmdServe passes the PREFIXED image model id — strip it before the API call.
+    makeModelPerformer = (model, onDelta): Performer =>
+      provider.streaming({ model: stripModelPrefix(model), onDelta });
   }
 
   const { toolInvoker, safeTools } = await bundledToolWiring(argv, layout);
@@ -171,7 +195,11 @@ async function chatCommand(argv: string[]): Promise<void> {
   }));
   const toolPerformer = makeToolPerformer(makeToolRegistry(contracts), toolInvoker);
 
-  const hasKey = typeof process.env.ANTHROPIC_API_KEY === "string" && process.env.ANTHROPIC_API_KEY !== "";
+  // Select the provider from the image's model-id prefix; use that provider's key.
+  const providerName = providerNameForModel(image.lock.model.id);
+  const providerEnvKey = providerDescriptor(providerName).envKey;
+  const hasKey =
+    typeof process.env[providerEnvKey] === "string" && process.env[providerEnvKey] !== "";
   const useFake = forceFake || !hasKey;
   // The streaming sink writes live tokens to the SAME stdout the REPL renders to.
   // The model performer streams into `sink.onDelta`; `runChat` resets the sink per
@@ -182,16 +210,16 @@ async function chatCommand(argv: string[]): Promise<void> {
     console.warn(
       forceFake
         ? "iris chat: --fake — using the deterministic (fake model); replies echo your input"
-        : "iris chat: no ANTHROPIC_API_KEY — using the deterministic (fake model); replies echo your input",
+        : `iris chat: no ${providerEnvKey} — using the deterministic (fake model); replies echo your input`,
     );
     modelPerformer = makeChatStreamingFakeModel(sink.onDelta);
   } else {
-    const provider = await import("@iris/provider-anthropic");
+    const provider = await loadModelProvider(providerName);
     // Stream tokens live; `wrapModelForImage` still injects model/system/maxTokens
-    // and absorbs a provider error into a synthetic reply (Finding B) so a failed
-    // model_call never poisons the durable journal.
+    // (model prefix-stripped; request.model wins) and absorbs a provider error into
+    // a synthetic reply (Finding B) so a failed model_call never poisons the journal.
     modelPerformer = wrapModelForImage(
-      provider.anthropicStreamingModelPerformer({ onDelta: sink.onDelta }),
+      provider.streaming({ onDelta: sink.onDelta }),
       image,
     );
   }

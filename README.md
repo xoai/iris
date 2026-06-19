@@ -10,6 +10,10 @@ At runtime, a session is an event-sourced journal — every model call, tool res
 
 **[Features](#key-features)** · **[When to use](#when-to-use-iris)** · **[Compare](#how-iris-compares)** · **[Authoring](#the-agent-is-a-directory)** · **[Install](#install)** · **[Quick start](#quick-start)** · **[How it works](#how-it-works)** · **[Packages](#whats-inside)** · **[Status](#status)**
 
+> **New here?** This README is the manifesto — *why* Iris exists. For a guided
+> path from `npx iris init` to a deployed, talkable agent, follow the
+> **[docs funnel](docs/README.md)** in order.
+
 ## Key features
 
 - **Pause and resume anywhere** — one agent image runs on a laptop, a VPS, a serverless function, or an edge isolate. Stop a session on one and resume it on another, mid-task.

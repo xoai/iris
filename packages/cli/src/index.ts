@@ -33,3 +33,16 @@ export {
 export type { ChatDeps, StreamSink } from "./chat.ts";
 export { loadBundledTools } from "./tools.ts";
 export type { BundledTools } from "./tools.ts";
+export {
+  providerNameForModel,
+  stripModelPrefix,
+  providerDescriptor,
+  loadModelProvider,
+} from "./providers.ts";
+export type {
+  ProviderName,
+  ProviderDescriptor,
+  LoadedProvider,
+  ModelPerformerOptions,
+  StreamingModelPerformerOptions,
+} from "./providers.ts";
