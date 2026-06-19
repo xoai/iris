@@ -23,6 +23,7 @@ import type {
 } from "@iris/core";
 import { normalizeContentKey } from "@iris/agent";
 import type { AgentImage } from "@iris/agent";
+import { stripModelPrefix } from "./providers.ts";
 
 // --- model-call wrapper ------------------------------------------------------
 
@@ -44,8 +45,9 @@ import type { AgentImage } from "@iris/agent";
 const CHAT_MAX_TOKENS = 4096;
 
 export function wrapModelForImage(base: Performer, image: AgentImage): Performer {
-  const id = image.agentfile.model;
-  const modelId = id.includes("/") ? id.slice(id.indexOf("/") + 1) : id;
+  // Strip the `provider/` prefix via the single source shared with the selection
+  // seam (providers.ts) — keep this in lockstep with how the performer is chosen.
+  const modelId = stripModelPrefix(image.agentfile.model);
   const sysKey = normalizeContentKey(image.agentfile.instructions);
   const b64 = image.content[sysKey];
   const system = b64 !== undefined ? Buffer.from(b64, "base64").toString("utf8") : undefined;

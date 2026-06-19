@@ -34,7 +34,11 @@ function captureFs() {
 // gate refuses it — see the second test); the deploy-success test overrides to a
 // remote, tool-less image. The resolver is derived from the scaffold's tools/ dir
 // so the bundled `subprocess://now` ref resolves when present.
-async function buildImage(overrides?: { requires?: Record<string, unknown>; tools?: unknown[] }) {
+async function buildImage(overrides?: {
+  requires?: Record<string, unknown>;
+  tools?: unknown[];
+  model?: string;
+}) {
   const src = await tmp("iris-deploy-src-");
   await cmdInit(src);
   if (overrides) {
@@ -42,6 +46,7 @@ async function buildImage(overrides?: { requires?: Record<string, unknown>; tool
     const agent = JSON.parse(await readFile(agentPath, "utf8")) as Record<string, unknown>;
     if (overrides.requires) agent.requires = overrides.requires;
     if (overrides.tools !== undefined) agent.tools = overrides.tools;
+    if (overrides.model !== undefined) agent.model = overrides.model;
     await writeFile(agentPath, JSON.stringify(agent, null, 2));
   }
   const out = await tmp("iris-deploy-oci-");
@@ -76,6 +81,12 @@ test("A1: a remote-only image scaffolds a valid Cloudflare Worker project (no ne
   assert.doesNotMatch(wrangler, /node_compat\s*=/);
   assert.match(worker, /import \{ edgeHost \} from "@iris\/store-do"/);
   assert.match(worker, /class AgentDO/);
+  // the default scaffold model is anthropic/claude-x → the worker wires the
+  // Anthropic provider + ANTHROPIC_API_KEY (locks the generalized branch).
+  assert.match(worker, /await import\("@iris\/provider-anthropic"\)/);
+  assert.match(worker, /env\.ANTHROPIC_API_KEY/);
+  assert.match(worker, /anthropicModelPerformer\(\{ apiKey: env\.ANTHROPIC_API_KEY, model: MODEL \}\)/);
+  assert.doesNotMatch(worker, /provider-openai/, "an anthropic image must not import the openai provider");
   // embeds the PREFIX-STRIPPED model id (anthropic/claude-x → claude-x) so the
   // real-key anthropicModelPerformer({model}) path sends a valid model to the API.
   const id = image.lock.model.id; // e.g. "anthropic/claude-x"
@@ -84,6 +95,29 @@ test("A1: a remote-only image scaffolds a valid Cloudflare Worker project (no ne
   if (id.includes("/")) {
     assert.ok(!worker.includes(`const MODEL = ${JSON.stringify(id)}`), "the provider prefix was stripped");
   }
+});
+
+test("A1: an OpenAI-pinned image generates a worker wired to @iris/provider-openai", async () => {
+  // a remote, tool-less image pinned to an openai/ model
+  const { out } = await buildImage({
+    requires: { tool_locality: "remote" },
+    tools: [],
+    model: "openai/gpt-x",
+  });
+  const fs = captureFs();
+  const dest = await tmp("iris-deploy-out-");
+  const result = await cmdDeploy(out, { outDir: dest, writeFile: fs.writeFile, mkdir: fs.mkdir });
+
+  assert.deepEqual(result.files, ["wrangler.toml", "worker.mjs"]);
+  const worker = fs.writes.find((w) => w.path.endsWith("worker.mjs"))!.data;
+  // the OpenAI branch: import the openai provider, read OPENAI_API_KEY, bake MODEL
+  assert.match(worker, /await import\("@iris\/provider-openai"\)/);
+  assert.match(worker, /env\.OPENAI_API_KEY/);
+  assert.match(worker, /openaiModelPerformer\(\{ apiKey: env\.OPENAI_API_KEY, model: MODEL \}\)/);
+  assert.ok(worker.includes(`const MODEL = ${JSON.stringify("gpt-x")}`), "embeds the stripped openai model id");
+  // and NEVER the anthropic provider / key for an openai image
+  assert.doesNotMatch(worker, /provider-anthropic/);
+  assert.doesNotMatch(worker, /ANTHROPIC_API_KEY/);
 });
 
 test("A1: an image demanding local_subprocess tools is REFUSED (ADR-0008) and writes ZERO files", async () => {

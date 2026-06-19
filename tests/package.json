@@ -18,6 +18,7 @@
     "@iris/evals": "*",
     "@iris/observe": "*",
     "@iris/provider-anthropic": "*",
+    "@iris/provider-openai": "*",
     "@iris/demo": "*",
     "@iris/tools": "*",
     "@iris/sandbox": "*",
