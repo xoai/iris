@@ -1,12 +1,33 @@
 {
   "name": "@iris/agent",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
-  "private": true,
   "description": "Iris agent image toolchain — Agentfile model + parsers, builder (resolve/embed/pin/validate), content-addressed inspectable image + OCI layout, lockfile, integrity verify, and session pinning + definition migration. Host-side, zero external deps.",
-  "exports": "./src/index.ts",
+  "exports": {
+    ".": {
+      "iris-src": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "dependencies": {
-    "@iris/core": "*",
-    "@iris/tools": "*"
-  }
+    "@iris/core": "^0.1.0",
+    "@iris/tools": "^0.1.0"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xoai/iris.git",
+    "directory": "packages/agent"
+  },
+  "homepage": "https://github.com/xoai/iris#readme",
+  "files": [
+    "dist"
+  ]
 }

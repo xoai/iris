@@ -14,11 +14,11 @@
 // (A miniflare run of the bundled worker is the other manual option, cf.
 //  manual/cloudflare-workers-smoke.ts.)
 import assert from "node:assert/strict";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { cmdInit, cmdBuild, cmdDeploy } from "@iris/cli";
+import { cmdInit, cmdBuild, cmdDeploy } from "iris";
 import { makeLocalResolver } from "@iris/agent";
 
 // A minimal in-memory DurableObjectStorage (the shape the generated doStorageAdapter
@@ -49,8 +49,15 @@ async function main() {
   }
   const src = await mkdtemp(join(tmpdir(), "iris-deploy-src-"));
   await cmdInit(src);
+  // The edge (Cloudflare DO) can't spawn subprocesses, so the deploy gate refuses
+  // the default LOCAL scaffold. Rewrite to a remote, tool-less agent for deploy.
+  const agentPath = join(src, "agent.json");
+  const agent = JSON.parse(await readFile(agentPath, "utf8"));
+  agent.requires = { tool_locality: "remote" };
+  agent.tools = [];
+  await writeFile(agentPath, JSON.stringify(agent, null, 2));
   const oci = await mkdtemp(join(tmpdir(), "iris-deploy-oci-"));
-  await cmdBuild({ file: join(src, "agent.json"), out: oci, resolver: makeLocalResolver({}) });
+  await cmdBuild({ file: agentPath, out: oci, resolver: makeLocalResolver({}) });
 
   // Generate UNDER the repo tree so the worker's bare `@iris/*` imports resolve via
   // Node's upward node_modules search (on a real deploy, wrangler/esbuild bundles them).

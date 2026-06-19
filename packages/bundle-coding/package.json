@@ -1,11 +1,32 @@
 {
   "name": "@iris/bundle-coding",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
-  "private": true,
   "description": "Iris first domain tactic bundle — coding-specialized seam tactics (read-only tools allow / writes+shell gated to ask, a tool-loop decideNext, window-compaction + tool-repair) composed HOST-SIDE from @iris/core's exported primitives. Produces the defaultBundle shape {tacticPerformer, invariants}; journaled {seam, tacticId, choice} outcomes inherit the ADR-0007 replay quarantine. @iris/core dependency only; core stays byte-untouched.",
-  "exports": "./src/index.ts",
+  "exports": {
+    ".": {
+      "iris-src": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "dependencies": {
-    "@iris/core": "*"
-  }
+    "@iris/core": "^0.1.0"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xoai/iris.git",
+    "directory": "packages/bundle-coding"
+  },
+  "homepage": "https://github.com/xoai/iris#readme",
+  "files": [
+    "dist"
+  ]
 }

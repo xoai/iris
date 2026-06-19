@@ -1,0 +1,9 @@
+{
+  "//": "Publish build — emits dist/*.js (+ .d.ts) from src. Extends tsconfig.base.json so the typecheck settings stay the single source of truth; rewriteRelativeImportExtensions turns the explicit ./x.ts import specifiers into ./x.js on emit. Per-package configs add rootDir/outDir/include. Dev still runs .ts directly via the `iris-src` export condition — this only runs at publish.",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "rewriteRelativeImportExtensions": true
+  }
+}

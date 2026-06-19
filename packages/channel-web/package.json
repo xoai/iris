@@ -1,8 +1,30 @@
 {
   "name": "@iris/channel-web",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
-  "private": true,
   "description": "Iris web channel — a minimal, zero-dep web chat UI served by `iris serve --web` on the same port. `makeWebHandler` is a pre-POST GET hook (host-side, node:fs/http) that serves two static assets (index.html + iris-web.js). The browser shell talks the iris serve SSE protocol and persists {sessionId, continuationToken} to localStorage so a tab close/reload resumes the same session while the server is up. The shell MIRRORS @iris/client-sdk's wire logic (no bundler → no shared import); it is a static asset OUTSIDE the tsc include and the test glob.",
-  "exports": "./src/index.ts"
+  "exports": {
+    ".": {
+      "iris-src": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xoai/iris.git",
+    "directory": "packages/channel-web"
+  },
+  "homepage": "https://github.com/xoai/iris#readme",
+  "files": [
+    "dist",
+    "assets"
+  ]
 }

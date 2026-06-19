@@ -1,15 +1,18 @@
+#!/usr/bin/env node
 // The `iris` bin — a zero-dep argv dispatcher over the command functions
 // (packages/demo/src/run.ts pattern). NOT unit-tested (the command fns are tested
 // directly with injected deps); this wires real fs/host defaults. The `run` path
 // uses the SQLite store + the Anthropic provider (needs a key) — the real path,
 // exercised manually. Host-side.
 import { createInterface } from "node:readline";
-import { makeLocalResolver, readOciLayout, governingDigest } from "@iris/agent";
+import { dirname, join } from "node:path";
+import { readOciLayout, governingDigest } from "@iris/agent";
 import { defaultBundle } from "@iris/core";
 import type { Performer } from "@iris/core";
-import { makeToolPerformer, makeToolRegistry, makeToolInvoker } from "@iris/tools";
+import { makeToolPerformer, makeToolRegistry, makeToolInvoker, makeSubprocessTransport } from "@iris/tools";
 import type { ToolContract } from "@iris/tools";
 import { cmdInit, cmdBuild, cmdInspect, cmdVerify, cmdPush, cmdPull, cmdRun, cmdServe, cmdDeploy } from "./iris.ts";
+import { loadBundledTools } from "./tools.ts";
 import { echoStreamingPerformer } from "./echo.ts";
 import { runChat, wrapModelForImage, makeChatStreamingFakeModel, makeStreamSink } from "./chat.ts";
 
@@ -18,9 +21,26 @@ function flag(argv: string[], name: string): string | undefined {
   return i >= 0 && i + 1 < argv.length ? argv[i + 1] : undefined;
 }
 
+// Discover the project's bundled tools for run/chat/serve. The tools dir defaults
+// to the `tools/` SIBLING of the image layout (`iris build --out ./image` puts the
+// image in the project, beside `tools/`), so it resolves regardless of CWD;
+// `--tools <dir>` overrides. Returns a subprocess invoker over the discovered specs
+// + the retrySafe names for the gate allowlist.
+async function bundledToolWiring(
+  argv: string[],
+  layout: string,
+): Promise<{ toolInvoker: ReturnType<typeof makeToolInvoker>; safeTools: string[] }> {
+  const toolsDir = flag(argv, "--tools") ?? join(dirname(layout), "tools");
+  const bundled = await loadBundledTools(toolsDir);
+  return {
+    toolInvoker: makeToolInvoker({ subprocess: makeSubprocessTransport(bundled.subprocessSpecs) }),
+    safeTools: bundled.safeToolNames,
+  };
+}
+
 async function runCommand(argv: string[]): Promise<void> {
   const layout = argv[1];
-  if (!layout) throw new Error("usage: iris run <layoutdir> --session <id> [--db <path>]");
+  if (!layout) throw new Error("usage: iris run <layoutdir> --session <id> [--db <path>] [--tools <dir>]");
   const session = flag(argv, "--session") ?? "default";
   const db = flag(argv, "--db") ?? ":memory:";
   // Real path (manual): SQLite store + Anthropic provider (needs ANTHROPIC_API_KEY).
@@ -29,12 +49,15 @@ async function runCommand(argv: string[]): Promise<void> {
   const handle = sqlite.openDatabase(db);
   const store = new sqlite.SqliteStateStore(handle);
   const scheduler = new sqlite.SqliteScheduler(handle);
+  const { toolInvoker, safeTools } = await bundledToolWiring(argv, layout);
   const outcome = await cmdRun(layout, {
     sessionId: session,
     store,
     scheduler,
     clock: { now: () => 0 },
     modelPerformer: provider.anthropicModelPerformer({}),
+    toolInvoker,
+    safeTools,
   });
   console.log(JSON.stringify({ status: outcome.status }));
 }
@@ -72,6 +95,7 @@ async function serveCommand(argv: string[]): Promise<void> {
     makeModelPerformer = (_model, onDelta): Performer => echoStreamingPerformer(onDelta);
   }
 
+  const { toolInvoker, safeTools } = await bundledToolWiring(argv, layout);
   const serve = await cmdServe(layout, {
     store,
     scheduler,
@@ -80,6 +104,8 @@ async function serveCommand(argv: string[]): Promise<void> {
     port,
     host,
     web,
+    toolInvoker,
+    safeTools,
   });
   console.log(`iris serve: listening on ${serve.url} (model=${resolved}${web ? ", web=on" : ""})`);
   if (web) console.log("  GET  /                       — web chat UI (open in a browser)");
@@ -101,7 +127,7 @@ async function serveCommand(argv: string[]): Promise<void> {
 async function chatCommand(argv: string[]): Promise<void> {
   const layout = argv[1];
   if (!layout) {
-    throw new Error("usage: iris chat <layoutdir> --session <id> [--db <path>] [--fake]");
+    throw new Error("usage: iris chat <layoutdir> --session <id> [--db <path>] [--tools <dir>] [--fake]");
   }
   const session = flag(argv, "--session") ?? "default";
   const db = flag(argv, "--db") ?? ":memory:";
@@ -129,10 +155,12 @@ async function chatCommand(argv: string[]): Promise<void> {
   }
   const defDigest = held ?? image.lock.imageDigest;
 
-  // Assemble performers (same shape as cmdRun): default bundle tactics, a
-  // lock-derived tool performer, and a model performer (wrapped Anthropic, or the
-  // deterministic fake when no key / --fake).
-  const bundle = defaultBundle();
+  // Assemble performers (same shape as cmdRun): default bundle tactics (with the
+  // bundled retrySafe tools allow-listed so a read-only tool call doesn't park on
+  // approval), a lock-derived tool performer over the project's subprocess tools,
+  // and a model performer (wrapped Anthropic, or the deterministic fake).
+  const { toolInvoker, safeTools } = await bundledToolWiring(argv, layout);
+  const bundle = defaultBundle({ safeTools });
   const contracts: ToolContract[] = image.lock.tools.map((t) => ({
     name: t.name,
     description: "",
@@ -141,7 +169,7 @@ async function chatCommand(argv: string[]): Promise<void> {
     location: t.location,
     retrySafe: t.retrySafe,
   }));
-  const toolPerformer = makeToolPerformer(makeToolRegistry(contracts), makeToolInvoker({}));
+  const toolPerformer = makeToolPerformer(makeToolRegistry(contracts), toolInvoker);
 
   const hasKey = typeof process.env.ANTHROPIC_API_KEY === "string" && process.env.ANTHROPIC_API_KEY !== "";
   const useFake = forceFake || !hasKey;
@@ -264,15 +292,27 @@ async function deployCommand(argv: string[]): Promise<void> {
 async function main(argv: string[]): Promise<void> {
   const cmd = argv[0];
   switch (cmd) {
-    case "init":
-      await cmdInit(argv[1] ?? ".");
-      console.log("iris: scaffolded agent.json + instructions.md");
+    case "init": {
+      const dir = argv[1] ?? ".";
+      await cmdInit(dir);
+      console.log(`iris: scaffolded ${dir}/ — agent.json, instructions.md, and a bundled tools/now tool`);
+      console.log("next:");
+      console.log(`  cd ${dir}`);
+      console.log("  iris build --file agent.json --out ./image     # compile the agent image");
+      console.log("  iris chat ./image --session s1 --db s1.sqlite --fake   # talk to it (no key needed)");
+      console.log("  (set ANTHROPIC_API_KEY and drop --fake for a real model that calls the now tool)");
       break;
+    }
     case "build": {
+      const file = flag(argv, "--file") ?? "agent.json";
+      // Resolve the project's bundled tools so scaffolded subprocess:// refs
+      // resolve (default tools dir = <agent dir>/tools; --tools overrides).
+      const toolsDir = flag(argv, "--tools") ?? join(dirname(file), "tools");
+      const { resolver } = await loadBundledTools(toolsDir);
       const image = await cmdBuild({
-        file: flag(argv, "--file") ?? "agent.json",
+        file,
         out: flag(argv, "--out") ?? "./image",
-        resolver: makeLocalResolver({}), // real registry resolution is manual
+        resolver, // bundled tools resolve here; a real external registry is manual
       });
       console.log(JSON.stringify({ imageDigest: image.lock.imageDigest }));
       break;
@@ -280,10 +320,14 @@ async function main(argv: string[]): Promise<void> {
     case "inspect":
       console.log(JSON.stringify(await cmdInspect(argv[1]), null, 2));
       break;
-    case "verify":
-      await cmdVerify(argv[1], { resolver: makeLocalResolver({}) });
+    case "verify": {
+      // verify re-resolves tool refs by ref — supply the same bundled resolver.
+      const toolsDir = flag(argv, "--tools") ?? "tools";
+      const { resolver } = await loadBundledTools(toolsDir);
+      await cmdVerify(argv[1], { resolver });
       console.log("iris: verify ok");
       break;
+    }
     case "push":
       await cmdPush(argv[1], argv[2]);
       console.log("iris: pushed (local OCI layout)");

@@ -14,40 +14,54 @@ import {
   cmdPush,
   cmdPull,
   cmdRun,
-} from "@iris/cli";
-import { makeLocalResolver, governingDigest } from "@iris/agent";
+  loadBundledTools,
+} from "iris";
+import { governingDigest } from "@iris/agent";
 import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
 import { TestClock } from "./lib/mem-store.ts";
 import { makeScriptedModel } from "./lib/fake-model.ts";
 
 const tmp = (p: string): Promise<string> => mkdtemp(join(tmpdir(), p));
 
-test("T9 (9a): init scaffolds an agent.json + instructions.md", async () => {
+// The scaffold now ships a bundled `now` tool, so building it needs the resolver
+// loadBundledTools derives from the project's tools/ dir (not an empty resolver).
+const scaffoldResolver = async (src: string) =>
+  (await loadBundledTools(join(src, "tools"))).resolver;
+
+test("T9 (9a): init scaffolds a self-contained project (agent + instructions + bundled tool)", async () => {
   const dir = await tmp("iris-init-");
   await cmdInit(dir);
   const agent = JSON.parse(await readFile(join(dir, "agent.json"), "utf8"));
   assert.equal(agent.apiVersion, "iris/v1");
+  assert.equal(agent.tools[0].ref, "subprocess://now", "scaffold references the bundled tool");
+  assert.equal(agent.requires.local_subprocess, true, "subprocess tool requires local_subprocess");
   assert.equal((await readFile(join(dir, "instructions.md"), "utf8")).length > 0, true);
+  // the bundled tool ships: a runnable script + its descriptor
+  assert.ok((await readFile(join(dir, "tools", "now.mjs"), "utf8")).includes("process.stdin"));
+  const desc = JSON.parse(await readFile(join(dir, "tools", "now.tool.json"), "utf8"));
+  assert.equal(desc.ref, "subprocess://now");
+  assert.equal(desc.exec, "now.mjs");
 });
 
 test("T9 (9a): build → inspect → verify over a local OCI layout", async () => {
   const src = await tmp("iris-src-");
   await cmdInit(src);
   const out = await tmp("iris-out-");
-  const resolver = makeLocalResolver({});
+  const resolver = await scaffoldResolver(src);
   const image = await cmdBuild({ file: join(src, "agent.json"), out, resolver });
   assert.match(image.lock.imageDigest, /^[0-9a-f]{64}$/);
   const info = await cmdInspect(out);
   assert.equal(info.name, "my-agent");
   assert.equal(info.imageDigest, image.lock.imageDigest);
-  await cmdVerify(out, { resolver }); // must not throw
+  assert.equal(info.tools[0].transport, "subprocess", "the bundled tool pins as a subprocess contract");
+  await cmdVerify(out, { resolver }); // must not throw (re-resolves the ref by the same resolver)
 });
 
 test("T9 (9b): push/pull round-trip a local OCI layout dir", async () => {
   const src = await tmp("iris-s-");
   await cmdInit(src);
   const out = await tmp("iris-o-");
-  await cmdBuild({ file: join(src, "agent.json"), out, resolver: makeLocalResolver({}) });
+  await cmdBuild({ file: join(src, "agent.json"), out, resolver: await scaffoldResolver(src) });
   const registry = join(await tmp("iris-reg-"), "img");
   await cmdPush(out, registry);
   const pulledRoot = await tmp("iris-pull-");
@@ -61,7 +75,7 @@ test("T9 (9c): run drives a turn against an in-memory host with a fake model; pi
   const src = await tmp("iris-rs-");
   await cmdInit(src);
   const out = await tmp("iris-ro-");
-  const image = await cmdBuild({ file: join(src, "agent.json"), out, resolver: makeLocalResolver({}) });
+  const image = await cmdBuild({ file: join(src, "agent.json"), out, resolver: await scaffoldResolver(src) });
   const store = new MemoryStateStore();
   const t = await cmdRun(out, {
     sessionId: "s",

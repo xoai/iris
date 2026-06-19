@@ -1,5 +1,5 @@
-// @iris/cli — public surface (the command functions; the bin is cli-main.ts).
-export const PACKAGE = "@iris/cli";
+// iris — public surface (the command functions; the bin is cli-main.ts).
+export const PACKAGE = "iris";
 
 export {
   cmdInit,
@@ -31,3 +31,5 @@ export {
   runChat,
 } from "./chat.ts";
 export type { ChatDeps, StreamSink } from "./chat.ts";
+export { loadBundledTools } from "./tools.ts";
+export type { BundledTools } from "./tools.ts";

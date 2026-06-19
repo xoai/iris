@@ -111,21 +111,22 @@ test("T9: core/src imports neither @iris/tools nor @iris/sandbox", () => {
 });
 
 // T10 (M4) — A1 extends to the image toolchain: @iris/core must import neither
-// @iris/agent nor @iris/cli. Same generic-reason classification as the M3 packages
-// (HOST_DENYLIST lists store|host|channel|provider, not agent/cli — the
-// relative-only catch-all is what bans them).
-test("T10: core/src imports neither @iris/agent nor @iris/cli", () => {
+// @iris/agent nor the `iris` CLI. Same generic-reason classification as the M3
+// packages (HOST_DENYLIST lists store|host|channel|provider, not agent/cli — the
+// relative-only catch-all is what bans them; the unscoped `iris` is banned by the
+// same catch-all, so the rename @iris/cli→iris needs no classifier change).
+test("T10: core/src imports neither @iris/agent nor the iris CLI", () => {
   const specs = specifiersInDir(CORE_SRC).map((r) => r.specifier);
   assert.equal(specs.includes("@iris/agent"), false, "core must not import @iris/agent");
-  assert.equal(specs.includes("@iris/cli"), false, "core must not import @iris/cli");
+  assert.equal(specs.includes("iris"), false, "core must not import the iris CLI");
   assert.notEqual(classifyForbidden("@iris/agent"), null);
-  assert.notEqual(classifyForbidden("@iris/cli"), null);
+  assert.notEqual(classifyForbidden("iris"), null);
   assert.equal(
     classifyForbidden("@iris/agent"),
     "non-relative import (core must be dependency-free)",
   );
   assert.equal(
-    classifyForbidden("@iris/cli"),
+    classifyForbidden("iris"),
     "non-relative import (core must be dependency-free)",
   );
 });

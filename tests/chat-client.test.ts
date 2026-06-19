@@ -16,7 +16,7 @@ import {
   renderOutcome,
   runChat,
   type ChatDeps,
-} from "@iris/cli";
+} from "iris";
 
 // A minimal literal image: the wrapper only reads agentfile.model,
 // agentfile.instructions, and content. `lock` is required by the type but unread.
