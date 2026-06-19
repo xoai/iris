@@ -1,0 +1,14 @@
+node_modules/
+*.log
+*.sqlite
+*.sqlite-journal
+*.sqlite-wal
+*.sqlite-shm
+.iris-tmp/
+
+.sage
+.sage-memory
+.claude
+.mcp.json
+sage
+CLAUDE.md

@@ -1,0 +1,11 @@
+{
+  "name": "@iris/sandbox",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Iris sandbox boundary — SandboxBackend/SandboxSession with a deny-all network floor + credential brokering (secret never enters the sandbox). inmemory backend (unit) + docker backend (manual smoke). Host-side, zero external deps.",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "@iris/core": "*"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "@iris/store-do",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Iris Cloudflare/edge (Durable Objects) host adapter — a StateStore + Scheduler over a narrow DoStorage abstraction (cold-per-turn isolate, DO-alarm-backed durable timer) enforcing the SAME CAS/fencing/hwm/snapshot invariants as the sqlite/fs stores. Install-free: tested against FakeDoStorage; the real isolate is a manual smoke. No @cloudflare/* import.",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "@iris/core": "*"
+  }
+}

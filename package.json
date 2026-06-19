@@ -1,0 +1,23 @@
+{
+  "name": "iris",
+  "private": true,
+  "type": "module",
+  "version": "0.0.1",
+  "description": "Iris — a portable durability runtime for stateful agents (M0 + early-M1 core).",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "workspaces": [
+    "packages/*",
+    "tests"
+  ],
+  "scripts": {
+    "test": "node --test 'tests/**/*.test.ts'",
+    "typecheck": "tsc --noEmit -p tsconfig.base.json"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.3",
+    "typescript": "^6.0.3"
+  }
+}

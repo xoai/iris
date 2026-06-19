@@ -1,0 +1,8 @@
+{
+  "name": "@iris/core",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Iris portable durability core — pure, imports no host/transport/Node-only API.",
+  "exports": "./src/index.ts",
+  "dependencies": {}
+}

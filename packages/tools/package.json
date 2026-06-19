@@ -1,0 +1,11 @@
+{
+  "name": "@iris/tools",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Iris tool boundary — ToolContract + contractDigest, the uniform ToolInvoker, real transports (in-process/subprocess/MCP-stdio/gRPC-over-http2+JSON), and the real tool_call performer. Host-side, zero external deps.",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "@iris/core": "*"
+  }
+}

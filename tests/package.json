@@ -1,0 +1,27 @@
+{
+  "name": "@iris/tests",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Iris test suite — runs on node:test against all packages.",
+  "dependencies": {
+    "@iris/core": "*",
+    "@iris/store-sqlite": "*",
+    "@iris/store-memory": "*",
+    "@iris/store-fs": "*",
+    "@iris/store-do": "*",
+    "@iris/bundle-coding": "*",
+    "@iris/host": "*",
+    "@iris/channel-rest": "*",
+    "@iris/channel-mcp": "*",
+    "@iris/inspect": "*",
+    "@iris/evals": "*",
+    "@iris/observe": "*",
+    "@iris/provider-anthropic": "*",
+    "@iris/demo": "*",
+    "@iris/tools": "*",
+    "@iris/sandbox": "*",
+    "@iris/agent": "*",
+    "@iris/cli": "*"
+  }
+}

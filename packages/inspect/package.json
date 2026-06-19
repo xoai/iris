@@ -1,0 +1,11 @@
+{
+  "name": "@iris/inspect",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Iris journal/decision viewer (ADR-0009 inspect surface) — reads a recorded session (snapshot + journal) from a StateStore and renders the deterministic decision/effect/marker timeline, keyed by the stable sessionId. READ-ONLY; re-derives the governing digest snapshot-safely; never writes. Pure over @iris/core.",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "@iris/core": "*"
+  }
+}

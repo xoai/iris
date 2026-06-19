@@ -1,0 +1,16 @@
+{
+  "name": "@iris/cli",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Iris CLI — iris init/build/inspect/verify/push/pull/run. Command functions over @iris/agent (so they are unit-testable with injected deps) + a zero-dep argv dispatcher. push/pull operate on a local OCI layout (real registry = manual); run drives the existing host adapters.",
+  "exports": "./src/index.ts",
+  "bin": { "iris": "./src/cli-main.ts" },
+  "dependencies": {
+    "@iris/core": "*",
+    "@iris/tools": "*",
+    "@iris/agent": "*",
+    "@iris/store-sqlite": "*",
+    "@iris/provider-anthropic": "*"
+  }
+}

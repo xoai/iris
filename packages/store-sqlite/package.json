@@ -1,0 +1,10 @@
+{
+  "name": "@iris/store-sqlite",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Iris host adapter — StateStore + Scheduler over node:sqlite (DatabaseSync).",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "@iris/core": "*"
+  }
+}

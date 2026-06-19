@@ -1,0 +1,12 @@
+{
+  "name": "@iris/host",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Iris host adapter surface — HostAdapter {name, capabilities, store, scheduler}, runTurnOn (run a turn ON a host's store+scheduler), and checkHostCapabilities (the tool/host-level ADR-0008 refusal). Makes 'same image, different host' explicit for the portability proof. Host-side; zero external deps.",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "@iris/core": "*",
+    "@iris/agent": "*"
+  }
+}

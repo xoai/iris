@@ -1,0 +1,11 @@
+{
+  "name": "@iris/bundle-coding",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Iris first domain tactic bundle — coding-specialized seam tactics (read-only tools allow / writes+shell gated to ask, a tool-loop decideNext, window-compaction + tool-repair) composed HOST-SIDE from @iris/core's exported primitives. Produces the defaultBundle shape {tacticPerformer, invariants}; journaled {seam, tacticId, choice} outcomes inherit the ADR-0007 replay quarantine. @iris/core dependency only; core stays byte-untouched.",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "@iris/core": "*"
+  }
+}
