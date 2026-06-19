@@ -14,8 +14,7 @@ import assert from "node:assert/strict";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { cmdInit, cmdBuild, cmdServe, echoStreamingPerformer } from "@iris/cli";
-import { makeLocalResolver } from "@iris/agent";
+import { cmdInit, cmdBuild, cmdServe, echoStreamingPerformer, loadBundledTools } from "iris";
 import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
 
 function parseSse(text) {
@@ -41,7 +40,8 @@ async function main() {
   const src = await mkdtemp(join(tmpdir(), "iris-web-src-"));
   await cmdInit(src);
   const out = await mkdtemp(join(tmpdir(), "iris-web-out-"));
-  await cmdBuild({ file: join(src, "agent.json"), out, resolver: makeLocalResolver({}) });
+  const resolver = (await loadBundledTools(join(src, "tools"))).resolver;
+  await cmdBuild({ file: join(src, "agent.json"), out, resolver });
 
   const serve = await cmdServe(out, {
     store: new MemoryStateStore(),

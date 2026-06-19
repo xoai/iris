@@ -1,12 +1,33 @@
 {
   "name": "@iris/channel-mcp",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
-  "private": true,
   "description": "Iris MCP-server channel (ADR-0009, MCP dual-use) — the agent exposed AS an MCP server over JSON-RPC 2.0 (stdio). Same two-identifier protocol as channel-rest: the channel mints the sessionId, issues + rotates the continuationToken (atomically single-use), and surfaces every failure as a loud JSON-RPC error. A real MCP stdio client is a manual smoke.",
-  "exports": "./src/index.ts",
+  "exports": {
+    ".": {
+      "iris-src": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "dependencies": {
-    "@iris/core": "*",
-    "@iris/host": "*"
-  }
+    "@iris/core": "^0.1.0",
+    "@iris/host": "^0.1.0"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xoai/iris.git",
+    "directory": "packages/channel-mcp"
+  },
+  "homepage": "https://github.com/xoai/iris#readme",
+  "files": [
+    "dist"
+  ]
 }

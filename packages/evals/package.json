@@ -1,12 +1,33 @@
 {
   "name": "@iris/evals",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
-  "private": true,
   "description": "Iris reproducible-eval arbiter (spec 03 §7) — run a deterministic scenario (fresh store + scripted performers per run), then score the recorded session via @iris/inspect. The arbiter is reproducibility, not taste: the same case+scorer re-runs byte-identically; a swapped tactic scores differently but reproducibly. Runner is core runTurn; deps @iris/core + @iris/inspect.",
-  "exports": "./src/index.ts",
+  "exports": {
+    ".": {
+      "iris-src": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "dependencies": {
-    "@iris/core": "*",
-    "@iris/inspect": "*"
-  }
+    "@iris/core": "^0.1.0",
+    "@iris/inspect": "^0.1.0"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xoai/iris.git",
+    "directory": "packages/evals"
+  },
+  "homepage": "https://github.com/xoai/iris#readme",
+  "files": [
+    "dist"
+  ]
 }

@@ -9,8 +9,7 @@ import assert from "node:assert/strict";
 import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { cmdInit, cmdBuild, cmdDeploy } from "@iris/cli";
-import { makeLocalResolver } from "@iris/agent";
+import { cmdInit, cmdBuild, cmdDeploy, loadBundledTools } from "iris";
 
 const tmp = (p: string): Promise<string> => mkdtemp(join(tmpdir(), p));
 
@@ -30,22 +29,30 @@ function captureFs() {
   };
 }
 
-async function buildImage(requires?: Record<string, unknown>) {
+// Build an image from the scaffold, optionally overriding `requires` and/or
+// `tools`. The default scaffold now ships a LOCAL subprocess tool (so the edge
+// gate refuses it — see the second test); the deploy-success test overrides to a
+// remote, tool-less image. The resolver is derived from the scaffold's tools/ dir
+// so the bundled `subprocess://now` ref resolves when present.
+async function buildImage(overrides?: { requires?: Record<string, unknown>; tools?: unknown[] }) {
   const src = await tmp("iris-deploy-src-");
   await cmdInit(src);
-  if (requires) {
+  if (overrides) {
     const agentPath = join(src, "agent.json");
     const agent = JSON.parse(await readFile(agentPath, "utf8")) as Record<string, unknown>;
-    agent.requires = requires;
+    if (overrides.requires) agent.requires = overrides.requires;
+    if (overrides.tools !== undefined) agent.tools = overrides.tools;
     await writeFile(agentPath, JSON.stringify(agent, null, 2));
   }
   const out = await tmp("iris-deploy-oci-");
-  const image = await cmdBuild({ file: join(src, "agent.json"), out, resolver: makeLocalResolver({}) });
+  const resolver = (await loadBundledTools(join(src, "tools"))).resolver;
+  const image = await cmdBuild({ file: join(src, "agent.json"), out, resolver });
   return { out, image };
 }
 
 test("A1: a remote-only image scaffolds a valid Cloudflare Worker project (no network)", async () => {
-  const { out, image } = await buildImage(); // default scaffold: requires.tool_locality "remote"
+  // the default scaffold is LOCAL (subprocess tool); a deployable image is remote + tool-less
+  const { out, image } = await buildImage({ requires: { tool_locality: "remote" }, tools: [] });
   const fs = captureFs();
   const dest = await tmp("iris-deploy-out-");
   const result = await cmdDeploy(out, {
@@ -80,7 +87,7 @@ test("A1: a remote-only image scaffolds a valid Cloudflare Worker project (no ne
 });
 
 test("A1: an image demanding local_subprocess tools is REFUSED (ADR-0008) and writes ZERO files", async () => {
-  const { out } = await buildImage({ local_subprocess: true, tool_locality: "local" });
+  const { out } = await buildImage(); // the DEFAULT scaffold ships a local subprocess tool
   const fs = captureFs();
   const dest = await tmp("iris-deploy-out-");
 

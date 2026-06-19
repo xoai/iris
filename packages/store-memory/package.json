@@ -1,10 +1,32 @@
 {
   "name": "@iris/store-memory",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "Iris in-memory host adapter — a real StateStore + Scheduler that enforces CAS/fencing/hwm (store B for cross-store resume; fast unit store). Not a determinism bypass.",
-  "exports": "./src/index.ts",
+  "exports": {
+    ".": {
+      "iris-src": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "dependencies": {
-    "@iris/core": "*"
-  }
+    "@iris/core": "^0.1.0"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xoai/iris.git",
+    "directory": "packages/store-memory"
+  },
+  "homepage": "https://github.com/xoai/iris#readme",
+  "files": [
+    "dist"
+  ]
 }

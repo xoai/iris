@@ -1,11 +1,32 @@
 {
   "name": "@iris/tools",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
-  "private": true,
   "description": "Iris tool boundary — ToolContract + contractDigest, the uniform ToolInvoker, real transports (in-process/subprocess/MCP-stdio/gRPC-over-http2+JSON), and the real tool_call performer. Host-side, zero external deps.",
-  "exports": "./src/index.ts",
+  "exports": {
+    ".": {
+      "iris-src": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "dependencies": {
-    "@iris/core": "*"
-  }
+    "@iris/core": "^0.1.0"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xoai/iris.git",
+    "directory": "packages/tools"
+  },
+  "homepage": "https://github.com/xoai/iris#readme",
+  "files": [
+    "dist"
+  ]
 }

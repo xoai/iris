@@ -1,11 +1,32 @@
 {
   "name": "@iris/sandbox",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
-  "private": true,
   "description": "Iris sandbox boundary — SandboxBackend/SandboxSession with a deny-all network floor + credential brokering (secret never enters the sandbox). inmemory backend (unit) + docker backend (manual smoke). Host-side, zero external deps.",
-  "exports": "./src/index.ts",
+  "exports": {
+    ".": {
+      "iris-src": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "dependencies": {
-    "@iris/core": "*"
-  }
+    "@iris/core": "^0.1.0"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xoai/iris.git",
+    "directory": "packages/sandbox"
+  },
+  "homepage": "https://github.com/xoai/iris#readme",
+  "files": [
+    "dist"
+  ]
 }

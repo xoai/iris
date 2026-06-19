@@ -8,8 +8,7 @@ import assert from "node:assert/strict";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { cmdInit, cmdBuild, cmdServe, echoStreamingPerformer, type ServeHandle } from "@iris/cli";
-import { makeLocalResolver } from "@iris/agent";
+import { cmdInit, cmdBuild, cmdServe, echoStreamingPerformer, loadBundledTools, type ServeHandle } from "iris";
 import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
 
 const tmp = (p: string): Promise<string> => mkdtemp(join(tmpdir(), p));
@@ -18,7 +17,9 @@ async function buildAndServe(web = false): Promise<ServeHandle> {
   const src = await tmp("iris-serve-src-");
   await cmdInit(src);
   const out = await tmp("iris-serve-out-");
-  await cmdBuild({ file: join(src, "agent.json"), out, resolver: makeLocalResolver({}) });
+  // the scaffold ships a bundled tool → build with its discovered resolver
+  const resolver = (await loadBundledTools(join(src, "tools"))).resolver;
+  await cmdBuild({ file: join(src, "agent.json"), out, resolver });
   return cmdServe(out, {
     store: new MemoryStateStore(),
     scheduler: new MemoryScheduler(),

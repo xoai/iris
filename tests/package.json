@@ -22,6 +22,6 @@
     "@iris/tools": "*",
     "@iris/sandbox": "*",
     "@iris/agent": "*",
-    "@iris/cli": "*"
+    "iris": "*"
   }
 }

@@ -1,10 +1,32 @@
 {
   "name": "@iris/provider-anthropic",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "description": "Iris model_call performer — direct Anthropic Messages adapter via built-in fetch (zero deps). Real adapter runs only with ANTHROPIC_API_KEY; tests use a fake fetch / fake model.",
-  "exports": "./src/index.ts",
+  "exports": {
+    ".": {
+      "iris-src": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "dependencies": {
-    "@iris/core": "*"
-  }
+    "@iris/core": "^0.1.0"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xoai/iris.git",
+    "directory": "packages/provider-anthropic"
+  },
+  "homepage": "https://github.com/xoai/iris#readme",
+  "files": [
+    "dist"
+  ]
 }
