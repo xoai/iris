@@ -6,8 +6,6 @@
 
 Iris is a portable runtime for durable AI agents — built so an agent is never locked to a single host, model, or vendor. You declare an agent as a config file plus a folder (instructions, tools, skills, channels), and `iris build` compiles it into an open, content-addressed image: the unit you version, push to any OCI registry, and run anywhere.
 
-At runtime, a session is an event-sourced journal — every model call, tool result, and timer is checkpointed *before* it runs, so live state is a deterministic replay of the log, not a process you hold open. That makes a session durable across crashes **and portable across hosts**: pause it on a VPS, resume it in a serverless function or an edge isolate, mid-task and byte-for-byte identical, against any LLM and over any channel. The harness ships with it — tool-calling, human-in-the-loop gates, context compaction, idempotent retries, resumable long-running work — and every decision is journaled, so replay never diverges.
-
 **[Features](#key-features)** · **[When to use](#when-to-use-iris)** · **[Compare](#how-iris-compares)** · **[Authoring](#the-agent-is-a-directory)** · **[Install](#install)** · **[Quick start](#quick-start)** · **[How it works](#how-it-works)** · **[Packages](#whats-inside)** · **[Status](#status)**
 
 > **New here?** This README is the manifesto — *why* Iris exists. For a guided
@@ -299,10 +297,11 @@ The same image runs on any host that implements the two ports. Each adapter enfo
                        │
                        ▼
   ┌──────────────────────  @iris/core  (pure)  ──────────────────────┐
-  │  harness kernel  →  seams  →  tactics (default / coding bundle)   │
-  │  effect engine   →  checkpoint-before-effect                      │
-  │  journal  →  replay + always-on assertion  →  snapshot            │
-  └──────┬────────────────────────────────────────────────────┬──────┘
+  │  harness kernel  →  seams  →  tactics (default / coding bundle)  │
+  │  effect engine   →  checkpoint-before-effect                     │
+  │  journal  →  replay + always-on assertion  →  snapshot           │
+  └──────┬─────────────────────────────────────────────────────┬─────┘
+         │                                                     │
    StateStore (CAS + fencing)                          Scheduler (wakeup)
          │                                                     │
          ▼                                                     ▼
