@@ -11,6 +11,7 @@ export {
   cmdRun,
   cmdServe,
   cmdDeploy,
+  governancePerformers,
 } from "./iris.ts";
 export type {
   CliBuildOptions,
