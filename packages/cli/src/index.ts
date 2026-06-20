@@ -28,6 +28,15 @@ export { loadSubagents } from "./subagents-cfg.ts";
 export type { SubagentEntry, SubagentsConfig } from "./subagents-cfg.ts";
 export { cmdAudit } from "./audit-cmd.ts";
 export type { CliAuditOptions } from "./audit-cmd.ts";
+export { cmdJournalExport, cmdJournalVerify, cmdJournalImport } from "./journal-cmd.ts";
+export type {
+  CliJournalExportOptions,
+  CliJournalExportResult,
+  CliJournalVerifyOptions,
+  CliJournalVerifyResult,
+  CliJournalImportOptions,
+  CliJournalImportResult,
+} from "./journal-cmd.ts";
 export { cmdEval, loadEvalSuite } from "./eval-cmd.ts";
 export type { EvalSuite, CmdEvalOptions, CmdEvalResult } from "./eval-cmd.ts";
 export { cmdSchedule } from "./schedule-cmd.ts";

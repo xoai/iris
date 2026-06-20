@@ -2,7 +2,7 @@
   "name": "@irisrun/provider-anthropic",
   "version": "0.1.0",
   "type": "module",
-  "description": "Iris model_call performer — direct Anthropic Messages adapter via built-in fetch (zero deps). Real adapter runs only with ANTHROPIC_API_KEY; tests use a fake fetch / fake model.",
+  "description": "Vendor-neutral, replay-safe model adapter — the Anthropic model_call performer behind Iris's portable model port; swap providers without touching the agent, and the captured reply replays byte-identically from the journal. Direct Anthropic Messages over built-in fetch (zero deps). Real adapter runs only with ANTHROPIC_API_KEY; tests use a fake fetch / fake model.",
   "exports": {
     ".": {
       "iris-src": "./src/index.ts",

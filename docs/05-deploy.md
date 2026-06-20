@@ -1,8 +1,10 @@
 # 05 — Deploy
 
-Portability is only a selling point once *one* host is turnkey. That host is
-**Cloudflare Durable Objects** — a cold edge isolate per turn is the most vivid
-"resume somewhere else" demo Iris has.
+The payoff of owning your state as a portable journal: the **same image resumes
+the same session on a completely different host** — byte-identically, mid-task.
+This chapter makes that turnkey on one real host, **Cloudflare Durable Objects**,
+where a cold edge isolate per turn is the most vivid "resume somewhere else" proof
+Iris has. Cloudflare is the demo; the portability is the point.
 
 ## Scaffold an edge project
 

@@ -14,6 +14,7 @@
   ],
   "scripts": {
     "test": "NODE_OPTIONS=--conditions=iris-src node --test 'tests/**/*.test.ts'",
+    "demo:cross-host": "NODE_OPTIONS=--conditions=iris-src node tests/manual/cross-host-journal-demo.ts",
     "typecheck": "tsc --noEmit -p tsconfig.base.json",
     "build": "node scripts/build.mjs",
     "version:set": "node scripts/version.mjs",

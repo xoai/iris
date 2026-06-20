@@ -2,7 +2,7 @@
   "name": "@irisrun/channel-rest",
   "version": "0.1.0",
   "type": "module",
-  "description": "Iris in-process REST channel (ADR-0009) over node:http — the two-identifier protocol: the channel MINTS sessionId and OWNS/ISSUES the continuationToken; every turn rotates the token, and a missing/stale/malformed token is refused with a loud 4xx (never a silent 200). A real external HTTP deploy is a manual smoke.",
+  "description": "Durable, replay-safe HTTP sessions — the in-process REST channel (ADR-0009) over node:http with live SSE + hand-rolled zero-dep WebSocket streaming. Owns the two-identifier protocol: the channel MINTS the sessionId and OWNS/ISSUES a single-use continuationToken, rotated every committed turn, so a missing/stale/malformed token is refused with a loud 4xx (never a silent 200). A real external HTTP deploy is a manual smoke.",
   "exports": {
     ".": {
       "iris-src": "./src/index.ts",

@@ -155,4 +155,4 @@ what really ran. Here, the record **is** the execution. That's the moat.
 For the full positioning and status, see the [project README](../README.md)
 (this is roadmap item P2-8 — auditability + reproducible evals as the product).
 
-**Next → [Back to the funnel index](./README.md)**
+**Next → [09 — Verifiable portable journals](./09-verifiable-journal.md)**
