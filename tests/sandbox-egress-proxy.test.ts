@@ -202,6 +202,35 @@ test("egress-proxy: close() releases the port (a fresh listener rebinds)", async
   });
 });
 
+test("egress-proxy: close() tears down an active CONNECT tunnel's upstream socket (no fd leak)", async () => {
+  const accepted: net.Socket[] = [];
+  const target = net.createServer((sock) => accepted.push(sock));
+  await new Promise<void>((r) => target.listen(0, "127.0.0.1", () => r()));
+  const tport = (target.address() as net.AddressInfo).port;
+  const proxy = await startEgressProxy({ policy: { allow: ["127.0.0.1"] }, host: "127.0.0.1" });
+  // open a CONNECT tunnel and KEEP it open
+  const client = http.request({ method: "CONNECT", host: "127.0.0.1", port: proxy.port, path: `127.0.0.1:${tport}` });
+  const clientSock: net.Socket = await new Promise((resolve) => {
+    client.on("connect", (_res, socket) => resolve(socket));
+    client.end();
+  });
+  // wait until the target has accepted the proxy's upstream connection
+  await new Promise<void>((resolve) => {
+    const i = setInterval(() => {
+      if (accepted.length) {
+        clearInterval(i);
+        resolve();
+      }
+    }, 5);
+  });
+  // resolves ONLY if close() actually destroyed the upstream tunnel socket
+  const upstreamClosed = new Promise<void>((resolve) => accepted[0].once("close", () => resolve()));
+  await proxy.close();
+  await upstreamClosed;
+  clientSock.destroy();
+  await new Promise<void>((r) => target.close(() => r()));
+});
+
 test("egress-proxy: a POST body is piped to upstream intact, alongside the brokered credential", async () => {
   const up = await makeUpstream();
   const broker = makeCredentialBroker({ API_KEY: SECRET });

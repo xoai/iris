@@ -51,13 +51,20 @@ function parseTarget(req: http.IncomingMessage): { host: string; port: number; p
     const u = new URL(rawUrl);
     return {
       host: u.hostname,
-      port: u.port ? Number(u.port) : 80,
+      port: u.port ? Number(u.port) : u.protocol === "https:" ? 443 : 80,
       path: `${u.pathname}${u.search}` || "/",
     };
   }
+  // Host-header fallback — parse via URL so a ported host and IPv6 (`[::1]:8080`)
+  // are handled the same way as the absolute-form path above (a bare `split(":")`
+  // mangles IPv6).
   const hostHeader = String(req.headers.host ?? "");
-  const [h, p] = hostHeader.split(":");
-  return { host: h ?? "", port: p ? Number(p) : 80, path: rawUrl || "/" };
+  try {
+    const u = new URL(`http://${hostHeader}`);
+    return { host: u.hostname, port: u.port ? Number(u.port) : 80, path: rawUrl || "/" };
+  } catch {
+    return { host: hostHeader, port: 80, path: rawUrl || "/" };
+  }
 }
 
 export function startEgressProxy(opts: EgressProxyOptions): Promise<EgressProxyHandle> {
@@ -136,6 +143,10 @@ export function startEgressProxy(opts: EgressProxyOptions): Promise<EgressProxyH
       upstream.pipe(clientSocket);
       clientSocket.pipe(upstream);
     });
+    // Track the upstream tunnel socket so close() tears it down too — it is not a
+    // server `connection`, so it would otherwise outlive a proxy shutdown (fd leak).
+    sockets.add(upstream);
+    upstream.on("close", () => sockets.delete(upstream));
     upstream.on("error", () => {
       if (!clientSocket.destroyed) {
         clientSocket.write("HTTP/1.1 502 Bad Gateway\r\n\r\n");
