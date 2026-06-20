@@ -1,4 +1,4 @@
-// The durability engine: runTurn (spec §6; framework Spec 00 §turn). Acquire
+// The durability engine: runTurn. Acquire
 // lease → replay → recover → step/effect/wait/finish, checkpoint-before-effect
 // with the replay-consistency assertion after every committed step. No I/O of
 // its own — store, scheduler, clock, and performers are all injected.
@@ -52,9 +52,9 @@ export interface EngineDeps<S extends Json> {
   defDigest: string;
   holderId: string;
   assertReplay?: boolean; // default true (dev/test) — set by the runner from IRIS_ASSERT
-  snapshotThreshold?: number; // default 64 (spec §3.7)
+  snapshotThreshold?: number; // default 64
   keepHistory?: boolean; // if true, do not truncate the journal after a snapshot
-  maxStepsPerTurn?: number; // default 10000 — safety guard (kernel cap lands in M2)
+  maxStepsPerTurn?: number; // default 10000 — safety guard
   onWarn?: (message: string) => void; // surfaces retry-unsafe recovery, etc.
   // Read-only, post-commit observer. Fires once per NEWLY committed journal
   // record, in seq order, with a DEEP COPY (never the live `tail` reference) so a
@@ -103,7 +103,7 @@ async function performEffect(
 }
 
 // The trailing effect_intent whose effectId has no effect_result anywhere —
-// i.e. recovery is needed (spec §3.5). Returns null otherwise.
+// i.e. recovery is needed. Returns null otherwise.
 function danglingIntent(tail: JournalRecord[]): EffectIntent | null {
   const results = new Set<string>();
   for (const r of tail) {
@@ -149,7 +149,7 @@ export async function runTurn<S extends Json>(
     state = replay(snapState, tail, program.reducer);
     // seq cursor = authoritative STORE row seq (the store's position is the
     // source of truth, not a record's self-reported seq). Empty-tail fallback =
-    // snapUpTo (spec §6) — never -1 when a snapshot exists.
+    // snapUpTo — never -1 when a snapshot exists.
     let seq = rows.length ? rows[rows.length - 1].seq : snapUpTo;
     let lastSnapshotSeq = snapUpTo;
 
@@ -197,7 +197,7 @@ export async function runTurn<S extends Json>(
       }
     };
 
-    // RECOVERY (spec §3.5): re-perform a dangling intent exactly once. effectId
+    // RECOVERY: re-perform a dangling intent exactly once. effectId
     // is READ FROM THE STORED INTENT — never recomputed.
     const dangling = danglingIntent(tail);
     if (dangling) {
@@ -248,10 +248,10 @@ export async function runTurn<S extends Json>(
         assertNow();
 
         // snapshot ONLY after a complete effect — never bisecting intent/result.
-        // (Spec §6 also allows snapshotting after a marker; in this slice the
+        // (Snapshotting after a marker is also allowed; in this slice the
         // only markers — wait/finish — terminate the turn, so there is no
-        // mid-turn marker continuation to snapshot. Revisit when M2 adds
-        // mid-turn decision/marker steps.)
+        // mid-turn marker continuation to snapshot. Revisit when
+        // mid-turn decision/marker steps are added.)
         if (shouldSnapshot(seq, lastSnapshotSeq, snapshotThreshold)) {
           await store.writeSnapshot(sessionId, seq, encode(state));
           if (!deps.keepHistory) await store.truncateJournal(sessionId, seq);

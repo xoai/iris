@@ -1,5 +1,5 @@
 // FakeDoStorage — the in-suite stand-in for Cloudflare's DurableObjectState
-// .storage (spec §2.1). An in-memory Map<string,Uint8Array> with:
+// .storage. An in-memory Map<string,Uint8Array> with:
 //   • get/put/delete/list({prefix}) (list returns sorted keys, mirroring the
 //     journal-order read the DoStateStore relies on),
 //   • a REAL serialized transaction(): a promise-chain mutex so two concurrent

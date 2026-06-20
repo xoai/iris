@@ -1,4 +1,4 @@
-// Session pinning + definition migration (spec §3.7, ADR-0002/0004) — ZERO engine
+// Session pinning + definition migration — ZERO engine
 // change. A session pins the image digest as its governing `defDigest` (the engine
 // already stamps every record). Pinning/migration ride the EXISTING per-record
 // defDigest + the `upgraded` marker; this module uses only the StateStore port +
@@ -50,7 +50,7 @@ const TURN_TERMINAL_MARKERS = new Set(["wait", "finish"]);
 
 /**
  * Migrate a LIVE session's pinned definition `from`→`to` at a turn boundary
- * (ADR-0004 hold-and-migrate). Appends an `upgraded {from,to,atTurn}` marker
+ * (hold-and-migrate). Appends an `upgraded {from,to,atTurn}` marker
  * stamped with `defDigest: to`; subsequent turns run with `defDigest = to`. Refuses
  * LOUDLY when the session has not started, is mid-turn, or its governing digest is
  * not `from`. `atTurn` = the boundary journal sequence (the engine emits no

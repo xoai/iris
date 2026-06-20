@@ -1,4 +1,4 @@
-// MCP-stdio transport (spec §3.3): a minimal MCP client over stdio. Spawn the
+// MCP-stdio transport: a minimal MCP client over stdio. Spawn the
 // server child; speak newline-delimited JSON-RPC 2.0 — `initialize`, then the
 // `notifications/initialized` notification, then `tools/call {name, arguments}`.
 // Map the result (`isError` / JSON-RPC `error`) to a ToolResult. Host-side

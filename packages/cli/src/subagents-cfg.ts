@@ -1,4 +1,4 @@
-// Subagent discovery (roadmap P2-9) — scan an agent project's optional `subagents.json`
+// Subagent discovery — scan an agent project's optional `subagents.json`
 // for delegate-tool → child-image declarations, mirroring loadBundledTools (`tools/`).
 // This is the seam that makes subagent DELEGATION reachable from the CLI: a tool NAME
 // listed here is dispatched by the kernel as a `subagent` effect (a child agent run),

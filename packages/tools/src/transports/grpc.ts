@@ -1,6 +1,6 @@
-// gRPC transport over node:http2 (spec §3.3): POST /<svc>/<method> with real
+// gRPC transport over node:http2: POST /<svc>/<method> with real
 // gRPC length-prefix framing (1 compression byte = 0, 4-byte big-endian length,
-// then the message) and a pluggable codec. The JSON codec keeps M3 zero-dep;
+// then the message) and a pluggable codec. The JSON codec keeps it zero-dep;
 // protobuf is a future codec behind the same `GrpcCodec` seam. The in-process
 // round-trip proves framing + codec — NOT protobuf interop (manual-only).
 // Host-side (node:http2).

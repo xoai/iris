@@ -1,4 +1,4 @@
-// Pure replay (spec §3.2, §3.5; framework Spec 01 §2). Reconstruct state by
+// Pure replay. Reconstruct state by
 // folding a journal suffix through the program's reducer. No I/O, no clock, no
 // RNG — a pure function of (snapshot, suffix, reducer).
 import type { Json } from "./json.ts";
@@ -9,7 +9,7 @@ export type Reducer<S extends Json> = (state: S, record: JournalRecord) => S;
 /**
  * Fold `suffix` over `snapshot`.
  *
- * Rules (spec §3.5):
+ * Rules:
  * - Every record (including `effect_intent`, which the reducer treats as a
  *   no-op) is folded, so replay sees the IDENTICAL record stream as live.
  * - At most ONE `effect_result` per `effectId` is folded (first wins); later

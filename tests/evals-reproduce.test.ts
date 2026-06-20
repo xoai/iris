@@ -1,4 +1,4 @@
-// P2-8 M3 — reproduce(): an explicit, provable reproducibility check for evals.
+// reproduce(): an explicit, provable reproducibility check for evals.
 // Runs an EvalCase N independent times and proves byte-identical {score, status,
 // full-journal digest} across runs. A deterministic case → reproducible:true; a case
 // with an in-process leak (model content that drifts per build()) → reproducible:false

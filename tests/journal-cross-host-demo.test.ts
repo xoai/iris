@@ -1,9 +1,9 @@
 // T6: the cross-host resume demo runs end-to-end, install-free and deterministic.
 // Importing runCrossHostDemo also pulls the demo file into `npm run typecheck`
-// (tsc follows imports past tsconfig's tests/manual exclude).
+// (tsc follows imports past tsconfig's tests/examples exclude).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { runCrossHostDemo } from "./manual/cross-host-journal-demo.ts";
+import { runCrossHostDemo } from "./examples/cross-host-journal-demo.ts";
 
 test("session migrates fs → sqlite → edge(DO), self-verifies at every hop, finishes byte-identical to control", async () => {
   const r = await runCrossHostDemo();

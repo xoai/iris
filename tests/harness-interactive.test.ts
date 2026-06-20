@@ -1,4 +1,4 @@
-// Interactive (chat) harness mode (ADR-0007). A GATED `interactive` flag turns the
+// Interactive (chat) harness mode. A GATED `interactive` flag turns the
 // one-shot harness into a durable multi-turn conversation: each user message is
 // ingested via a `user_recv` effect (its value supplied per-turn by a performer,
 // so it is journaled and replay-deterministic), the conversation accumulates in
@@ -230,7 +230,7 @@ test("interactive: a user_recv value without string content throws loudly", asyn
   );
 });
 
-// ── 7. Interactive × tool loop (spec §5.6) ──────────────────────────────────
+// ── 7. Interactive × tool loop ──────────────────────────────────────────────
 
 const ONE_TOOL_THEN_DONE: Json[] = [
   { role: "assistant", content: "tool", toolCalls: [{ callId: "a", name: "rm", args: {} }], stopReason: "tool_use" },

@@ -1,8 +1,8 @@
-// Task 1 (M2): a seam consultation IS an effect (effectKind "tactic") performed
+// Task 1: a seam consultation IS an effect (effectKind "tactic") performed
 // via the existing PerformerRegistry — ZERO engine change. Mirrors
 // model-effect.test.ts / model-recovery.test.ts: the engine's generic effect
 // path journals intent+result, resume + replay never re-invoke the performer
-// (ADR-0007 quarantine), and danglingIntent recovery re-performs exactly once.
+// (the replay quarantine), and danglingIntent recovery re-performs exactly once.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { runTurn, replay, canonicalize, decode, encode, acquireLease } from "@irisrun/core";

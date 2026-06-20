@@ -1,4 +1,4 @@
-// DoScheduler — a Scheduler (spec §2.3) over a Cloudflare Durable Object's
+// DoScheduler — a Scheduler over a Cloudflare Durable Object's
 // storage + alarm, under the edge cold-per-isolate model: no held process. A
 // timer/signal is a record under `_wake/`; the durable wakeup is the DO ALARM
 // (storage.setAlarm). Mirrors FsScheduler's conformance: dueWakeups PEEKS
@@ -44,7 +44,7 @@ function decodeRec<T>(bytes: Uint8Array): T {
   return JSON.parse(TD.decode(bytes)) as T;
 }
 // Web-standard base64 (btoa is a global on Node 24 AND the edge isolate) — no Node
-// `Buffer`, so the edge adapter needs no `nodejs_compat` flag (the M6 portability claim).
+// `Buffer`, so the edge adapter needs no `nodejs_compat` flag (the portability claim).
 function toB64(bytes: Uint8Array): string {
   let s = "";
   for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);

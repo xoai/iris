@@ -1,4 +1,4 @@
-// T7 — session pinning + hold (spec §3.7). Builds a REAL parked runTurn journal,
+// T7 — session pinning + hold. Builds a REAL parked runTurn journal,
 // then asserts governingDigest reads the pin, a never-started session is null, and
 // a live session HOLDS its pin while a new session adopts a new image digest.
 import { test } from "node:test";

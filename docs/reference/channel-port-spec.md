@@ -7,7 +7,7 @@ conformance suite (`tests/lib/channel-port-conformance.ts`) that any channel mus
 pass — `channel-rest`, `channel-mcp`, and `channel-slack` all run it.
 
 > Like the [verifiable-journal spec](./verifiable-journal-spec.md), this is a
-> reference document, not a tutorial — start at [04 — Channels](../04-channels.md).
+> reference document, not a tutorial — start at [Channels](../channels.md).
 
 ## The two identifiers
 
@@ -83,3 +83,7 @@ A channel passes the port conformance suite iff it: mints on START; rotates on a
 committed continue; refuses stale/missing/unknown loudly; keeps the prior token on
 `contended` and `aborted`; and enforces single-use under concurrency. Passing the
 suite is the definition of a first-class Iris channel.
+
+---
+
+Back to the **[Channels chapter](../channels.md)** · the **[bridge pattern](./bridge-pattern.md)** · the **[project README](../../README.md)**.

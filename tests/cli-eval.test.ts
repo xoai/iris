@@ -1,4 +1,4 @@
-// C2 (roadmap P2-8) — `iris eval`: the testable command logic + the suite loader.
+// C2 — `iris eval`: the testable command logic + the suite loader.
 // Proves (1) the dynamic-import-of-a-user-`.mjs`-suite path works under the repo's
 // `--conditions=iris-src` ESM setup (the loader is new surface — this is its proof,
 // so the fixture is a REAL on-disk .mjs imported by file:// URL, never in-memory);

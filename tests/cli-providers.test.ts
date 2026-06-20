@@ -83,7 +83,7 @@ test("loadModelProvider('anthropic') loads the Anthropic package and routes to i
   assert.match(cap.url ?? "", /\/v1\/messages$/, "routed to the Anthropic endpoint");
 });
 
-// §9: --base-url (deploy-time endpoint override) flows through the seam to the
+// --base-url (deploy-time endpoint override) flows through the seam to the
 // performer, redirecting WHERE the protocol's request is sent — the mechanism behind
 // `iris run/serve/chat --base-url`. The model-id prefix still selects the protocol.
 test("loadModelProvider forwards baseUrl to the buffered performer (deploy-time endpoint override)", async () => {
@@ -106,11 +106,11 @@ test("loadModelProvider forwards baseUrl to the streaming performer too", async 
   assert.equal(cap.url, custom, "the streaming Anthropic-protocol request was redirected");
 });
 
-// §9 (Gate-3 follow-up): pin the THREE cli-main `--base-url` call sites. The seam tests
+// (Gate-3 follow-up): pin the THREE cli-main `--base-url` call sites. The seam tests
 // above prove baseUrl is forwarded to the performer; this guards the cli-main wiring
 // (run/serve/chat) — a regression dropping baseUrl from any provider.buffered/streaming
 // construction would otherwise pass unnoticed. Source-assertion, like docs-funnel.
-test("§9: every provider.buffered/streaming construction in cli-main passes baseUrl", () => {
+test("every provider.buffered/streaming construction in cli-main passes baseUrl", () => {
   const cliMain = readFileSync(
     join(dirname(fileURLToPath(import.meta.url)), "..", "packages", "cli", "src", "cli-main.ts"),
     "utf8",

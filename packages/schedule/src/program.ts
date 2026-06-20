@@ -1,4 +1,4 @@
-// scheduleProgram (P2-9, spec §5.1): a recurring job as a pure, durable Program. Each cycle
+// scheduleProgram: a recurring job as a pure, durable Program. Each cycle
 // reads the logical clock (a journaled `clock` effect), runs ONE job effect, and parks on a
 // durable timer at `now + intervalTicks`; on the next wake it loops. Cadence derives ONLY
 // from journaled clock results (never `record.ts`), so the whole schedule replays

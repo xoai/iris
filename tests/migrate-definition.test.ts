@@ -1,4 +1,4 @@
-// T8 — hold-and-migrate (spec §3.7, ADR-0004), against a REAL runTurn journal (not
+// T8 — hold-and-migrate, against a REAL runTurn journal (not
 // a synthetic fixture). engine.ts is byte-untouched: migration appends the EXISTING
 // `upgraded` marker host-side; the marker folds to a reducer state no-op so replay
 // stays byte-consistent across the migration.

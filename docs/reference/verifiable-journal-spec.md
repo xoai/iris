@@ -3,7 +3,7 @@
 > Status: stable. Format `iris-journal-export`, version `1`, algorithm
 > `sha256/iris-journal-v1`. Reproducible in any language from this document
 > alone. See also the [threat model](./threat-model.md) and the
-> [funnel chapter](../09-verifiable-journal.md).
+> [funnel chapter](../verifiable-journal.md).
 
 An Iris session is an event-sourced journal: every nondeterministic input (the
 model call, tool calls, the clock) is recorded as an effect, and replay reads the
@@ -163,4 +163,4 @@ iris journal import --in <file> --store <db>
 ---
 
 Read next: **[the threat model](./threat-model.md)** — what this does and does not
-prove. Back to the **[funnel](../09-verifiable-journal.md)**.
+prove. Back to the **[funnel](../verifiable-journal.md)**.

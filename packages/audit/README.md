@@ -21,7 +21,7 @@ model deterministic. Depends on `@irisrun/core` + `@irisrun/auth` only.
 iris audit s1 --db /tmp/s1.sqlite    # a replay-verified, compliance-grade trail for session s1
 ```
 
-See **[docs/08 — Audit & reproducible evals](../../docs/08-audit-and-evals.md)**.
+See **[docs/Audit & reproducible evals](../../docs/audit-and-evals.md)**.
 
 ---
 Part of [Iris](../../README.md) — own, portable, verifiable state.

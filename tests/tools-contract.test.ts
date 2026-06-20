@@ -25,7 +25,7 @@ test("T1: contractDigest is deterministic over the model surface (key order irre
   assert.match(a, /^[0-9a-f]{64}$/);
 });
 
-// T1 — transport/location/retrySafe do NOT change the digest (they float, ADR-0004).
+// T1 — transport/location/retrySafe do NOT change the digest (they float).
 test("T1: transport/location/retrySafe changes do NOT change the digest", () => {
   const d = contractDigest(base);
   assert.equal(contractDigest({ ...base, transport: "mcp" }), d);

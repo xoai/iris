@@ -1,5 +1,5 @@
-// @irisrun/client-sdk — a thin, isomorphic client over the `iris serve` protocol
-// (spec §1). The channel MINTS the sessionId and OWNS/ROTATES the single-use
+// @irisrun/client-sdk — a thin, isomorphic client over the `iris serve` protocol.
+// The channel MINTS the sessionId and OWNS/ROTATES the single-use
 // continuationToken; this client mirrors that discipline EXACTLY: it adopts the
 // rotated token the server returns and presents it on the next turn. Zero runtime
 // deps — only global `fetch` / `TextDecoder` / `ReadableStream` (Node ≥24 + browser).

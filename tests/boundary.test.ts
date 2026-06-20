@@ -35,7 +35,7 @@ test("A1: core/src imports only relative specifiers (no host/transport/Node-only
   );
 });
 
-// C7 (M2) — A1 extends to the harness layer: the kernel, seams, invariants,
+// C7 — A1 extends to the harness layer: the kernel, seams, invariants,
 // bundle, and tactics are pure deciders that must import only relative core
 // modules (no host/transport/provider/Node-only API). Explicit named guard even
 // though the recursive A1 scan above already covers core/src.
@@ -85,9 +85,9 @@ test("A1: scanner catches a planted host import (test-the-test)", () => {
   assert.equal(classifyForbidden("./journal.ts"), null);
 });
 
-// T9 (M3) — A1 extends to the new host packages: @irisrun/core must import neither
+// T9 — A1 extends to the new host packages: @irisrun/core must import neither
 // @irisrun/tools nor @irisrun/sandbox. The recursive A1 scan above already fails on ANY
-// non-relative import; this named test makes the M3 intent explicit and pins the
+// non-relative import; this named test makes the intent explicit and pins the
 // classification.
 test("T9: core/src imports neither @irisrun/tools nor @irisrun/sandbox", () => {
   const specs = specifiersInDir(CORE_SRC).map((r) => r.specifier);
@@ -110,8 +110,8 @@ test("T9: core/src imports neither @irisrun/tools nor @irisrun/sandbox", () => {
   );
 });
 
-// T10 (M4) — A1 extends to the image toolchain: @irisrun/core must import neither
-// @irisrun/agent nor the `iris` CLI. Same generic-reason classification as the M3
+// T10 — A1 extends to the image toolchain: @irisrun/core must import neither
+// @irisrun/agent nor the `iris` CLI. Same generic-reason classification as the
 // packages (HOST_DENYLIST lists store|host|channel|provider, not agent/cli — the
 // relative-only catch-all is what bans them; the unscoped `iris` is banned by the
 // same catch-all, so the rename @irisrun/cli→iris needs no classifier change).
@@ -131,12 +131,12 @@ test("T10: core/src imports neither @irisrun/agent nor the iris CLI", () => {
   );
 });
 
-// T6 (M-Proof) — A1 extends to the new host/transport packages: @irisrun/core must
-// import none of @irisrun/store-fs / @irisrun/host / @irisrun/channel-rest. Unlike the M3/M4
+// T6 — A1 extends to the new host/transport packages: @irisrun/core must
+// import none of @irisrun/store-fs / @irisrun/host / @irisrun/channel-rest. Unlike the
 // packages (tools/sandbox/agent/cli, banned via the generic relative-only rule),
 // these three MATCH the HOST_DENYLIST (/^@irisrun\/(store|host|channel|provider)/), so
 // they classify as the precise "host/transport package" reason — like @irisrun/store-sqlite.
-test("T6 (M-Proof): core/src imports none of @irisrun/store-fs / @irisrun/host / @irisrun/channel-rest", () => {
+test("T6: core/src imports none of @irisrun/store-fs / @irisrun/host / @irisrun/channel-rest", () => {
   const specs = specifiersInDir(CORE_SRC).map((r) => r.specifier);
   for (const pkg of ["@irisrun/store-fs", "@irisrun/host", "@irisrun/channel-rest"]) {
     assert.equal(specs.includes(pkg), false, `core must not import ${pkg}`);
@@ -150,12 +150,12 @@ test("T6 (M-Proof): core/src imports none of @irisrun/store-fs / @irisrun/host /
   }
 });
 
-// T5 (M5) — A1 extends to the channels & observability packages. @irisrun/core must
+// T5 — A1 extends to the channels & observability packages. @irisrun/core must
 // import NONE of them. The reasons SPLIT: @irisrun/channel-mcp MATCHES the HOST_DENYLIST
 // (the `channel` alternative) → "host/transport package"; @irisrun/inspect / @irisrun/evals
 // / @irisrun/observe do NOT match the denylist → the GENERIC relative-only reason (like
 // tools/sandbox/agent/cli). Asserting the exact strings makes the distinction load-bearing.
-test("T5 (M5): core/src imports none of channel-mcp / inspect / evals / observe (with the right per-package reasons)", () => {
+test("T5: core/src imports none of channel-mcp / inspect / evals / observe (with the right per-package reasons)", () => {
   const specs = specifiersInDir(CORE_SRC).map((r) => r.specifier);
   for (const pkg of ["@irisrun/channel-mcp", "@irisrun/inspect", "@irisrun/evals", "@irisrun/observe"]) {
     assert.equal(specs.includes(pkg), false, `core must not import ${pkg}`);
@@ -168,14 +168,14 @@ test("T5 (M5): core/src imports none of channel-mcp / inspect / evals / observe 
   assert.equal(classifyForbidden("@irisrun/observe"), "non-relative import (core must be dependency-free)");
 });
 
-// T9 (M6) — A1 extends to the edge adapter + the first domain bundle. @irisrun/core must
+// T9 — A1 extends to the edge adapter + the first domain bundle. @irisrun/core must
 // import NEITHER. The reasons SPLIT: @irisrun/store-do MATCHES the HOST_DENYLIST (the `store`
 // alternative of /^@irisrun\/(store|host|channel|provider)/, exactly like @irisrun/store-fs /
 // @irisrun/store-sqlite) → the precise "host/transport package" reason; @irisrun/bundle-coding does
 // NOT match the denylist (it deps @irisrun/core only, host-side) → the GENERIC relative-only
 // reason (like tools/sandbox/agent/cli/inspect/evals/observe). The scanner needs NO change —
-// this only adds the named M6 assertions, making the per-package distinction load-bearing.
-test("T9 (M6): core/src imports neither @irisrun/store-do nor @irisrun/bundle-coding (with the right per-package reasons)", () => {
+// this only adds the named assertions, making the per-package distinction load-bearing.
+test("T9: core/src imports neither @irisrun/store-do nor @irisrun/bundle-coding (with the right per-package reasons)", () => {
   const specs = specifiersInDir(CORE_SRC).map((r) => r.specifier);
   for (const pkg of ["@irisrun/store-do", "@irisrun/bundle-coding"]) {
     assert.equal(specs.includes(pkg), false, `core must not import ${pkg}`);

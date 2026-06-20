@@ -5,7 +5,7 @@ import type { Json } from "@irisrun/core";
 import { MemStateStore, MemScheduler, TestClock } from "./lib/mem-store.ts";
 
 // Structural-conformance check: the in-memory mocks implement the ports and
-// enforce CAS/fencing (they never bypass the checks; spec §2).
+// enforce CAS/fencing (they never bypass the checks).
 test("ports: MemStateStore cas + fenced append round-trip", async () => {
   const store = new MemStateStore();
   const sid = "s1";

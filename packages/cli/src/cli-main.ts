@@ -141,7 +141,7 @@ function taskFromArgs(args: Json): string {
   return JSON.stringify(args ?? {});
 }
 
-// Build the subagent wiring (P2-9) from the project's optional `subagents.json`
+// Build the subagent wiring from the project's optional `subagents.json`
 // (default beside the layout; `--subagents <file>` overrides). Each entry maps a
 // delegate tool name → a child agent layout. Children are PRE-LOADED here (async) so
 // the per-call `resolveChild` can be synchronous (makeSubagentPerformer calls it sync).
@@ -184,7 +184,7 @@ async function buildSubagents(
     // (no transport-level `env`), even when the child image declares secrets/environment.
     // Per-image env scoping is wired for the top-level run/serve/chat path only;
     // threading a child's resolved env here is deferred (subagents are the separate
-    // P2-9 feature). This is privilege-BROADENING for the child (it gets more than it
+    // feature). This is privilege-BROADENING for the child (it gets more than it
     // declared), not a leak of the parent's scoped secrets. Recorded in decisions.md.
     children.set(entry.name, {
       image,
@@ -226,7 +226,7 @@ async function runCommand(argv: string[]): Promise<void> {
   if (!layout) throw new Error("usage: iris run <layoutdir> --session <id> [--db <path>] [--tools <dir>] [--subagents <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]");
   const session = flag(argv, "--session") ?? "default";
   const db = flag(argv, "--db") ?? ":memory:";
-  // §9: a deploy-time endpoint override. The model-id prefix still selects the
+  // A deploy-time endpoint override. The model-id prefix still selects the
   // protocol; --base-url (or IRIS_MODEL_BASE_URL) only redirects WHERE that protocol's
   // request is sent — point a portable image at any compatible endpoint. Undefined →
   // the provider's default URL.
@@ -271,10 +271,10 @@ async function serveCommand(argv: string[]): Promise<void> {
   const db = flag(argv, "--db") ?? "./iris-serve.sqlite"; // a server wants durability (cf. run's :memory:)
   const modelOpt = flag(argv, "--model") ?? "auto";
   const web = argv.includes("--web"); // serve the web chat UI at GET /
-  // §9: deploy-time endpoint override (see runCommand). The echo branch ignores it.
+  // Deploy-time endpoint override (see runCommand). The echo branch ignores it.
   const baseUrl = flag(argv, "--base-url") ?? process.env.IRIS_MODEL_BASE_URL;
 
-  // Opt-in governance (roadmap P1-5): --policy loads a who-may-approve policy + an
+  // Opt-in governance: --policy loads a who-may-approve policy + an
   // approval inbox. A client submits a decision via the message body's `approve:{…}`
   // field; the governed signal_recv performer reads it on the HITL resume, and every
   // approval is journaled (queryable with `iris audit`). Absent → ungoverned.
@@ -424,7 +424,7 @@ async function chatCommand(argv: string[]): Promise<void> {
   // Select the provider from the image's model-id prefix; use that provider's key.
   const providerName = providerNameForModel(image.lock.model.id);
   const providerEnvKey = providerDescriptor(providerName).envKey;
-  // §9: deploy-time endpoint override (see runCommand). Ignored on the fake path.
+  // Deploy-time endpoint override (see runCommand). Ignored on the fake path.
   const baseUrl = flag(argv, "--base-url") ?? process.env.IRIS_MODEL_BASE_URL;
   const hasKey =
     typeof process.env[providerEnvKey] === "string" && process.env[providerEnvKey] !== "";
@@ -518,7 +518,7 @@ async function deployCommand(argv: string[]): Promise<void> {
     }
     const { spawn } = await import("node:child_process");
     // Pre-flight: refuse BEFORE cmdDeploy writes the scaffold if wrangler is absent
-    // (strict gate-before-write, spec §3.2). The runner's onerror stays as a backstop.
+    // (strict gate-before-write). The runner's onerror stays as a backstop.
     const wranglerAvailable = await new Promise<boolean>((resolve) => {
       const probe = spawn("wrangler", ["--version"], { stdio: "ignore" });
       probe.on("error", () => resolve(false));
@@ -552,7 +552,7 @@ async function deployCommand(argv: string[]): Promise<void> {
 
 // `iris audit <session> --db <path> [--interactive] [--json]` — print a whole-session,
 // compliance-grade audit (full retained journal + completeness) and a replay-verified
-// verdict (roadmap P2-8). Reads a session recorded by a prior run/serve/chat. Host-side.
+// verdict. Reads a session recorded by a prior run/serve/chat. Host-side.
 async function auditCommand(argv: string[]): Promise<void> {
   const session = argv[1];
   if (!session) {
@@ -584,7 +584,7 @@ async function auditCommand(argv: string[]): Promise<void> {
 }
 
 // `iris eval <suite.mjs> [--reproduce <N>] [--json]` — run a reproducible eval suite
-// (roadmap P2-8). The suite is a user MODULE exporting `cases` + `scorer`; we resolve
+// The suite is a user MODULE exporting `cases` + `scorer`; we resolve
 // its path to a file:// URL and import it (the loadBundledTools precedent for code the
 // CLI must consume). `--reproduce N` proves each case byte-identical over N runs.
 async function evalCommand(argv: string[]): Promise<void> {
@@ -606,7 +606,7 @@ async function evalCommand(argv: string[]): Promise<void> {
 }
 
 // `iris schedule <layout> --interval <ticks> --max-runs <n> [--ticks <n>] [--db <path>]
-// [--session <id>]` — run a recurring, durably-replayable job (roadmap P2-9). The job is a
+// [--session <id>]` — run a recurring, durably-replayable job. The job is a
 // keyless `echo` heartbeat (one effect per cycle) pinned to the agent image; it parks on a
 // durable SQLite timer between cycles and the host-side pump resumes each due cycle. Prints
 // one JSON line per committed cycle. Host-side.
@@ -659,7 +659,7 @@ async function scheduleCommand(argv: string[]): Promise<void> {
 }
 
 // `iris journal <export|verify|import>` — the verifiable portable journal
-// (roadmap-v0.2 P0). A `journal` subcommand group because `iris verify` already
+// A `journal` subcommand group because `iris verify` already
 // means OCI image verification. export/import open a SQLite store; verify is
 // file-only (Tier 1) with an optional `--replay` (Tier 2) and `--image` pin.
 // Wires real fs/sqlite IO; the cmdJournal* logic is unit-tested with injected deps.
@@ -727,7 +727,7 @@ async function journalCommand(argv: string[]): Promise<void> {
 
 // `iris providers [--matrix]` — read-only. Lists the two protocols + how to point a
 // portable image at any compatible endpoint; `--matrix` prints the conformance-verified
-// compatibility matrix (§9). Pure print over @irisrun/provider-compat — no I/O, no key.
+// compatibility matrix. Pure print over @irisrun/provider-compat — no I/O, no key.
 function providersCommand(argv: string[]): void {
   if (argv.includes("--matrix")) {
     console.log(renderCompatMatrix());
@@ -798,7 +798,7 @@ async function main(argv: string[]): Promise<void> {
       console.log(agentfileSchemaJson());
       break;
     case "providers":
-      // List model protocols + config; `--matrix` prints the compatibility matrix (§9).
+      // List model protocols + config; `--matrix` prints the compatibility matrix.
       providersCommand(argv);
       break;
     case "verify": {

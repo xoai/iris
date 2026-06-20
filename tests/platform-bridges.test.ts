@@ -1,4 +1,4 @@
-// Reference platform bridges (roadmap v0.2 §12 extension): Discord, Telegram, Teams as
+// Reference platform bridges: Discord, Telegram, Teams as
 // thin adapters over the generic REST-protocol bridge — proving "additional platforms
 // need no core changes" three times, with REAL per-platform auth (Ed25519 / secret
 // token / Outgoing-Webhook HMAC) and end-to-end turns against an in-process REST channel.
@@ -8,10 +8,10 @@ import { generateKeyPairSync, sign as edSign, createHmac } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { makeBridgeDemoChannel } from "./manual/bridge-reference.ts";
-import { makeDiscordBridge } from "./manual/bridges/discord.ts";
-import { makeTelegramBridge } from "./manual/bridges/telegram.ts";
-import { makeTeamsBridge } from "./manual/bridges/teams.ts";
+import { makeBridgeDemoChannel } from "./examples/bridge-reference.ts";
+import { makeDiscordBridge } from "./examples/bridges/discord.ts";
+import { makeTelegramBridge } from "./examples/bridges/telegram.ts";
+import { makeTeamsBridge } from "./examples/bridges/teams.ts";
 
 // ── Discord (Ed25519) ────────────────────────────────────────────────────────
 
@@ -176,15 +176,15 @@ test("teams bridge: a real end-to-end turn against the in-process channel", asyn
   }
 });
 
-// ── the §12 invariant: bridges import NOTHING from @irisrun/* ─────────────────
+// ── the invariant: bridges import NOTHING from @irisrun/* ─────────────────────
 
 test("platform bridges + harness import nothing from @irisrun/* (any-language, zero core changes)", () => {
   const here = dirname(fileURLToPath(import.meta.url));
   const files = [
-    join(here, "manual", "platform-bridge.ts"),
-    join(here, "manual", "bridges", "discord.ts"),
-    join(here, "manual", "bridges", "telegram.ts"),
-    join(here, "manual", "bridges", "teams.ts"),
+    join(here, "examples", "platform-bridge.ts"),
+    join(here, "examples", "bridges", "discord.ts"),
+    join(here, "examples", "bridges", "telegram.ts"),
+    join(here, "examples", "bridges", "teams.ts"),
   ];
   for (const f of files) {
     const src = readFileSync(f, "utf8");

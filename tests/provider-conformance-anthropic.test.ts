@@ -1,6 +1,6 @@
 // Anthropic fixture for the shared model-provider conformance suite. The EXISTING
 // @irisrun/provider-anthropic performers run the exact same behavioral tests as
-// @irisrun/provider-openai — that parity IS the P1-6 "done when". (anthropic-adapter
+// @irisrun/provider-openai — that parity IS the "done when". (anthropic-adapter
 // / anthropic-streaming tests remain as provider-specific detail coverage.)
 import assert from "node:assert/strict";
 import { anthropicModelPerformer, anthropicStreamingModelPerformer } from "@irisrun/provider-anthropic";

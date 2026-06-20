@@ -56,7 +56,7 @@ test("T6: verify fails loudly on a wrong stored imageDigest", async () => {
 
 test("T6: verify resolves by the stable ref, NOT the floating location (pin-contract/float-impl)", async () => {
   // the resolved contract's location differs from its Agentfile ref/base — the
-  // exact ADR-0004 "float the implementation" case. verify must still pass.
+  // exact "float the implementation" case. verify must still pass.
   const floatResolver = makeLocalResolver({
     "mcp://registry/issue-tracker": {
       name: "issue-tracker", description: "track", inputSchema: {},

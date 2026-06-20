@@ -5,7 +5,7 @@
 // `defaultBundle()` — a pure `tacticPerformer` (a Performer answering a
 // {seam, payload} request with {seam, tacticId:"iris/coding", choice}) plus the
 // kernel invariant caps. The journaled {seam, tacticId, choice} outcome rides the
-// `tactic` effect's result value exactly like the default bundle, so the ADR-0007
+// `tactic` effect's result value exactly like the default bundle, so the replay
 // quarantine (replay folds the journaled choice, never re-invokes a tactic)
 // applies to this external bundle unchanged.
 //

@@ -1,4 +1,4 @@
-// The ReAct default tactics (spec §3.7): a tool-use loop. `assembleContext` passes
+// The ReAct default tactics: a tool-use loop. `assembleContext` passes
 // the accumulated context through (the conversation already lives in `ctx`); a
 // richer prompt assembly can layer on later without a seam change. `decideNext`
 // continues while the model is still requesting tools and finishes when it stops.

@@ -1,4 +1,4 @@
-// makeScheduleRunner (P2-9, spec §5.3): the host-side PUMP that drives durable timers
+// makeScheduleRunner: the host-side PUMP that drives durable timers
 // locally. `tick(now)` discovers sessions whose timer/signal is due (the scheduler's
 // peek API), resumes each at most once, and confirms the wakeup ONLY after a committed
 // (non-aborted) turn — so an aborted resume re-fires next tick (at-least-once). It
@@ -21,7 +21,7 @@ export interface WakeupSource {
 }
 
 // Per-(session, tick) resume inputs. `now` is the tick's logical time — the caller binds
-// BOTH the engine clock AND the `clock` performer to it (see spec §5.3), so each resumed
+// BOTH the engine clock AND the `clock` performer to it, so each resumed
 // cycle's clock effect reads `now`. Returns null to SKIP a session this runner doesn't own.
 export type ResumeInputs = (
   sessionId: string,

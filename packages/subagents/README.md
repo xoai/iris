@@ -19,7 +19,7 @@ depends on `@irisrun/core` + `@irisrun/host` only, no kernel change.
 Register `makeSubagentPerformer` as the host's `subagent` performer (the CLI wires
 it from a project's `subagents.json`).
 
-See **[docs/08 — Audit & reproducible evals](../../docs/08-audit-and-evals.md)**
+See **[docs/Audit & reproducible evals](../../docs/audit-and-evals.md)**
 for delegation on the journaled substrate.
 
 ---

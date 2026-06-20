@@ -1,4 +1,4 @@
-// Direct Anthropic Messages adapter (spec §3.2, §4). Host-side; uses the
+// Direct Anthropic Messages adapter. Host-side; uses the
 // built-in `fetch` (zero deps); `fetch` is injectable so unit tests run with no
 // network/key. A missing key is a CONSTRUCTION-time config error (loud) — never
 // a mid-turn laundered failure.
@@ -35,7 +35,7 @@ interface ResolvedConfig {
   url: string;
 }
 
-// Shared config resolution + CONSTRUCTION-time validation (spec §3.2): a
+// Shared config resolution + CONSTRUCTION-time validation: a
 // registered performer that threw at call time would be caught by the engine and
 // laundered to {ok:false}, so these errors fire at construction. Both the buffered
 // and the streaming performer go through this — identical posture.

@@ -21,7 +21,7 @@ no bundler, so it can't share the import); it is a static asset that lives
 iris serve ./image --port 8787 --web   # → open http://127.0.0.1:8787/
 ```
 
-See **[docs/04 — Channels](../../docs/04-channels.md)** for the serve protocol and
+See **[docs/Channels](../../docs/channels.md)** for the serve protocol and
 the client SDK.
 
 ---

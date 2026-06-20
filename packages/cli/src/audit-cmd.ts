@@ -1,4 +1,4 @@
-// `iris audit` command logic (roadmap P2-8) — the testable unit (injected store).
+// `iris audit` command logic — the testable unit (injected store).
 // Renders a whole-session, compliance-grade audit (full retained journal +
 // completeness) AND a replay-verification verdict. cli-main.ts wires the real sqlite
 // store; the logic lives here so it is unit-tested with an injected StateStore.

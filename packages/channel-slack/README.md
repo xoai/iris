@@ -33,4 +33,4 @@ Zero runtime deps: `node:crypto` for verification, built-in `fetch` for outbound
 
 ---
 
-Part of Iris — own, portable, verifiable state.
+Part of [Iris](../../README.md) — own, portable, verifiable state.

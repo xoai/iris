@@ -1,4 +1,4 @@
-// Deterministic child-session identity (P2-9, spec §4.1). A delegation derives the child
+// Deterministic child-session identity. A delegation derives the child
 // agent's sessionId from the PARENT session + the delegating call's id, so a recovery
 // re-perform (engine danglingIntent) re-finds the SAME child session and returns its
 // already-final output — making delegation idempotent under crash recovery. Pure; no I/O.

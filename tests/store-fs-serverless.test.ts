@@ -1,4 +1,4 @@
-// T2 (M-Proof) — the SERVERLESS cold-per-turn invariant. A turn is driven with a
+// T2 — the SERVERLESS cold-per-turn invariant. A turn is driven with a
 // FRESH FsStateStore instance; it parks on the HITL signal wait. A SEPARATE,
 // brand-new FsStateStore over the SAME root resumes and finishes. No method holds
 // a long-lived handle, so a cold invocation (new instance) behaves identically to

@@ -1,7 +1,7 @@
-// M6 T6 — @irisrun/bundle-coding, the first domain bundle. A HOST-SIDE package that
+// T6 — @irisrun/bundle-coding, the first domain bundle. A HOST-SIDE package that
 // composes coding-specialized tactics on the 5 seams from core's EXPORTED
 // primitives (core stays byte-untouched). It produces the SAME journaled
-// `{seam, tacticId, choice}` shape as defaultBundle, so the ADR-0007 quarantine
+// `{seam, tacticId, choice}` shape as defaultBundle, so the replay quarantine
 // applies to it unchanged. This test proves: (1) the performer answers all 5
 // seams with `tacticId:"iris/coding"`; (2) the gate ALLOWS a read-only tool but
 // gates a write/shell tool to "ask"; (3) a full turn runs under the bundle (via

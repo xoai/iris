@@ -1,4 +1,4 @@
-// P2-9 (C4) — childSessionId determinism. The deterministic id is what makes a recovery
+// childSessionId determinism. The deterministic id is what makes a recovery
 // re-perform of a `subagent` effect idempotent (it re-finds the SAME child session).
 import { test } from "node:test";
 import assert from "node:assert/strict";

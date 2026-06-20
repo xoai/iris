@@ -1,5 +1,5 @@
-// Record-replay FIDELITY for model_call (roadmap v0.2 P2 #7; the precise §8
-// determinism claim). The existing B1 (model-effect.test.ts) proves resume does
+// Record-replay FIDELITY for model_call — the precise
+// determinism claim. The existing B1 (model-effect.test.ts) proves resume does
 // not re-call the provider via a call counter. This goes further and makes the
 // proof non-vacuous in two ways the spec review demanded:
 //   1. The original performer is NONDETERMINISTIC (its value encodes the call

@@ -1,8 +1,8 @@
-// Phase C (P0 item 3) — `iris deploy` (Cloudflare Durable Objects, supported path).
-// cmdDeploy reads an image, runs the M6 capability-diff gate (assertDeployable), and
+// `iris deploy` (Cloudflare Durable Objects, supported path).
+// cmdDeploy reads an image, runs the capability-diff gate (assertDeployable), and
 // scaffolds a Worker project (wrangler.toml + worker.mjs). A remote-only image
 // scaffolds; an image demanding local_subprocess tools is REFUSED with the
-// byte-identical ADR-0008 message and writes ZERO files (the gate runs before any
+// byte-identical message and writes ZERO files (the gate runs before any
 // write). The real `wrangler deploy` egress is an env-gated manual smoke, not here.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -120,7 +120,7 @@ test("A1: an OpenAI-pinned image generates a worker wired to @irisrun/provider-o
   assert.doesNotMatch(worker, /ANTHROPIC_API_KEY/);
 });
 
-test("A1: an image demanding local_subprocess tools is REFUSED (ADR-0008) and writes ZERO files", async () => {
+test("A1: an image demanding local_subprocess tools is REFUSED and writes ZERO files", async () => {
   const { out } = await buildImage(); // the DEFAULT scaffold ships a local subprocess tool
   const fs = captureFs();
   const dest = await tmp("iris-deploy-out-");
@@ -129,7 +129,7 @@ test("A1: an image demanding local_subprocess tools is REFUSED (ADR-0008) and wr
     () => cmdDeploy(out, { outDir: dest, writeFile: fs.writeFile, mkdir: fs.mkdir }),
     (e: unknown) => {
       assert.ok(e instanceof Error);
-      // byte-identical ADR-0008 refusal, interpolating the edge host name "Cloudflare"
+      // byte-identical refusal, interpolating the edge host name "Cloudflare"
       assert.match(e.message, /requires local_subprocess tools; the Cloudflare target supports remote MCP tools only/);
       return true;
     },

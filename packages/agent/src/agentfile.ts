@@ -1,9 +1,9 @@
-// Agentfile model + JSON parser + validation (spec §3.2, ADR-0005). The Agentfile
+// Agentfile model + JSON parser + validation. The Agentfile
 // is a RECIPE: it references content (embedded by hash) and contracts (pinned by
 // digest) and contains NO executable behavior. Host-side; zero deps.
 import type { Json } from "@irisrun/core";
 
-// The capability profile (ADR-0008). NEW @irisrun/agent type (the framework doc
+// The capability profile. NEW @irisrun/agent type (the framework doc
 // defines the shape; no core type exists). `tool_locality:"in-process"` is a
 // legal PROFILE value (it mirrors @irisrun/tools ToolLocality) — distinct from a
 // resolved tool-contract transport, which may NOT be in-process in an Agentfile.
@@ -41,7 +41,7 @@ export interface AgentfileModel {
 }
 
 // A contract ref must use one of these schemes; anything else (incl. an inline
-// `code`/`script`/`source` field) is inlined behavior and is rejected (ADR-0005).
+// `code`/`script`/`source` field) is inlined behavior and is rejected.
 const CONTRACT_SCHEMES = ["mcp", "grpc", "subprocess"] as const;
 const INLINE_BEHAVIOR_FIELDS = ["code", "script", "source"] as const;
 
@@ -77,7 +77,7 @@ export function parseAgentfileJson(text: string): AgentfileModel {
  * (shape, required fields) and enforces the content-vs-contract split: a tool /
  * connection entry is REJECTED if it carries an inline-behavior field
  * (code/script/source) or a ref whose scheme is not mcp/grpc/subprocess
- * (ADR-0005 — no behavior in the manifest). Throws loudly; never coerces.
+ * (no behavior in the manifest). Throws loudly; never coerces.
  */
 export function validateAgentfile(raw: unknown): AgentfileModel {
   const o = asObject(raw, "Agentfile");
@@ -245,7 +245,7 @@ function requireStringArray(o: { [k: string]: Json }, key: string): string[] {
   return v as string[];
 }
 
-// Validate a tools/connections array, rejecting inlined behavior (ADR-0005).
+// Validate a tools/connections array, rejecting inlined behavior.
 function requireRefArray(o: { [k: string]: Json }, key: string): ToolRef[] {
   const v = o[key];
   if (!Array.isArray(v)) {
@@ -256,7 +256,7 @@ function requireRefArray(o: { [k: string]: Json }, key: string): ToolRef[] {
     for (const field of INLINE_BEHAVIOR_FIELDS) {
       if (field in e) {
         throw new Error(
-          `Agentfile: ${key}[${i}] carries inline behavior ("${field}") — tools are contracts referenced by digest, not inlined code (ADR-0005)`,
+          `Agentfile: ${key}[${i}] carries inline behavior ("${field}") — tools are contracts referenced by digest, not inlined code`,
         );
       }
     }

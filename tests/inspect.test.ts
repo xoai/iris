@@ -1,4 +1,4 @@
-// T2 (M5) — the journal/decision viewer. `inspectSession` reads a recorded
+// T2 — the journal/decision viewer. `inspectSession` reads a recorded
 // session (snapshot + journal) from a StateStore and renders the deterministic
 // decision/effect/marker timeline, keyed by the stable sessionId. READ-ONLY: it
 // re-derives the governing digest snapshot-safely (mirrors pin.ts:latestRecord)

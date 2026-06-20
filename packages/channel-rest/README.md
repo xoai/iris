@@ -11,8 +11,8 @@ paused and resumed across processes and a stale or forged token is refused
 `makeRestChannel` mints the `sessionId`, owns and issues the `continuationToken`,
 and streams a turn live over **SSE** *and* a hand-rolled, zero-dependency
 **WebSocket** (`ws://…/v1/ws`) — both records and model token deltas. Drop the
-`Accept: text/event-stream` header for one buffered JSON reply. ADR-0009; a real
-external HTTP deploy is an env-gated manual smoke.
+`Accept: text/event-stream` header for one buffered JSON reply. A real
+external HTTP deploy is an env-gated smoke test.
 
 The two-identifier protocol itself — token rotation (only on a committed turn), the
 atomic single-use claim, and the loud refusal taxonomy — lives in
@@ -27,7 +27,7 @@ conformance suite (see the normative
 iris serve ./image --port 8787     # REST + SSE + WS; add --web for the chat UI
 ```
 
-See **[docs/04 — Channels](../../docs/04-channels.md)** for the wire protocol and
+See **[docs/Channels](../../docs/channels.md)** for the wire protocol and
 **[@irisrun/client-sdk](../client-sdk/README.md)** for a typed client.
 
 ---

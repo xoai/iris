@@ -2,7 +2,7 @@
 // (1) the frame codec in isolation — masking, partial buffering, fragmentation,
 // the 64-bit length branch, ping/close; (2) end-to-end via Node 24's BUILT-IN
 // WebSocket client — handshake, a streamed turn (records/deltas/outcome), token
-// rotation, and the ADR-0008 capability-gate refusal.
+// rotation, and the capability-gate refusal.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { harnessProgram, defaultBundle } from "@irisrun/core";

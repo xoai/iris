@@ -1,4 +1,4 @@
-// The portable export file model (spec §3). Canonical JSON; the suggested
+// The portable export file model. Canonical JSON; the suggested
 // on-disk name is `<contentDigest>.irisjournal`. A self-contained, content-
 // addressed, tamper-evident capture of a session's snapshot + journal tail.
 
@@ -20,7 +20,7 @@ export interface JournalExportV1 {
   algorithm: "sha256/iris-journal-v1";
   sessionId: string;
   defDigest: string; // governing digest = last included record's defDigest; "" if 0 records
-  complete: boolean; // §3.0 three-way rule (mirrors verifySession)
+  complete: boolean; // three-way rule (mirrors verifySession)
   range: { from: number; to: number } | null; // null ⇔ 0 records
   snapshot: ExportSnapshot | null;
   records: ExportRecord[];

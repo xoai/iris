@@ -1,6 +1,6 @@
 // Scheduler over node:sqlite. The journal records THAT a session is waiting;
 // this persists the durable timer/signal so a restarted process can find and
-// re-arm it (spec §3.8, §4.3). Host-side `dueWakeups` lets the runner discover
+// re-arm it. Host-side `dueWakeups` lets the runner discover
 // which sessions to re-enter at a given logical time.
 import type { DatabaseSync } from "node:sqlite";
 import type { Scheduler } from "@irisrun/core";

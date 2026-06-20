@@ -1,4 +1,4 @@
-// P0 #2 — the batteries-included starter tool. Covers `loadBundledTools` (the
+// the batteries-included starter tool. Covers `loadBundledTools` (the
 // tools/*.tool.json discovery that feeds the build resolver + the run/chat/serve
 // subprocess transport), the SCAFFOLDED now.mjs over the REAL subprocess
 // transport, a tool-less regression, and a full harness turn where a scripted

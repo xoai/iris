@@ -1,8 +1,8 @@
-// Drift guard (roadmap v0.2 §9, plan T9.6) — the agentfile/docs-funnel drift-guard
+// Drift guard — the agentfile/docs-funnel drift-guard
 // pattern applied to the compatibility matrix. The table embedded in
-// docs/06-providers.md between the COMPAT-MATRIX markers MUST equal
+// docs/providers.md between the COMPAT-MATRIX markers MUST equal
 // renderCompatMatrix() byte-for-byte, so the published matrix can NEVER silently
-// diverge from the registry (a rotted matrix is a false promise — roadmap §7 risk).
+// diverge from the registry (a rotted matrix is a false promise).
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -36,15 +36,15 @@ test("render: every endpoint label + replaySafety appears in the output", () => 
   assert.ok(out.includes("known-divergent"), "render shows known-divergent entries");
 });
 
-test("render: DRIFT GUARD — docs/06-providers.md table equals renderCompatMatrix()", () => {
-  const doc = readFileSync(join(DOCS, "06-providers.md"), "utf8");
+test("render: DRIFT GUARD — docs/providers.md table equals renderCompatMatrix()", () => {
+  const doc = readFileSync(join(DOCS, "providers.md"), "utf8");
   const m = doc.match(/<!-- COMPAT-MATRIX:START[^>]*-->\n([\s\S]*?)\n<!-- COMPAT-MATRIX:END -->/);
-  assert.ok(m, "docs/06-providers.md must contain the COMPAT-MATRIX:START/END markers");
+  assert.ok(m, "docs/providers.md must contain the COMPAT-MATRIX:START/END markers");
   const embedded = m![1];
   assert.equal(
     embedded,
     renderCompatMatrix(),
-    "docs/06-providers.md compatibility table has drifted from @irisrun/provider-compat — " +
+    "docs/providers.md compatibility table has drifted from @irisrun/provider-compat — " +
       "regenerate it (the table is generated, do not hand-edit).",
   );
 });

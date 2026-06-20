@@ -1,4 +1,4 @@
-// Logical clock port (spec §3.8). The core never reads a wall clock; time is a
+// Logical clock port. The core never reads a wall clock; time is a
 // monotonic integer supplied by the runner and recorded via a `clock` effect.
 import type { LogicalTime } from "./journal.ts";
 

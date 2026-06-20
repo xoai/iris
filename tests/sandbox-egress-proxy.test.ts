@@ -3,7 +3,7 @@
 // inmemory firewall's three guarantees — per-host allowlist, credential brokering
 // at the boundary, and an `egress[]` audit log — but for a real `node:http`
 // forward proxy. The container↔proxy transport is the manual docker smoke; this
-// suite is the unit-scope proof. (spec §2/§4.1.)
+// suite is the unit-scope proof.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import http from "node:http";

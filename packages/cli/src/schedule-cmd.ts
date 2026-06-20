@@ -1,4 +1,4 @@
-// `iris schedule` command logic (roadmap P2-9) — the testable unit. Makes a recurring,
+// `iris schedule` command logic — the testable unit. Makes a recurring,
 // durably-replayable job reachable from the CLI: build a scheduleProgram, run its first
 // cycle, then drive the host-side pump (makeScheduleRunner) forward in logical time,
 // resuming each due cycle. cli-main.ts wires the real sqlite host + the default echo job;

@@ -1,4 +1,4 @@
-// Task 3 (M2): seam signatures + tactic-chain composition precedence (spec §3.5).
+// Task 3: seam signatures + tactic-chain composition precedence.
 // gateAction = most-restrictive-wins; decideNext = first-decisive-wins;
 // assembleContext = ordered pipeline. Pure functions — no engine, no effects.
 import { test } from "node:test";

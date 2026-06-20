@@ -1,4 +1,4 @@
-// LIVE model-provider conformance tier (roadmap v0.2 P2 #7 "done when": both
+// LIVE model-provider conformance tier ("done when": both
 // adapters hold the recorded-effect contract against REAL, streaming,
 // nondeterministic API responses). Gated: runs only with IRIS_LIVE_CONFORMANCE=1
 // AND the provider key set; otherwise every case SKIPs (suite stays green here —

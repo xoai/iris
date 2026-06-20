@@ -4,7 +4,7 @@ import { encode } from "@irisrun/core";
 import type { Version } from "@irisrun/core";
 import { openDatabase, SqliteStateStore } from "@irisrun/store-sqlite";
 
-// Task 2: writeSnapshot seeds the high-water mark (spec §3.4).
+// Task 2: writeSnapshot seeds the high-water mark.
 
 test("snapshot-hwm: normal-op (upToSeq == hwm) is a no-op — append continues densely", async () => {
   const s = new SqliteStateStore(openDatabase(":memory:"));

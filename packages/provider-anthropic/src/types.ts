@@ -1,4 +1,4 @@
-// model_call request/result shapes (spec §4). Plain interfaces — they describe
+// model_call request/result shapes. Plain interfaces — they describe
 // the JSON that crosses the effect boundary (request: Json, result value: Json)
 // but are NOT declared `extends Record<string,Json>` so optional fields don't
 // fight the index signature. The performer casts Json ↔ these at the boundary.

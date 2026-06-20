@@ -1,5 +1,4 @@
-// channel-rest runs the shared channel-port conformance suite (roadmap v0.2 §10, plan
-// T10.3) — "two channels pass the same port conformance suite", REST half. Drives the
+// channel-rest runs the shared channel-port conformance suite — "three channels pass the same port conformance suite", REST half. Drives the
 // REAL node:http surface; a makeFlippableStore lets the suite force contended/aborted.
 import type { Program, Json, JournalRecord } from "@irisrun/core";
 import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";

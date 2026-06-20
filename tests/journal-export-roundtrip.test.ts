@@ -1,6 +1,6 @@
 // T3: exportSession/importSession cross-host round-trip. A session exported
 // from store A and imported into store B resumes-equivalent to a never-migrated
-// control (verifySession parity), records are imported VERBATIM, the §3.0
+// control (verifySession parity), records are imported VERBATIM, the
 // truncated-window is handled, and importSession refuses a non-empty
 // destination before any write (releasing the lease on every path).
 import { test } from "node:test";

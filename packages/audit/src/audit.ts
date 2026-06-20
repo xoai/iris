@@ -1,4 +1,4 @@
-// auditSession (roadmap P2-8): a whole-session, compliance-grade audit. UNLIKE
+// auditSession: a whole-session, compliance-grade audit. UNLIKE
 // `inspectSession` (which reads only the POST-snapshot tail), this reads the FULL
 // retained journal from seq 0 — every effect intent/result, every marker — plus the
 // governed approval trail (via @irisrun/auth's `auditApprovals`, also full-journal).

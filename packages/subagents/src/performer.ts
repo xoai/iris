@@ -1,4 +1,4 @@
-// makeSubagentPerformer (P2-9, spec §4.3): the host-side performer for the `subagent`
+// makeSubagentPerformer: the host-side performer for the `subagent`
 // EffectKind. The kernel's tool_exec step emits a `subagent` effect whose request is the
 // delegating ToolCall {callId, name, args}; this performer derives the deterministic child
 // sessionId, resolves the child agent, drives it to completion, and maps the outcome back

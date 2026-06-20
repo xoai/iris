@@ -1,4 +1,4 @@
-// Deterministic effect identity (spec §3.4, framework Spec 01 §4).
+// Deterministic effect identity.
 import type { EffectKind } from "./journal.ts";
 
 /**
@@ -8,7 +8,7 @@ import type { EffectKind } from "./journal.ts";
  *
  * The engine must only treat an intent as committed when append returns this
  * exact seq; on recovery the effectId is READ FROM THE STORED INTENT, never
- * recomputed from a predicted seq (spec §3.4).
+ * recomputed from a predicted seq.
  */
 export function effectId(seq: number, kind: EffectKind): string {
   if (!Number.isInteger(seq) || seq < 0) {

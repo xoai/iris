@@ -1,6 +1,6 @@
-// Cross-store session migration (spec §3.4). Copies a session from one
+// Cross-store session migration. Copies a session from one
 // StateStore to another using ONLY the StateStore port (which core owns), so it
-// is host-agnostic and lives in core (reusable for the M-Proof cross-host demo).
+// is host-agnostic and lives in core (reusable for the cross-host demo).
 import type { StateStore } from "./ports.ts";
 import { acquireLease } from "./lease.ts";
 
@@ -11,7 +11,7 @@ export interface MigrateResult {
 
 /**
  * Copy `sessionId` from `from` to `to`. Order matters: the snapshot is written
- * first (which seeds the destination's high-water mark, spec §3.4), so the
+ * first (which seeds the destination's high-water mark), so the
  * journal tail — which starts at `snapshotUpTo + 1` after a truncated source —
  * satisfies the destination's seq-density check.
  */

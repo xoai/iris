@@ -1,5 +1,5 @@
 // StateStore over node:sqlite (DatabaseSync — synchronous). Implements real
-// compare-and-swap and an ATOMIC fenced append (spec §3.6, §4.2). node:sqlite
+// compare-and-swap and an ATOMIC fenced append. node:sqlite
 // is Node-only, which is why this lives in the host adapter, never in core.
 import { DatabaseSync } from "node:sqlite";
 import type {
@@ -135,7 +135,7 @@ export class SqliteStateStore implements StateStore {
     fence: Version,
   ): Promise<AppendResult> {
     // Atomic: fence check + seq check + inserts + fence bump in ONE immediate
-    // transaction. No interleave window (spec §3.6).
+    // transaction. No interleave window.
     this.db.exec("BEGIN IMMEDIATE");
     try {
       const fenceRow = this.fenceGet.get(sessionId) as
@@ -189,7 +189,7 @@ export class SqliteStateStore implements StateStore {
     bytes: Uint8Array,
   ): Promise<void> {
     this.snapInsert.run(sessionId, upToSeq, bytes);
-    // Seed the high-water mark (spec §3.4). Normal callers pass upToSeq === hwm
+    // Seed the high-water mark. Normal callers pass upToSeq === hwm
     // (no-op); the only caller with upToSeq > hwm is migration seeding an empty
     // destination, so the migrated tail (from upToSeq+1) passes the density check.
     this.hwmSeed.run(sessionId, upToSeq);

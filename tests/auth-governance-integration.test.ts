@@ -1,5 +1,5 @@
 // T5 (HEADLINE) — governance end-to-end through runTurn, mirroring harness-hitl.test.ts
-// but with the governed signal_recv performer. Proves BOTH done-when:
+// but with the governed signal_recv performer. Proves BOTH:
 //   #1 who-may-approve is policy-configurable — hold principal+intent+action constant
 //      and vary ONLY the policy: A grants → tool runs; B denies → tool skipped.
 //   #2 approvals are queryable from the journal — auditApprovals projects the trail.
@@ -109,12 +109,12 @@ async function runUnderPolicy(policy: ApprovalPolicy, decision: RawApproval, o: 
 const GRANTS_DEV: ApprovalPolicy = { rules: [{ tool: "rm", anyOfRoles: ["dev"] }] };
 const REQUIRES_ADMIN: ApprovalPolicy = { rules: [{ tool: "rm", anyOfRoles: ["admin"] }] };
 
-test("done-when #1: policy A (grants dev) runs the tool — identical inputs", async () => {
+test("policy A (grants dev) runs the tool — identical inputs", async () => {
   const { toolRan } = await runUnderPolicy(GRANTS_DEV, ALICE_APPROVE);
   assert.equal(toolRan, true, "authorized approval runs the gated tool");
 });
 
-test("done-when #1: policy B (requires admin) SKIPS the tool — only the policy changed", async () => {
+test("policy B (requires admin) SKIPS the tool — only the policy changed", async () => {
   const { toolRan } = await runUnderPolicy(REQUIRES_ADMIN, ALICE_APPROVE);
   assert.equal(toolRan, false, "same principal+intent+action, deny policy → tool skipped");
 });
@@ -124,7 +124,7 @@ test("an explicit deny skips the tool even under a granting policy", async () =>
   assert.equal(toolRan, false);
 });
 
-test("done-when #2: the approval is queryable from the journal as an audit trail", async () => {
+test("the approval is queryable from the journal as an audit trail", async () => {
   const { store } = await runUnderPolicy(GRANTS_DEV, ALICE_APPROVE);
   const trail = await auditApprovals(store, "s");
   assert.equal(trail.length, 1);
@@ -169,14 +169,14 @@ test("recovery: a dangling signal_recv intent re-performs once; the approval doe
   assert.equal(t2.status, "finished");
   assert.equal(log.calls.length, 1, "the approved tool runs exactly once after recovery (approval did not flip)");
 
-  // m2: the recovery re-perform must not DOUBLE-COUNT the approval in the audit either.
+  // The recovery re-perform must not DOUBLE-COUNT the approval in the audit either.
   const trail = await auditApprovals(store, "s");
   assert.equal(trail.length, 1, "exactly one approval entry after recovery (no double-count)");
 });
 
-// M1 (regression): the audit must stay complete across a snapshot boundary. inspectSession
+// Regression: the audit must stay complete across a snapshot boundary. inspectSession
 // reads only the post-snapshot tail, so auditApprovals reads the FULL retained journal.
-test("done-when #2 across a snapshot: with retained history the trail is complete (auditApprovals ⊇ inspect tail)", async () => {
+test("across a snapshot: with retained history the trail is complete (auditApprovals ⊇ inspect tail)", async () => {
   const { store } = await runUnderPolicy(GRANTS_DEV, ALICE_APPROVE, { snapshotThreshold: 2, keepHistory: true });
   const insp = await inspectSession(store, "s");
   assert.notEqual(insp.snapshotUpTo, null, "a snapshot boundary was crossed (test is exercising the limitation)");

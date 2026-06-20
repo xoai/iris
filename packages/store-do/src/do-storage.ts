@@ -1,4 +1,4 @@
-// The narrow Durable Objects storage + alarm abstraction (spec §2.1). The edge
+// The narrow Durable Objects storage + alarm abstraction. The edge
 // adapter is written against THIS interface — the subset Cloudflare guarantees —
 // not @cloudflare/workers-types (which is not install-free). The real
 // DurableObjectState.storage satisfies this shape; the in-suite FakeDoStorage

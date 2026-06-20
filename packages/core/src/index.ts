@@ -54,7 +54,7 @@ export { shouldSnapshot, DEFAULT_SNAPSHOT_THRESHOLD } from "./snapshot.ts";
 export { migrateSession } from "./migrate.ts";
 export type { MigrateResult } from "./migrate.ts";
 
-// Harness layer (M2, ADR-0007) — pure seams + tactic-chain composition + kernel.
+// Harness layer — pure seams + tactic-chain composition + kernel.
 export { composeGate, composeDecideNext, composeAssemble } from "./harness/seams.ts";
 export { harnessProgram } from "./harness/kernel.ts";
 export type { Phase, HarnessState, HarnessInput, HarnessConfig } from "./harness/kernel.ts";

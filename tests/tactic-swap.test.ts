@@ -1,9 +1,9 @@
-// Task 11 (M2) — C4 HEADLINE: every seam decision is journaled, and replay NEVER
+// Task 11 — C4 HEADLINE: every seam decision is journaled, and replay NEVER
 // re-invokes a tactic. Proof: run a default-bundle turn live (recording the seam
 // decisions), then (1) pure replay() with ZERO performers reconstructs the
 // multi-decision turn byte-identically, and (2) resuming with a DIFFERENT tactic
 // performer whose every decision differs leaves the result byte-identical and the
-// swapped-in tactic is never called — the ADR-0007 quarantine.
+// swapped-in tactic is never called — the replay quarantine.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { runTurn, replay, canonicalize, decode, harnessProgram, defaultBundle } from "@irisrun/core";
@@ -66,7 +66,7 @@ test("C4: seam decisions are journaled; replay reads them and never re-invokes a
   };
   const t2 = await runTurn(deps(store, v2, v1.invariants, { calls: [] }), "s");
   assert.equal(t2.status, "finished");
-  assert.equal(v2Calls, 0, "the swapped-in tactic was NEVER invoked on replay (ADR-0007 quarantine)");
+  assert.equal(v2Calls, 0, "the swapped-in tactic was NEVER invoked on replay (quarantine)");
   assert.equal(
     canonicalize(t2.status === "finished" ? t2.state : null),
     canonicalize(live),

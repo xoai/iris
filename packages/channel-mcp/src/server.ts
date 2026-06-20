@@ -1,4 +1,4 @@
-// makeMcpChannel (ADR-0009, MCP is dual-use): the agent exposed AS an MCP server
+// makeMcpChannel (MCP is dual-use): the agent exposed AS an MCP server
 // over JSON-RPC 2.0. `handle(req)` is the testable core; `serve(in,out)` frames
 // newline-delimited JSON-RPC over a stream (stdin/stdout in production). It speaks
 // the SAME two-identifier protocol as channel-rest — the channel MINTS the
@@ -79,7 +79,7 @@ export function makeMcpChannel<S extends Json>(opts: McpChannelOptions<S>): McpC
   // single-use, committed-only rotation) lives in the shared channel-core port — the
   // SAME driver channel-rest uses. This MCP transport just maps refusals to JSON-RPC
   // error codes. (Previously this file rotated the token on EVERY committed-or-not turn;
-  // channel-core corrects that to rotate only on finished/parked — see roadmap §10.)
+  // channel-core corrects that to rotate only on finished/parked.)
   const session = makeChannelSession<S>({
     runTurn: async (sessionId, args) =>
       runTurnOn(opts.adapter, { sessionId, ...opts.makeTurnInputs(sessionId, args) }),

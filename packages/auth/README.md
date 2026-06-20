@@ -20,8 +20,8 @@ answer a gated tool call from that decision; `approvalAudit` / `auditApprovals` 
 iris serve ./image --policy ./policy.json    # turn on governed approvals
 ```
 
-`iris chat` resolves the same gate inline. See **[docs/07 — Governance &
-audit](../../docs/07-governance.md)**.
+`iris chat` resolves the same gate inline. See **[docs/Governance &
+audit](../../docs/governance.md)**.
 
 ---
 Part of [Iris](../../README.md) — own, portable, verifiable state.

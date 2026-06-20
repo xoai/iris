@@ -35,4 +35,4 @@ session lives in the StateStore journal. See `docs/reference/channel-port-spec.m
 
 ---
 
-Part of Iris — own, portable, verifiable state.
+Part of [Iris](../../README.md) — own, portable, verifiable state.

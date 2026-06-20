@@ -1,4 +1,4 @@
-// Image build (spec §3.5): resolve + pin → embed content by hash → compute the
+// Image build: resolve + pin → embed content by hash → compute the
 // content-addressed, deterministic imageDigest = sha256(canonicalize(canonical
 // image)). The canonical image EXCLUDES the self-referential imageDigest field;
 // content values are base64 STRINGS (canonicalize rejects Buffer/Uint8Array) and
@@ -32,10 +32,10 @@ export interface AgentImage {
 export interface BuildOptions {
   resolver: RegistryResolver;
   readFile: (path: string) => Promise<Uint8Array>; // resolves a model path → bytes
-  // OPTIONAL (M6): when set AND harness.bundle is present, the bundle ref is
+  // OPTIONAL: when set AND harness.bundle is present, the bundle ref is
   // resolved to a BundleDefinition and pinned by its REAL bundleDigest. When
-  // absent (every M4 path), the M4 sha256Hex(id) placeholder is kept byte-for-byte
-  // — back-compat is load-bearing, so existing M4 image digests are unchanged.
+  // absent, the sha256Hex(id) placeholder is kept byte-for-byte
+  // — back-compat is load-bearing, so existing image digests are unchanged.
   resolveBundle?: BundleResolver;
 }
 
@@ -96,7 +96,7 @@ export async function buildImage(
   if (model.harness.bundle !== undefined) {
     const id = model.harness.bundle;
     if (opts.resolveBundle !== undefined) {
-      // M6: resolve the bundle ref to a definition and pin its REAL content digest.
+      // Resolve the bundle ref to a definition and pin its REAL content digest.
       // The id stays the STABLE Agentfile ref (re-resolved by verify, location floats).
       const def = await opts.resolveBundle.resolve(id);
       if (def === null) {
@@ -104,7 +104,7 @@ export async function buildImage(
       }
       tactics.bundle = { id, digest: bundleDigest(def) };
     } else {
-      // Back-compat (every M4 path): keep the sha256Hex(id) placeholder unchanged.
+      // Back-compat: keep the sha256Hex(id) placeholder unchanged.
       tactics.bundle = { id, digest: sha256Hex(id) };
     }
   }
@@ -126,7 +126,7 @@ export async function buildImage(
   return image;
 }
 
-// --- inspect (spec §3.5) ------------------------------------------------------
+// --- inspect ------------------------------------------------------
 
 export interface ImageInspection {
   name: string;
@@ -158,7 +158,7 @@ export function inspectImage(image: AgentImage): ImageInspection {
   };
 }
 
-// --- OCI image layout (local, files-only — spec §3.5) -------------------------
+// --- OCI image layout (local, files-only) -------------------------
 // Real registry push/pull (+ cosign) is the manual smoke; this is the install-free
 // path. Shape: `oci-layout` + `index.json` + `blobs/sha256/<hex>`.
 

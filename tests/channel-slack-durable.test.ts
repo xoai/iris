@@ -1,4 +1,4 @@
-// THE §11 HEADLINE (roadmap v0.2 §11, plan T11.3): a Slack approval that PARKS, then —
+// THE HEADLINE: a Slack approval that PARKS, then —
 // after the engine/channel/inbox are discarded and the store reopened (a simulated
 // redeploy) — RESUMES the SAME session byte-identically when the Approve arrives. The
 // durable session lives in the StateStore journal; the approval context rides the
@@ -167,7 +167,7 @@ async function runScenario(
   };
 }
 
-test("§11 durable HITL: an Approve that survives a redeploy resumes the SAME session and runs the gated tool", async () => {
+test("durable HITL: an Approve that survives a redeploy resumes the SAME session and runs the gated tool", async () => {
   const r = await runScenario(true);
   assert.equal(r.finalStatus, "finished", "the redeployed instance resumed the parked session to completion");
   assert.equal(r.toolRan, true, "the approved tool ran after the redeploy");
@@ -181,7 +181,7 @@ test("§11 durable HITL: an Approve that survives a redeploy resumes the SAME se
   assert.equal(trail[0].tool, "rm");
 });
 
-test("§11 durable HITL: a DUPLICATE Approve (Slack retry) does not double-apply the gated tool", async () => {
+test("durable HITL: a DUPLICATE Approve (Slack retry) does not double-apply the gated tool", async () => {
   // Slack re-delivers an interaction on timeout. The Approve path calls session.advance
   // directly (token validation bypassed — the signature already authenticated it), so the
   // protection against double-apply is engine/store idempotency: the second advance
@@ -212,7 +212,7 @@ test("§11 durable HITL: a DUPLICATE Approve (Slack retry) does not double-apply
   assert.equal(log.calls.length, 1, "the gated tool ran EXACTLY once despite the duplicate Approve");
 });
 
-test("§11 durable HITL: the redeployed resume is BYTE-IDENTICAL to a no-redeploy control", async () => {
+test("durable HITL: the redeployed resume is BYTE-IDENTICAL to a no-redeploy control", async () => {
   const control = await runScenario(false);
   const redeployed = await runScenario(true);
   assert.equal(control.finalStatus, "finished");

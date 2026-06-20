@@ -1,6 +1,6 @@
-// ToolContract + contractDigest (spec §3.2, Spec 05 A1). Host-side: MAY use
+// ToolContract + contractDigest. Host-side: MAY use
 // node:crypto (not core). The digest covers the MODEL-PERCEIVED surface only —
-// transport/location/retrySafe float (ADR-0004) — and reuses @irisrun/core's
+// transport/location/retrySafe float — and reuses @irisrun/core's
 // canonicalize for deterministic bytes.
 import { canonicalize } from "@irisrun/core";
 import type { Json } from "@irisrun/core";
@@ -12,15 +12,14 @@ export interface ToolContract {
   inputSchema: Json; // model-visible (JSON Schema as Json)
   transport: "in-process" | "subprocess" | "mcp" | "grpc";
   location: string; // "inproc://id" | "subprocess://cmd" | "mcp://cmd" | "grpc://host:port/svc/method"
-  retrySafe: boolean; // idempotency posture metadata (ADR-0003); descriptive — the
-  // harness config is authoritative for the EFFECT's posture (spec §3.5)
+  retrySafe: boolean; // idempotency posture metadata; descriptive — the
+  // harness config is authoritative for the EFFECT's posture
 }
 
 /**
  * sha256(canonicalize({ name, description, inputSchema })) — the model-perceived
  * surface only. transport/location/retrySafe are deliberately excluded so the
- * same logical tool keeps one identity across localities (ADR-0004). M3 computes
- * + exposes the digest; session-pinning enforcement is M4.
+ * same logical tool keeps one identity across localities.
  */
 export function contractDigest(contract: ToolContract): string {
   const surface: Json = {
@@ -40,7 +39,7 @@ export interface ToolRegistry {
 
 /**
  * A name-keyed registry of tool contracts. `register` rejects a duplicate name
- * loudly (build-time collision check, Spec 05 A1) — two tools sharing a
+ * loudly (build-time collision check) — two tools sharing a
  * model-visible name is an authoring error, never silently overwritten.
  */
 export function makeToolRegistry(initial: ToolContract[] = []): ToolRegistry {

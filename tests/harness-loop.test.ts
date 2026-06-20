@@ -1,8 +1,8 @@
-// Task 5 (M2) — C1: a multi-step ReAct tool loop runs to finish, every effect
+// Task 5 — C1: a multi-step ReAct tool loop runs to finish, every effect
 // journaled, replay byte-identical. The scripted model returns tool calls on the
 // first turn and end_turn on the second; the react tactic loops while the model
 // wants tools and finishes when it stops. gateAction allows; tools are simulated
-// in-process (real protocol-boundary tools are M3).
+// in-process (real protocol-boundary tools come later).
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {

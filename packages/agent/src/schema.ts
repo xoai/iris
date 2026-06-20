@@ -19,7 +19,7 @@ export const AGENTFILE_SCHEMA: { [k: string]: unknown } = {
   $id: "https://iris.run/schema/agentfile/v1.json",
   title: "Iris Agentfile (iris/v1, kind Agent)",
   description:
-    "An Iris Agentfile: a declarative RECIPE that references content (embedded by hash) and tool/connection contracts (pinned by digest). It carries NO executable behavior (ADR-0005).",
+    "An Iris Agentfile: a declarative RECIPE that references content (embedded by hash) and tool/connection contracts (pinned by digest). It carries NO executable behavior.",
   type: "object",
   required: [
     "apiVersion",
@@ -102,7 +102,7 @@ export const AGENTFILE_SCHEMA: { [k: string]: unknown } = {
           pattern: "^(mcp|grpc|subprocess)://",
           description: "Contract ref. Scheme must be mcp, grpc, or subprocess.",
         },
-        // ADR-0005: a tool/connection is a contract referenced by digest, never
+        // A tool/connection is a contract referenced by digest, never
         // inlined code. A present code/script/source field validates against the
         // boolean `false` subschema → rejected.
         code: false,

@@ -1,4 +1,4 @@
-// Import a portable export into a destination StateStore (spec §4). Mirrors
+// Import a portable export into a destination StateStore. Mirrors
 // migrateSession's destination half (snapshot-first then dense fenced append),
 // but STRICTER: it releases the lease on every path (migrateSession leaks it)
 // and refuses a non-empty destination BEFORE any write (migrateSession can

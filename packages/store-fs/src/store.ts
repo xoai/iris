@@ -1,5 +1,5 @@
 // FsStateStore — a StateStore over node:fs under the SERVERLESS cold-per-turn
-// model (spec §3.2): the store holds NO long-lived handle. Every method opens,
+// model: the store holds NO long-lived handle. Every method opens,
 // reads/writes, and returns, so a FRESH instance over the same root behaves
 // identically to a reused one (the serverless invariant, T2). It enforces the
 // SAME invariants as the sqlite/memory stores — true CAS, fenced+dense append,
@@ -269,7 +269,7 @@ export class FsStateStore implements StateStore {
 
   // --- snapshots ------------------------------------------------------------
   // writeSnapshot SEEDS the hwm to max(hwm, upToSeq) implicitly: hwm derives
-  // from snapshotUpTo, so writing snapshots/<upToSeq> raises it (spec §3.2).
+  // from snapshotUpTo, so writing snapshots/<upToSeq> raises it.
 
   async writeSnapshot(
     sessionId: string,

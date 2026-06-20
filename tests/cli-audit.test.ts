@@ -1,4 +1,4 @@
-// P2-8 M4 — cmdAudit(): the `iris audit` command logic over an injected store.
+// cmdAudit(): the `iris audit` command logic over an injected store.
 // Asserts the rendered trail + verification line, the --json shape, an empty session,
 // and the C1 interactivity auto-detection (an interactive session must replay under
 // the interactive reducer — forcing the wrong reducer must fail). cli-main.ts's

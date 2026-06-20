@@ -1,4 +1,4 @@
-// P2-9 (A-1, A-2) — end-to-end delegation on the REAL harness: a parent agent configured
+// End-to-end delegation on the REAL harness: a parent agent configured
 // with a `delegate` subagent-tool emits a delegate call; the kernel routes tool_exec to a
 // `subagent` effect; the performer drives a child harness; the parent receives the child's
 // reply. The load-bearing proofs:

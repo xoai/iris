@@ -1,4 +1,4 @@
-// T4 (M5) — OTel-shaped observability. toSpans derives spans from a recorded
+// T4 — OTel-shaped observability. toSpans derives spans from a recorded
 // session's inspection: a root `turn` span + child spans per effect (intent→result)
 // + the terminal marker span, with DETERMINISTIC spanIds (sessionId#seq, no RNG)
 // and timing read from record.ts (allowed — observability; only reducers/step may

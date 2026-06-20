@@ -1,4 +1,4 @@
-// makeSlackChannel (roadmap v0.2 §11) — a first-party Slack channel built on the
+// makeSlackChannel — a first-party Slack channel built on the
 // channel port (@irisrun/channel-core) to showcase the moat where a buyer feels it:
 // durable, journaled, approval-gated sessions. A Slack approval can PARK for hours,
 // survive a redeploy, and resume the SAME session byte-identically — because the

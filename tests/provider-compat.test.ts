@@ -1,4 +1,4 @@
-// Matrix invariants (roadmap v0.2 §9, plan T9.1). The compatibility matrix is
+// Matrix invariants. The compatibility matrix is
 // conformance-tested DATA; these pins keep the data honest: stable unique ids, valid
 // protocols, the note↔replaySafety contract, and — for replay-safe entries — that the
 // baseUrl is the FULL endpoint URL ending in the protocol's path suffix (the T9.3

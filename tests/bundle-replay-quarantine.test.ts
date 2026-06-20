@@ -1,11 +1,11 @@
-// M6 T8 — replay-incorruptibility of an INSTALLED external bundle (C4 extended,
-// spec §4.3 / §6 done-when #3b). Mirrors tests/tactic-swap.test.ts exactly, but
+// T8 — replay-incorruptibility of an INSTALLED external bundle (C4 extended).
+// Mirrors tests/tactic-swap.test.ts exactly, but
 // with @irisrun/bundle-coding's tacticPerformer as the session's installed tactic.
 // Proof that an installed third-party (or malicious) bundle CANNOT corrupt a
 // replayed session: (1) pure replay() with ZERO performers reconstructs the turn
 // byte-identically; (2) resuming with an ADVERSARIAL performer (every seam choice
 // flipped) leaves the result byte-identical AND the adversarial performer is NEVER
-// invoked (advCalls===0). The ADR-0007 quarantine — replay folds the journaled
+// invoked (advCalls===0). The replay quarantine — replay folds the journaled
 // `choice` regardless of the authoring performer; `tacticId` is a label only.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -82,7 +82,7 @@ test("T8: an installed coding bundle's seam decisions are journaled; replay neve
   };
   const t2 = await runTurn(deps(store, adversary, v1.invariants, { calls: [] }), "s");
   assert.equal(t2.status, "finished");
-  assert.equal(advCalls, 0, "the adversarial performer was NEVER invoked on replay (ADR-0007 quarantine)");
+  assert.equal(advCalls, 0, "the adversarial performer was NEVER invoked on replay (replay quarantine)");
   assert.equal(
     canonicalize(t2.status === "finished" ? t2.state : null),
     canonicalize(live),

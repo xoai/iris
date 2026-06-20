@@ -1,10 +1,10 @@
-// Task 9 (M2) — C5: kernel-enforced invariants. Two DISTINCT mechanisms:
+// Task 9 — C5: kernel-enforced invariants. Two DISTINCT mechanisms:
 //  - cap-tightening is a RUNTIME kernel override in the reducer (forces `done`
 //    when a journaled counter exceeds a cap, regardless of decideNext:"continue");
 //  - remit isolation is TYPE-enforced (narrow seam signatures; no cap I/O on any
 //    seam), checked here with @ts-expect-error.
-// egress deny-all is a pinned constant/type-level default in M2 (no runtime
-// network until M3); gate-irreversible-by-default is likewise pinned.
+// egress deny-all is a pinned constant/type-level default (no runtime network
+// yet); gate-irreversible-by-default is likewise pinned.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {

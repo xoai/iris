@@ -1,4 +1,4 @@
-// A ZERO-DEP YAML-SUBSET reader for AUTHORING Agentfiles (spec §3.2). Supports
+// A ZERO-DEP YAML-SUBSET reader for AUTHORING Agentfiles. Supports
 // the doc's subset only: 2-space-indent maps, `- ` sequences, scalars (string /
 // boolean / number), `#` comments. Anything outside the subset — flow (`{}`/`[]`),
 // anchors/aliases (`&`/`*`), multi-document (`---`), tab indentation — is REJECTED

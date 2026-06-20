@@ -1,5 +1,5 @@
 // `iris journal export|verify|import` command logic — the verifiable portable
-// journal (roadmap-v0.2 P0). The TESTABLE units (injected store / raw bytes);
+// journal. The TESTABLE units (injected store / raw bytes);
 // cli-main.ts's journalCommand wires real sqlite + fs IO and is not unit-tested
 // per repo convention. NOTE: `iris verify` already means OCI image verification,
 // so these live under the `journal` subcommand group.

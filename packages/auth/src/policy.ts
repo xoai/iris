@@ -1,4 +1,4 @@
-// The who-may-approve authorization policy (roadmap P1-5, done-when #1). Declarative
+// The who-may-approve authorization policy. Declarative
 // and Json-shaped so it is serializable, inspectable, and (future) pinnable. Pure:
 // no clock/RNG, no `ts` reads — the decision is journaled and folded once, so replay
 // reproduces it without re-evaluating the policy.

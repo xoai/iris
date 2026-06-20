@@ -1,4 +1,4 @@
-// The uniform ToolInvoker (spec §3.3, Spec 05 A3): one invoke(...) interface
+// The uniform ToolInvoker: one invoke(...) interface
 // over N transports, dispatched by contract.transport. Host-side; transports
 // MAY use node: builtins. A missing transport fails loudly (no silent success).
 import type { Json } from "@irisrun/core";
@@ -64,7 +64,7 @@ export function locationHandle(location: string, scheme: string): string {
   return location.startsWith(prefix) ? location.slice(prefix.length) : location;
 }
 
-// --- tool_locality resolution (spec §3.4, Spec 05 A4, ADR-0008) ---------------
+// --- tool_locality resolution ------------------------------------------------
 // Locality selects the PHYSICAL realization without changing the model-perceived
 // surface, so the same logical tool keeps one contractDigest across localities.
 
@@ -85,7 +85,7 @@ export interface LocalityOption {
 
 export type LocalityOptions = Partial<Record<ToolLocality, LocalityOption>>;
 
-// Which transports are valid for each locality (Spec 05 A4): in-process is the
+// Which transports are valid for each locality: in-process is the
 // trusted same-language case; local is a subprocess; remote is a network call.
 const ALLOWED_TRANSPORTS: Record<ToolLocality, ToolContract["transport"][]> = {
   "in-process": ["in-process"],
@@ -98,8 +98,7 @@ const ALLOWED_TRANSPORTS: Record<ToolLocality, ToolContract["transport"][]> = {
  * model-perceived surface (name/description/inputSchema) is carried through
  * unchanged so `contractDigest` is identical across localities. A locality with
  * no configured transport — or one bound to the wrong transport kind — is a
- * configuration error and is refused LOUDLY (the tool-level capability check;
- * the full host capability-diff gate is M6).
+ * configuration error and is refused LOUDLY (the tool-level capability check).
  */
 export function resolveLocality(
   tool: LogicalTool,

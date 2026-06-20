@@ -1,6 +1,6 @@
 # Threat model — the sandbox egress firewall & credential broker
 
-*Roadmap v0.2 P2 #8 — the adversarial review of the security spine before it is
+*The adversarial review of the security spine before it is
 load-bearing for real users. Companion to the sidecar egress proxy in
 `@irisrun/sandbox` (`packages/sandbox/src/egress-proxy.ts`). Every guarantee
 below maps to a test in `tests/sandbox-adversarial.test.ts` (plus the existing
@@ -32,7 +32,7 @@ Agentfile-declared `secrets`/`environment` plus a fixed non-secret base (PATH/HO
 proxy/TLS), never the operator's whole shell, and an undeclared `--env`/`--env-file`
 key is refused. Secret VALUES still never enter the manifest, image, journal, or any
 error message — they are supplied at run time via `--env-file`/`--env`. See
-[Tools → Secrets & environment](../03-tools.md) for the user-facing model.
+[Tools → Secrets & environment](../tools.md) for the user-facing model.
 
 ## Assets
 
@@ -124,3 +124,7 @@ otherwise exact-match and **case-sensitive** (broker store keys).
   network boundary (not the cooperative default) — needs real infra.
 - Brokering-over-TLS, if ever required, needs an explicit TLS-termination design
   (and a re-review) — today it is correctly refused, not faked.
+
+---
+
+Back to the **[Tools chapter](../tools.md)** · the sibling **[journal threat model](./threat-model.md)** · the **[project README](../../README.md)**.

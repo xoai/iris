@@ -1,4 +1,4 @@
-// Gate for the env-gated LIVE conformance tier (roadmap v0.2 P2 #7). The live
+// Gate for the env-gated LIVE conformance tier. The live
 // tier hits the real provider endpoints, so it runs ONLY when explicitly enabled
 // AND the relevant API key is present — otherwise the tests SKIP cleanly (never
 // fail) so the default suite stays green here and in CI without keys. The gate

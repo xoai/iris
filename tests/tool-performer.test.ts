@@ -1,7 +1,7 @@
 // T6 — the REAL tool_call performer (backed by ToolInvoker over the in-process
-// transport, so this also covers in-process) replaces M2's simulated fake and
-// drives the M2 kernel tool loop to finish. Effects are journaled; replay never
-// re-invokes the tool — for BOTH the success and the failure path (spec §7).
+// transport, so this also covers in-process) replaces the simulated fake and
+// drives the kernel tool loop to finish. Effects are journaled; replay never
+// re-invokes the tool — for BOTH the success and the failure path.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {

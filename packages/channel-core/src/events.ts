@@ -1,4 +1,4 @@
-// The channel wire-event model (roadmap v0.2 §10). Re-homed from channel-rest so
+// The channel wire-event model. Re-homed from channel-rest so
 // EVERY channel transport shares one event vocabulary. A `record` is a committed
 // JournalRecord (the deep-copied journal timeline); a `delta` is a non-journaled
 // model token; the terminal `outcome` carries the TurnOutcome + the rotated

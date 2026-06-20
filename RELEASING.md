@@ -90,10 +90,11 @@ and cuts a GitHub Release. `v0.0.1` predates this; `v0.1.0` is the first synced 
   `npm i -g iris-runtime`. (Named `iris-runtime` because the bare `iris` name and
   the `@iris` scope are owned by others on npm; the binary stays `iris`.)
 - **`@irisrun/*`** — the libraries: `core`, `tools`, `agent`, `host`,
-  `channel-rest`, `channel-web`, `channel-mcp`, `client-sdk`, `store-do`,
-  `store-fs`, `store-memory`, `store-sqlite`, `provider-anthropic`,
-  `provider-openai`, `auth`, `audit`, `subagents`, `schedule`,
-  `bundle-coding`, `inspect`, `observe`, `evals`, `sandbox`.
+  `channel-core`, `channel-rest`, `channel-web`, `channel-mcp`, `channel-slack`,
+  `client-sdk`, `store-do`, `store-fs`, `store-memory`, `store-sqlite`,
+  `provider-anthropic`, `provider-openai`, `provider-compat`, `auth`, `audit`,
+  `subagents`, `schedule`, `bundle-coding`, `inspect`, `observe`, `evals`,
+  `journal-export`, `sandbox`.
 
 All publishable packages share one lockstep version (currently `0.1.0`) and
 publish with public access via `publishConfig`.

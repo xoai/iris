@@ -1,4 +1,4 @@
-// Canonical JSON serialization (spec §3.9). Deterministic bytes are the basis
+// Canonical JSON serialization. Deterministic bytes are the basis
 // for snapshot storage and the replay byte-equality assertion. Pure; uses only
 // the Web-standard TextEncoder/TextDecoder globals (no Node-only API), so core
 // stays edge/WASM-reachable.
@@ -15,7 +15,7 @@ export type Json =
  * Deterministic JSON string: object keys sorted recursively, array order
  * preserved. Rejects values that have no canonical JSON form (undefined,
  * NaN/Infinity, BigInt, functions, symbols, and non-plain objects such as
- * Map/Set/class instances) — loudly, never with silent coercion (spec §3.9).
+ * Map/Set/class instances) — loudly, never with silent coercion.
  */
 export function canonicalize(value: Json): string {
   return write(value, []);

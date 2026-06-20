@@ -1,4 +1,4 @@
-// The channel PORT (roadmap v0.2 §10) — the formal, normalize-inbound / emit-outbound
+// The channel PORT — the formal, normalize-inbound / emit-outbound
 // contract a platform adapter implements, the way StateStore is the store port. A
 // transport's job reduces to: normalizeInbound(platformEvent) → drive the
 // ChannelSession (start / continueTurn) → emitOutbound(result). Keeping this narrow is

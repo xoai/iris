@@ -2,7 +2,7 @@
 // consultation. A seam consultation IS an effect (effectKind "tactic") performed
 // via the existing PerformerRegistry, exactly like model_call: the performer runs
 // the seam's tactic chain and returns the decision as the effect result VALUE
-// { seam, tacticId, choice }. Replay never calls it (ADR-0007 quarantine), which
+// { seam, tacticId, choice }. Replay never calls it (the replay quarantine), which
 // is what the tactic-swap proof (C4) relies on.
 import type { Performer, Json, Outcome } from "@irisrun/core";
 

@@ -1,4 +1,4 @@
-// Task 4 (M2): the kernel is a Program<HarnessState> over the EXISTING runTurn
+// Task 4: the kernel is a Program<HarnessState> over the EXISTING runTurn
 // (ZERO engine change). This proves the no-tool spine of the phase machine:
 // assemble → maybe_compact(false) → await_model → decide_next(finish) → done.
 // Every seam consultation is a `tactic` effect; replay reconstructs byte-identical

@@ -1,4 +1,4 @@
-// Cryptographic content-addressing for the verifiable journal (spec §3.1).
+// Cryptographic content-addressing for the verifiable journal.
 // THE only new home of node:crypto — @irisrun/core and @irisrun/audit stay
 // Node-free. All structured preimages are `canonicalize(...)` of a JSON object
 // (sorted keys → injective → no separator ambiguity); the record chain folds
@@ -50,7 +50,7 @@ export function chainHashOf(genesis: string, recordHashes: string[]): string {
   return acc;
 }
 
-/** The canonical addressing preimage STRING (spec §3.1) — exposed so the
+/** The canonical addressing preimage STRING — exposed so the
  *  reproducibility-vector test can anchor on the exact bytes, not only the digest. */
 export function addressingPreimage(input: {
   chainHash: string;

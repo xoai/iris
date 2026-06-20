@@ -23,8 +23,9 @@ only when `ANTHROPIC_API_KEY` is set; the test suite runs it against a fake
 Selected automatically from an `anthropic/…` model prefix in your Agentfile — set
 the prefix once and `iris run` / `chat` / `serve` / `deploy` all follow it:
 
-```json
-{ "model": "anthropic/claude-x" }
+```yaml
+# agent.yaml
+model: anthropic/claude-x
 ```
 
 This adapter speaks the **Anthropic Messages protocol**, not just Anthropic itself:
@@ -33,7 +34,7 @@ point it at any compatible endpoint with `--base-url` (or `IRIS_MODEL_BASE_URL`)
 are **replay-safe vs known-divergent** is a conformance-tested matrix in
 **[`@irisrun/provider-compat`](../provider-compat/README.md)** (`iris providers --matrix`).
 
-See **[docs/06 — Models & providers](../../docs/06-providers.md)** for the model
+See **[docs/Models & providers](../../docs/providers.md)** for the model
 port, the shared conformance suite, the compatibility matrix, and how to add a third
 provider.
 

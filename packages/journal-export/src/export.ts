@@ -1,4 +1,4 @@
-// Build / serialize / parse the portable export file (spec §3, §4).
+// Build / serialize / parse the portable export file.
 import { encode, decode } from "@irisrun/core";
 import type { Json, JournalRecord, StateStore } from "@irisrun/core";
 import type { JournalExportV1 } from "./types.ts";
@@ -44,12 +44,12 @@ export function buildExport(parts: {
 
 /** Export a recorded session from a StateStore to a portable, content-addressed
  *  file model. Mirrors verifySession's replay window: snapshot + tail from
- *  snapUpTo+1, with the §3.0 `complete` rule computed from the FULL journal. */
+ *  snapUpTo+1, with the `complete` rule computed from the FULL journal. */
 export async function exportSession(store: StateStore, sessionId: string): Promise<JournalExportV1> {
   const snap = await store.readLatestSnapshot(sessionId);
   const snapUpTo = snap ? snap.upToSeq : -1;
   const tail = await store.readJournal(sessionId, snapUpTo + 1);
-  // §3.0 — mirror verifySession exactly (full[0].seq===0 vs snap===null).
+  // Mirror verifySession exactly (full[0].seq===0 vs snap===null).
   const full = await store.readJournal(sessionId, 0);
   const complete = full.length === 0 ? snap === null : full[0].seq === 0;
   // Governing digest = last included record's defDigest ("" when 0 records).

@@ -1,5 +1,5 @@
-// Shared channel-PORT conformance suite (roadmap v0.2 §10, plan T10.2). The literal
-// realization of the §10 done-when: "a documented channel-port spec with a conformance
+// Shared channel-PORT conformance suite. The literal
+// realization: "a documented channel-port spec with a conformance
 // test ANY channel must pass." channel-rest and channel-mcp both run this exact set of
 // behavioral assertions through their REAL transport surface; only the wire mapping
 // (HTTP status / JSON-RPC code → refusal) comes from the fixture.
@@ -94,7 +94,7 @@ export function runChannelPortConformance(fx: ChannelPortFixture): void {
     }
   });
 
-  test(`${P} a CONTENDED turn KEEPS the prior token (§10 committed-only rotation)`, async () => {
+  test(`${P} a CONTENDED turn KEEPS the prior token (committed-only rotation)`, async () => {
     const ops = await fx.create();
     try {
       const s = await ops.start();
@@ -110,7 +110,7 @@ export function runChannelPortConformance(fx: ChannelPortFixture): void {
     }
   });
 
-  test(`${P} an ABORTED turn KEEPS the prior token (§10 committed-only rotation)`, async () => {
+  test(`${P} an ABORTED turn KEEPS the prior token (committed-only rotation)`, async () => {
     const ops = await fx.create();
     try {
       const s = await ops.start();

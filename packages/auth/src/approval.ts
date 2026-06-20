@@ -1,4 +1,4 @@
-// The governed approval decision (roadmap P1-5). Combines the human's raw decision
+// The governed approval decision. Combines the human's raw decision
 // with the authorization policy into the value that rides the journaled `signal_recv`
 // effect result. The kernel's `foldApproval` (@irisrun/core kernel.ts:197) reads ONLY
 // `approved===true`; the other fields are audit metadata that persist in the journal.

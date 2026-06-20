@@ -1,4 +1,4 @@
-// C3 (roadmap P2-9) — subagent delegation reachable from the CLI. Proves:
+// C3 — subagent delegation reachable from the CLI. Proves:
 //   • loadSubagents parses/validates an optional `subagents.json` (loud on malformed,
 //     empty when absent — zero-value-off);
 //   • subagentPerformers(undefined,…) === {} (byte-identical when unconfigured);

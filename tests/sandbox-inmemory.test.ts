@@ -1,4 +1,4 @@
-// T8 — T-sandbox-secure (inmemory scope, spec §3.6). The inmemory
+// T8 — T-sandbox-secure (inmemory scope). The inmemory
 // backend defaults network egress to deny-all (the secure floor), and the
 // credential broker injects a secret ONLY at the egress firewall — the secret
 // never enters the sandbox's env, command args, /workspace, or output. (The real

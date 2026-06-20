@@ -1,4 +1,4 @@
-// reproduce() (roadmap P2-8): makes "reproducible evals" an EXPLICIT, provable
+// reproduce(): makes "reproducible evals" an EXPLICIT, provable
 // feature, not just an implicit property. It runs an EvalCase N independent times
 // (each `case.build()` is a fresh store + performers, index reset to 0 — the EvalCase
 // contract) and proves byte-identical {score, status, FULL-journal digest} across

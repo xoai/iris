@@ -1,4 +1,4 @@
-// Phase B (P0 items 3+4) — @irisrun/channel-web `makeWebHandler` (routes + content-type
+// @irisrun/channel-web `makeWebHandler` (routes + content-type
 // + false-fallthrough, never throws) AND the additive `channel-rest` webHandler seam
 // (GET / is served while POST /v1/session still round-trips, proving the seam does
 // not shadow the API). The browser shell render itself is an env-gated manual smoke.

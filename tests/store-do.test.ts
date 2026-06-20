@@ -1,4 +1,4 @@
-// M6 T2 — @irisrun/store-do DoStateStore conformance (spec §2.2). The edge store
+// T2 — @irisrun/store-do DoStateStore conformance. The edge store
 // (Cloudflare Durable Objects, cold-per-isolate over a narrow DoStorage) MUST
 // enforce the SAME invariants the sqlite/fs stores enforce: true CAS (compare-
 // and-write inside ONE storage.transaction — atomic, no check→await→mutate gap),

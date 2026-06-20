@@ -1,4 +1,4 @@
-// Registry resolver seam (spec §3.3). The builder resolves each Agentfile tool/
+// Registry resolver seam. The builder resolves each Agentfile tool/
 // connection ref (which may carry a version range `@^2`) to a concrete
 // ToolContract. Install-free: makeLocalResolver over an in-memory map; the real
 // external registry is a manual smoke. Host-side.
@@ -20,7 +20,7 @@ export function refBase(ref: string): string {
 /**
  * A resolver over an in-memory `refBase → ToolContract` map (install-free). Both
  * `mcp://r/x@^2` and `mcp://r/x@^3` resolve via the shared base `mcp://r/x`,
- * modelling "pin the contract, float the implementation" (ADR-0004).
+ * modelling "pin the contract, float the implementation".
  */
 export function makeLocalResolver(
   map: Record<string, ToolContract>,

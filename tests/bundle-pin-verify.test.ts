@@ -1,13 +1,13 @@
-// M6 T7 — bundle pinning by a REAL content digest + an EXTENDED verifyImage.
+// T7 — bundle pinning by a REAL content digest + an EXTENDED verifyImage.
 // Today buildImage pins `Lock.tactics.bundle = {id, digest: sha256Hex(id)}` — a
 // placeholder over the id string only — and verifyImage never touches the bundle.
-// M6 introduces a resolved BundleDefinition + bundleDigest(def) = sha256 over the
-// canonical BEHAVIOR surface (stable across a floating `location`, ADR-0004), pins
+// This introduces a resolved BundleDefinition + bundleDigest(def) = sha256 over the
+// canonical BEHAVIOR surface (stable across a floating `location`), pins
 // the real digest WHEN a resolveBundle resolver is injected, and EXTENDS verifyImage
 // to re-resolve the bundle by its STABLE id/ref and recompute+compare the digest.
 //
 // Back-compat is load-bearing: WITHOUT a resolveBundle resolver, build keeps the
-// sha256Hex(id) placeholder byte-unchanged and verify behaves exactly as M4. The
+// sha256Hex(id) placeholder byte-unchanged and verify behaves exactly as before. The
 // content-tamper case exercises the NEW re-resolve loop SPECIFICALLY (the lock
 // digest is left unchanged, so the pre-existing imageDigest check passes).
 import { test } from "node:test";
@@ -59,7 +59,7 @@ test("T7: bundleDigest is sha256(canonical behavior surface) and is STABLE acros
   const d1 = bundleDigest(CODING_DEF);
   const d2 = bundleDigest({ ...CODING_DEF, location: "registry://other/place@sha-zzz" });
   assert.match(d1, /^[0-9a-f]{64}$/);
-  assert.equal(d1, d2, "a floating location must NOT change the digest (ADR-0004)");
+  assert.equal(d1, d2, "a floating location must NOT change the digest");
   // a real content change (the behavior surface) DOES change the digest
   const d3 = bundleDigest({ ...CODING_DEF, seams: [...CODING_DEF.seams, "spawnPolicy"] });
   assert.notEqual(d1, d3, "a behavior-surface change DOES change the digest");
@@ -91,16 +91,16 @@ test("T7 (back-compat): WITHOUT resolveBundle, buildImage keeps the sha256Hex(id
   assert.equal(
     img.lock.tactics.bundle.digest,
     sha256Hex("default"),
-    "the M4 placeholder is preserved exactly",
+    "the placeholder is preserved exactly",
   );
 });
 
-test("T7: an EXACT M4-style build (no resolveBundle) is byte-identical to the pre-M6 build", async () => {
+test("T7: an EXACT build (no resolveBundle) is byte-identical to the prior build", async () => {
   // The whole image digest must be unchanged when no resolveBundle is injected —
-  // this is what keeps every existing M4 build/verify test green.
+  // this is what keeps every existing build/verify test green.
   const img = await buildImage(model("default"), { resolver: toolResolver, readFile });
   // imageDigest is computed over the placeholder-pinned lock; recompute matches
-  await verifyImage(img, { resolver: toolResolver }); // M4 verify path unchanged
+  await verifyImage(img, { resolver: toolResolver }); // verify path unchanged
   assert.equal(img.lock.tactics.bundle?.digest, sha256Hex("default"));
 });
 
@@ -154,13 +154,13 @@ test("T7: a dangling bundle ref (resolveBundle returns null) FAILS loudly", asyn
   );
 });
 
-test("T7 (back-compat): verifyImage WITHOUT resolveBundle never touches the bundle (M4 behavior)", async () => {
+test("T7 (back-compat): verifyImage WITHOUT resolveBundle never touches the bundle", async () => {
   // Build WITH a real bundle pin, then verify WITHOUT a resolveBundle — must pass
-  // exactly as M4 (the bundle loop is skipped when no resolver is injected).
+  // exactly as before (the bundle loop is skipped when no resolver is injected).
   const img: AgentImage = await buildImage(model("iris/coding@^1"), {
     resolver: toolResolver,
     readFile,
     resolveBundle: bundleResolver(CODING_DEF),
   });
-  await verifyImage(img, { resolver: toolResolver }); // no resolveBundle → M4 path, no throw
+  await verifyImage(img, { resolver: toolResolver }); // no resolveBundle → prior path, no throw
 });
