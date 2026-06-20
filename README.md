@@ -8,11 +8,17 @@
   <h3>A portable runtime for durable AI agents</h3>
 </div>
 
-![Node](https://img.shields.io/badge/node-%E2%89%A5%2024-339933?logo=nodedotjs&logoColor=white) ![runtime deps](https://img.shields.io/badge/runtime%20deps-0-success) ![tests](https://img.shields.io/badge/tests-592%2F592-success) ![license](https://img.shields.io/badge/license-MIT-blue)
+<p align="center">
+  <a href="https://www.npmjs.com/package/iris-runtime"><img alt="npm version" src="https://img.shields.io/npm/v/iris-runtime?style=for-the-badge&logo=npm&logoColor=white&label=iris-runtime&color=CB3837&labelColor=000000"></a>
+  <a href="https://nodejs.org"><img alt="Node ≥ 24" src="https://img.shields.io/badge/node-%E2%89%A5%2024-339933?style=for-the-badge&logo=nodedotjs&logoColor=white&labelColor=000000"></a>
+  <img alt="TypeScript — no build step" src="https://img.shields.io/badge/TypeScript-no%20build%20step-3178C6?style=for-the-badge&logo=typescript&logoColor=white&labelColor=000000">
+  <img alt="tests: 592/592" src="https://img.shields.io/badge/tests-592%2F592-44CC11?style=for-the-badge&labelColor=000000">
+  <a href="LICENSE"><img alt="license: MIT" src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge&labelColor=000000"></a>
+</p>
 
-Iris is a portable runtime for durable AI agents — built so an agent is never locked to a single host, model, or vendor. You declare an agent as a config file plus a folder (instructions, tools, skills, channels), and `iris build` compiles it into an open, content-addressed image: the unit you version, push to any OCI registry, and run anywhere.
+Iris is a portable runtime for durable AI agents — built so an agent is never locked to a single host, model, or vendor. You declare an agent as a config file plus a folder — instructions and skills as files, tools and channels referenced by address — and `iris build` compiles it into an open, content-addressed image: the unit you version, push to any OCI registry, and run anywhere.
 
-**[Features](#key-features)** · **[When to use](#when-to-use-iris)** · **[Compare](#how-iris-compares)** · **[Authoring](#the-agent-is-a-directory)** · **[Install](#install)** · **[Quick start](#quick-start)** · **[How it works](#how-it-works)** · **[Packages](#whats-inside)** · **[Status](#status)**
+**[Features](#key-features)** · **[When to use](#when-to-use-iris)** · **[Compare](#how-iris-compares)** · **[Authoring](#the-agent-is-a-directory)** · **[Install](#install)** · **[Quick start](#quick-start)** · **[How it works](#how-it-works)** · **[Packages](#whats-inside)**
 
 > **New here?** This README is the manifesto — *why* Iris exists. For a guided
 > path from `npx iris-runtime init` to a deployed, talkable agent, follow the
@@ -28,7 +34,7 @@ Iris is a portable runtime for durable AI agents — built so an agent is never 
 - **Talk to it, deploy it in one command** — a built-in web chat UI (`iris serve --web`) and a small isomorphic client SDK (`@irisrun/client-sdk`) put a human in front of the agent, and `iris deploy` lands it on a real edge host (Cloudflare Durable Objects), where a tab close or a host migration resumes the same session.
 - **Bring your own model** — the model call is just another recorded step behind a small adapter. Anthropic and OpenAI adapters ship (both pass one shared conformance suite); others drop in. No provider is baked into the core.
 - **A small, safe core you can extend** — a thin kernel enforces the safety rules; the agent's decisions (when to summarize context, when to stop, when to ask a human) are pluggable, and every choice is recorded so replay stays exact.
-- **Secure by default** — tools run sandboxed with networking denied by default, and credentials are brokered so secrets never enter the sandbox. Real per-host allowlist egress + brokering for the docker backend ride a host-side sidecar egress proxy ([ADR-0010](docs/adr-0010-sandbox-egress-proxy.md)).
+- **Secure by default** — tools run sandboxed with networking denied by default, and credentials are brokered so secrets never enter the sandbox. Real per-host allowlist egress + brokering for the docker backend ride a host-side sidecar egress proxy.
 
 ## When to use Iris
 
@@ -60,13 +66,6 @@ Iris's two neighbors each made one simplifying trade. **Docker Agent** keeps age
 
 <sub>— marks a property outside that project's design center, not necessarily a hard limitation.</sub>
 
-**Only Iris:**
-
-- **Resumes a live session on a different substrate** — start on a VPS, finish on a serverless function or an edge isolate, from the same journal, byte-for-byte identical.
-- **Owns the durability engine** — journal / replay / snapshot is Iris's code, identical everywhere; a host supplies only a compare-and-swap store and a wakeup.
-- **Proves its own determinism** — replay is a pure function of the journal, and an always-on assertion trips the moment any nondeterminism is introduced.
-- **Is stateful, portable, *and* OCI-distributed at once** — Docker's distribution model and Eve's statefulness, without either's trade.
-
 > Iris = Docker's portability + Eve's durability — minus both their trades.
 
 ## The agent is a directory
@@ -81,7 +80,7 @@ my-agent/
     └── triage.md
 ```
 
-Tools and connections aren't local files — the manifest **references** them by URI, because behavior lives across a protocol boundary:
+Tools and connections aren't local files — the manifest **references** them by URI (`mcp://`, `grpc://`, `subprocess://`), because behavior lives across a protocol boundary, free to be written in any language:
 
 ```json
 {
@@ -108,7 +107,10 @@ Tools and connections aren't local files — the manifest **references** them by
 }
 ```
 
-Every field, and what it controls:
+`build` validates loudly: an unknown `apiVersion`/`kind`, an inline-behavior field (`code`/`script`/`source`), or an unrecognized ref scheme is rejected (`subprocess://` also requires `local_subprocess: true` and rules out `tool_locality: "remote"`). The whole contract ships as a JSON Schema (draft 2020-12) — run **`iris schema`** for the authoritative field reference, editor autocomplete, and CI validation.
+
+<details>
+<summary><b>Every Agentfile field</b></summary>
 
 | Field | Required | Values / form | What it does |
 |---|---|---|---|
@@ -131,9 +133,7 @@ Every field, and what it controls:
 | `sandbox.network` | yes | e.g. `deny-all` | Network policy floor. |
 | `sandbox.workspace` | no | path | A workspace directory, embedded by hash. |
 
-`build` validates the manifest loudly: an unknown `apiVersion`/`kind`, an inline-behavior field (`code`/`script`/`source`), or a non-`mcp`/`grpc`/`subprocess` ref is rejected — and a `subprocess://` tool requires `local_subprocess: true` and is incompatible with `tool_locality: "remote"`. That same contract is published as a JSON Schema (draft 2020-12) — `iris schema` emits it for editor/CI validation, kept drift-locked to the runtime validator by a shared conformance corpus.
-
-> Where Eve keeps tools as local TypeScript, Iris references them across a protocol boundary — *language-agnostic by exile*. The price is a serialize-and-transport hop; the payoff is that a tool can live in any language, in-process or across the network, while one stable contract pins it by digest.
+</details>
 
 `iris build` resolves those refs, embeds content by hash, pins everything in a lockfile, and emits a content-addressed OCI layout — the thing you push, pull, and run:
 
@@ -185,109 +185,103 @@ Use the glob form `node --test 'tests/**/*.test.ts'` (a bare directory fails on 
 
 ## Quick start
 
-Build an image, look inside it, and run a session — the lifecycle is `init → build → inspect → schema → verify → run → serve/chat → deploy`:
+From nothing to a running, resumable agent in **three steps** — no build step, no config, no API key required.
+
+**1 · Scaffold a project**
 
 ```sh
-iris init    ./my-agent                                   # scaffold a self-contained project: agent.json + instructions.md + a bundled `now` tool
+npx iris-runtime init ./my-agent
+```
+
+Drops a self-contained agent on disk: `agent.json` + `instructions.md` + a working bundled `now` tool.
+
+**2 · Build it into an image**
+
+```sh
+iris build --file ./my-agent/agent.json --out ./image
+# → {"imageDigest":"sha256:…"}
+```
+
+`build` resolves and hashes everything into a content-addressed OCI image — the single unit you version, push to any registry, and run anywhere.
+
+**3 · Talk to it**
+
+```sh
+iris chat ./image --session s1 --db /tmp/s1.sqlite --fake
+```
+
+`--fake` uses a deterministic echo model, so this runs with **no API key**. The conversation *is* the session journal: leave with `/exit`, rerun the exact same command, and the chat resumes where you left off.
+
+> **Want a real model?** `export ANTHROPIC_API_KEY=sk-ant-…` then drop `--fake`.
+
+That's the core loop. The rest of the command surface is below.
+
+<details>
+<summary><b>The full lifecycle — every command</b></summary>
+
+`init → build → inspect → schema → verify → run → serve/chat → deploy`
+
+```sh
+iris init    ./my-agent                                   # scaffold a project: agent.json + instructions.md + a bundled `now` tool
 iris build   --file ./my-agent/agent.json --out ./image   # → {"imageDigest":"sha256:…"}
-iris inspect ./image                                      # the image at the intent level
-iris schema  > agentfile.schema.json                      # emit the published Agentfile JSON Schema (draft 2020-12) for editor/CI validation
+iris inspect ./image                                      # read the image at the intent level
+iris schema  > agentfile.schema.json                      # emit the Agentfile JSON Schema (draft 2020-12) for editor/CI
 iris verify  ./image                                      # loud failure on any tamper or pin mismatch
-iris run     ./image --session s1 --db /tmp/s1.sqlite     # run a turn under the session's held pin
-iris serve   ./image --port 8787 --web                    # turnkey HTTP server: REST + SSE + WS streaming, + a web chat UI at /
-iris chat    ./image --session s1 --db /tmp/s1.sqlite     # talk to the agent — durable, resumable, streaming chat
-iris deploy  ./image --out ./iris-edge                    # scaffold a Cloudflare Worker + Durable Object project (one-command edge deploy)
+iris run     ./image --session s1 --db /tmp/s1.sqlite     # run one turn (real model call — needs ANTHROPIC_API_KEY)
+iris serve   ./image --port 8787 --web                    # HTTP server: REST + SSE + WS streaming, + a web chat UI at /
+iris chat    ./image --session s1 --db /tmp/s1.sqlite     # durable, resumable, streaming chat
+iris deploy  ./image --out ./iris-edge                    # scaffold a Cloudflare Worker + Durable Object for edge deploy
 ```
 
-(Working from a clone instead of the published package, run the bin from the workspace with the dev resolution condition — no build step: `node --conditions=iris-src packages/cli/src/cli-main.ts <cmd> …`.) `iris run` performs a real model call, so it needs `ANTHROPIC_API_KEY` — for a no-key run, use the demo below. `iris serve` defaults to a **no-key echo model** (set `--model anthropic` with a key for the real provider), so streaming is demoable immediately: `POST /v1/session` (add `Accept: text/event-stream` for SSE), `POST /v1/session/<id>/message` to continue, or connect a WebSocket to `ws://<host>/v1/ws`.
+`audit`, `eval`, and `schedule` round out the surface.
 
-### A minimal example — park and resume across a real restart
+**Running from a clone** (no published package, no build step) — swap `iris` for the source bin:
+`node --conditions=iris-src packages/cli/src/cli-main.ts <cmd> …`
 
-No model needed. The bundled demo runs one turn, parks on a durable timer, exits — then a **fresh process** rehydrates purely from SQLite and finishes:
+</details>
 
-```sh
-# 1. Run a turn — reads a logical clock, parks on a durable timer, exits.
-node packages/demo/src/run.ts --session demo --db /tmp/iris-demo.sqlite
-# → {"status":"parked","wait":{"kind":"timer","at":10}}
+### Chat with it
 
-# 2. A brand-new process resumes from the SAME journal and finishes.
-node packages/demo/src/run.ts --session demo --db /tmp/iris-demo.sqlite --resume --now 100
-# → {"status":"finished","output":{"counter":2,"echoed":{"counter":1}}}
-```
-
-### Chat with an agent — a durable, resumable conversation
-
-`iris chat` is the interactive client: a terminal REPL where you talk to an agent
-turn-by-turn, the way `eve dev` lets you converse with one locally — except the
-conversation **is** the session journal, so it survives the process and resumes
-later (and, like any Iris session, can migrate across hosts mid-chat). Between
-messages the session simply *parks* on a user wait; the next message resumes it.
-
-Replies **stream live**, token by token, as the model produces them — each
-`agent>` line fills in as the tokens arrive rather than appearing all at once
-(the keyless `--fake` echo streams in word chunks, so you can see it without a
-key). Streaming is a non-journaled side-channel: the durable journal still
-records the whole reply, so resuming a session replays from the journal **without
-re-streaming** earlier turns.
+A terminal REPL where you talk to the agent turn-by-turn. Replies **stream live**, token by token. Because the conversation *is* the journal, a brand-new process resumes the same chat — earlier turns are not re-streamed.
 
 ```sh
-# No key needed: pass --fake to use the deterministic echo model (what the suite uses).
+# No key needed — --fake is the deterministic echo model.
 printf 'hello\nwhat can you do?\n/exit\n' \
   | iris chat ./image --session s1 --db /tmp/s1.sqlite --fake
-# agent> echo:hello              ← printed token-by-token as it streams
+# agent> echo:hello              ← streamed token-by-token
 # agent> echo:what can you do?
 
-# A BRAND-NEW process resumes the SAME conversation from /tmp/s1.sqlite:
+# A BRAND-NEW process resumes the SAME conversation:
 printf 'still there?\n/exit\n' \
   | iris chat ./image --session s1 --db /tmp/s1.sqlite --fake
-# agent> echo:still there?      ← continues turn 3; earlier turns are NOT re-streamed
+# agent> echo:still there?       ← turn 3; earlier turns are NOT re-streamed
 ```
 
-Set `ANTHROPIC_API_KEY` (and drop `--fake`) for real model replies — the chat
-wraps the **streaming** model call with the image's model + instructions, and a
-provider error surfaces as the agent's reply rather than poisoning the session.
-`--db :memory:` works for a throwaway session; pass a file path to make it
-durable. `/exit`, `/quit`, or Ctrl-D leaves; the session stays put. When the agent reaches an irreversible tool, `iris chat`
-parks and resolves the approval gate **inline** — `approve? [y/n]`, recorded as a
-journaled, replayable decision (see [governance](docs/07-governance.md)).
+- **Real model** — drop `--fake`, set `ANTHROPIC_API_KEY`. A provider error surfaces as the reply, never poisons the session.
+- **Durability** — `--db :memory:` for throwaway, a file path to persist.
+- **Human-in-the-loop** — at an irreversible tool, chat parks and asks inline (`approve? [y/n]`), recorded as a journaled, replayable decision ([governance](docs/07-governance.md)).
 
-### Serve it over HTTP — SSE or WebSocket streaming
+### Serve it over HTTP
 
-`iris serve` boots the same image as a one-command HTTP server: buffered REST
-plus a **live token stream** over SSE or WebSocket. It defaults to the no-key
-echo model (so it streams immediately); pass `--model anthropic` with
-`ANTHROPIC_API_KEY` for the real provider.
+One command turns the image into an HTTP server — buffered REST plus a **live token stream** over SSE or WebSocket. Defaults to the no-key echo model; add `--model anthropic` + `ANTHROPIC_API_KEY` for the real provider.
 
 ```sh
 iris serve ./image --port 8787
-# → iris serve: listening on http://127.0.0.1:8787 (model=echo)
+# → listening on http://127.0.0.1:8787 (model=echo)
 
-# Start a session and stream the turn as Server-Sent Events (Accept: text/event-stream):
+# Stream a turn as Server-Sent Events:
 curl -N -H 'accept: text/event-stream' -H 'content-type: application/json' \
   -d '{"messages":[{"role":"user","content":"hello"}]}' \
   http://127.0.0.1:8787/v1/session
-# event: delta    data: {"type":"delta","text":"echo:"}      ← one event per model token
-# event: delta    data: {"type":"delta","text":" hello"}
-# event: outcome  data: {"type":"outcome","sessionId":"…","status":"parked","continuationToken":"…"}
-
-# Continue the SAME session — present the rotated single-use token (a body field,
-# or the x-continuation-token header). The path carries the minted sessionId:
-curl -N -H 'accept: text/event-stream' -H 'content-type: application/json' \
-  -d '{"continuationToken":"<token>","messages":[{"role":"user","content":"more"}]}' \
-  http://127.0.0.1:8787/v1/session/<sessionId>/message
+# event: delta    data: {"type":"delta","text":"echo:"}
+# event: outcome  data: {"type":"outcome","status":"parked","continuationToken":"…"}
 ```
 
-Drop `Accept: text/event-stream` for a single buffered JSON reply
-(`{sessionId, continuationToken, status, …}`). A WebSocket client can hold one
-connection for the whole conversation at `ws://127.0.0.1:8787/v1/ws` (same
-`record` / `delta` / `outcome` event model, gated on the `websockets`
-capability). The channel rotates the single-use `continuationToken` every
-committed turn; a stale or missing token is refused loudly (4xx), never a silent
-200.
+Drop the `Accept` header for one buffered JSON reply, or hold a whole conversation over one WebSocket at `ws://…/v1/ws`. To continue a session, present the rotated single-use `continuationToken` — a stale or missing one is refused loudly (4xx), never a silent 200.
 
-### The headline — resume on a *different* host
+### Resume on a *different* host
 
-The portability proof is install-free. The **same image** starts a session on host A (sqlite, long-running), parks at a turn boundary via human-in-the-loop, and resumes on host B (a serverless-style host that holds **no** long-lived handle) — from the same journal, with byte-identical output:
+The install-free portability proof: the **same image** starts on host A (sqlite, long-running), parks at a human-in-the-loop boundary, and resumes on host B (serverless-style, no held process) — same journal, byte-identical output.
 
 ```sh
 node manual/portability-demo.ts        # prints the proof, exits 0 on PASS
@@ -295,13 +289,13 @@ node manual/portability-demo.ts        # prints the proof, exits 0 on PASS
 
 ```text
 ① host A (vps-sqlite): turn ran → parked on HITL
-② host A crossed a real snapshot+truncate boundary — the migration is non-vacuous
-③ migrateSession A→B: snapshot + journal tail copied to serverless-fs (store-only, port-only)
-④ host B (serverless-fs): resumed from the SAME journal → finished (replay assertion green)
-⑤ host-B state + output are BYTE-IDENTICAL to a single-host control; the image pin is unchanged
+② host A crossed a real snapshot+truncate boundary — migration is non-vacuous
+③ migrateSession A→B: snapshot + journal tail copied to serverless-fs (port-only)
+④ host B (serverless-fs): resumed from the SAME journal → finished (assertion green)
+⑤ host-B state + output are BYTE-IDENTICAL to a single-host control
 ```
 
-It is regression-locked by `tests/cross-host-resume.test.ts`.
+Regression-locked by `tests/cross-host-resume.test.ts`.
 
 ## Where a session can run
 
@@ -319,28 +313,31 @@ The same image runs on any host that implements the two ports. Each adapter enfo
 ## How it works
 
 ```text
-        client ──▶  channel  (REST · SSE · WS · MCP — two-identifier protocol)
-                       │
-                       ▼
-  ┌──────────────────────  @irisrun/core  (pure)  ──────────────────────┐
-  │  harness kernel  →  seams  →  tactics (default / coding bundle)  │
-  │  effect engine   →  checkpoint-before-effect                     │
-  │  journal  →  replay + always-on assertion  →  snapshot           │
-  └──────┬─────────────────────────────────────────────────────┬─────┘
-         │                                                     │
-   StateStore (CAS + fencing)                          Scheduler (wakeup)
-         │                                                     │
-         ▼                                                     ▼
-  host adapters:   sqlite  ·  fs  ·  durable-objects  ·  memory
+                               client
+                                  │
+                                  ▼
+┌────────────────  channel · REST · SSE · WS · MCP  ─────────────────┐
+└─────────────────────────────────┬──────────────────────────────────┘
+                                  ▼
+╔══════════════════════  @irisrun/core · pure  ══════════════════════╗
+║  harness kernel → seams → tactics  (default / coding bundle)       ║
+║  effect engine → checkpoint-before-effect                          ║
+║  journal → replay + always-on assertion → snapshot                 ║
+╚════════════════╤══════════════════════════════════╤════════════════╝
+                 │ StateStore (CAS + fencing)       │ Scheduler (wakeup)
+                 ▼                                  ▼
+┌────────────────────────────────────────────────────────────────────┐
+│  host adapters    sqlite · fs · durable-objects · memory           │
+└────────────────────────────────────────────────────────────────────┘
 
-  tools  ◀── protocol boundary ──▶  in-process · subprocess · mcp · grpc
+   channel protocol:  stable sessionId  +  single-use continuationToken (rotated per turn)
+   tools across a protocol boundary:  in-process · subprocess · mcp · grpc
 ```
 
-- **Durability engine.** An append-only journal of *effects* and *decisions* is the single source of truth. Effects are checkpointed before they run and read back on replay (`effectId` is deterministic, so a recovered crash applies each effect at most once). The `StateStore` port is compare-and-swap + fencing — plain get/put can't guarantee single-writer safety. Snapshots periodically materialize state and truncate the journal so replay cost stays bounded.
-- **Tools across the protocol boundary.** A tool's **contract** (name + schema + transport) is its stable, model-visible identity, pinned by digest; behavior floats behind it. Transports ship for **in-process**, **subprocess** (`subprocess://`), **MCP** (`mcp://`, stdio JSON-RPC), and **gRPC** (`grpc://`, over http2 + JSON). `tool_locality` is a host capability, not a fixed assumption. Only an explicitly retry-safe tool gets an idempotency key, so recovery never double-applies a write.
-- **Pluggable harness.** A seam consultation *is* an effect — performed through the same path as a model call, its `{seam, tacticId, choice}` journaled — so a tactic may be nondeterministic or third-party and replay still cannot diverge. The shipped **default bundle** covers most agents; `@irisrun/bundle-coding` is the first domain bundle (read-only tools allow, writes + shell gate to *ask*, tool-loop `decideNext`, compaction + tool repair).
-- **Channels.** A channel owns the **two-identifier protocol**: a stable `sessionId` to attach/inspect, and a `continuationToken` the channel mints, rotates every turn, and treats as atomically single-use — a stale or missing token is refused loudly (a 4xx over REST, a JSON-RPC error over MCP), never a silent 200. Ships for REST (`node:http`) and as an MCP server (stdio). The REST channel also **streams a turn live**: with `Accept: text/event-stream` it emits the committed journal records and the model's token deltas over **SSE**, then a terminal `outcome` event with the rotated token; the same event model rides a **WebSocket** (hand-rolled RFC 6455, zero-dep, gated on the `websockets` capability per ADR-0008). `iris serve` boots the whole thing as a one-command server — add `--web` to serve a minimal browser chat UI (`@irisrun/channel-web`) on the same port, which the `@irisrun/client-sdk` (and the UI) drive over that SSE protocol.
-- **Observability.** `@irisrun/inspect` renders the deterministic decision/effect/marker timeline; `@irisrun/observe` derives OTel-shaped spans with deterministic span ids; `@irisrun/evals` is a reproducibility arbiter (same case + scorer → byte-identical re-run; a swapped tactic scores differently but reproducibly). All three are read-only derivations over the journal, so they can't affect determinism.
+- **Durability engine.** An append-only journal of *effects* and *decisions* is the single source of truth. Each effect is checkpointed before it runs and read back on replay (a deterministic `effectId` means a recovered crash applies it at most once). The `StateStore` port is compare-and-swap + fencing, so only one writer ever wins; snapshots periodically materialize state and truncate the journal to keep replay cost bounded.
+- **Tools across a protocol boundary.** A tool's **contract** (name + schema + transport) is its stable, model-visible identity, pinned by digest; the implementation floats behind it, in any language. Transports ship for in-process, `subprocess://`, `mcp://` (stdio JSON-RPC), and `grpc://` (http2 + JSON). Only an explicitly retry-safe tool gets an idempotency key, so recovery never double-writes.
+- **Pluggable harness.** Each seam consultation *is* a journaled effect (`{seam, tacticId, choice}`), so a tactic can be nondeterministic or third-party and replay still cannot diverge. The **default bundle** covers most agents; `@irisrun/bundle-coding` adds coding-specialized tactics.
+- **Channels & observability.** A channel owns the two-identifier protocol — a stable `sessionId` plus a single-use `continuationToken` rotated every turn — and streams a turn live over SSE or WebSocket (`iris serve`; `--web` adds the chat UI). `@irisrun/inspect`, `@irisrun/observe`, and `@irisrun/evals` are read-only journal derivations (timeline, OTel spans, reproducible evals), so they can't affect determinism.
 
 ## What's inside
 
@@ -352,46 +349,34 @@ A monorepo (npm workspaces). The **pure core** imports nothing host/transport/No
 | `@irisrun/store-sqlite` · `@irisrun/store-fs` · `@irisrun/store-memory` · `@irisrun/store-do` | The four host adapters — long-running (sqlite), serverless (fs, O_EXCL), in-memory, and edge (Durable Objects). |
 | `@irisrun/host` | `HostAdapter` + `runTurnOn` + the capability-diff deploy gate. |
 | `@irisrun/agent` | The image toolchain — Agentfile parse/validate, resolve/embed/pin, deterministic `imageDigest`, OCI layout, loud `verify`, session pinning + definition migration. |
-| `iris` | The unscoped CLI package — the `iris` binary: `init / build / inspect / schema / verify / push / pull / run / serve / chat / deploy / audit / eval / schedule`. `init` scaffolds a self-contained project with a bundled `now` tool; `schema` prints the published Agentfile JSON Schema (draft 2020-12) for editor/CI validation; `serve` boots a turnkey HTTP server (buffered REST + streaming SSE + WebSocket; `--policy` turns on governance; `--web` mounts the chat UI); `chat` is the interactive durable chat client that resolves approval gates inline; `audit` prints a replay-verified compliance trail; `eval` runs a reproducible eval suite; `schedule` drives a recurring, replayable job. |
+| `iris` | The CLI (`iris` binary): `init / build / inspect / schema / verify / push / pull / run / serve / chat / deploy / audit / eval / schedule`. `serve` boots the HTTP server (`--policy` governance, `--web` chat UI); `chat` resolves approval gates inline; `audit` / `eval` / `schedule` add compliance, reproducible evals, and recurring jobs. |
 | `@irisrun/tools` | The tool boundary — contract + digest, the uniform invoker, in-process/subprocess/MCP/gRPC transports, the retry-safe `tool_call` performer. |
-| `@irisrun/sandbox` | The security floor — deny-all network + credential brokering + a host-side sidecar egress proxy (real per-host allowlist egress, [ADR-0010](docs/adr-0010-sandbox-egress-proxy.md)). inmemory (unit) + docker (manual smoke). |
+| `@irisrun/sandbox` | The security floor — deny-all network + credential brokering + a host-side sidecar egress proxy (real per-host allowlist egress). inmemory (unit) + docker (manual smoke). |
 | `@irisrun/channel-rest` · `@irisrun/channel-mcp` | The channels — REST over `node:http` with live **SSE** and hand-rolled zero-dep **WebSocket** streaming of a turn (records + model token deltas), and the agent exposed *as* an MCP server. |
-| `@irisrun/channel-web` · `@irisrun/client-sdk` | The last mile to a human — a minimal, zero-dep web chat UI served by `iris serve --web` on the same port (persists `{sessionId, continuationToken}` so a tab close / reload resumes the same session), and a thin **isomorphic** client SDK over the `iris serve` SSE protocol (buffered + streamed turns, token rotation). |
+| `@irisrun/channel-web` · `@irisrun/client-sdk` | The last mile to a human — a zero-dep web chat UI (`iris serve --web`, persists the session so a reload resumes it) and a thin **isomorphic** client SDK over the serve SSE protocol. |
 | `@irisrun/bundle-coding` | The first domain tactic bundle — coding-specialized seam tactics. |
 | `@irisrun/inspect` · `@irisrun/observe` · `@irisrun/evals` | Read-only journal derivations — timeline viewer, OTel spans, reproducible-eval arbiter. |
 | `@irisrun/provider-anthropic` · `@irisrun/provider-openai` | The `model_call` performers — direct Anthropic Messages and OpenAI Chat Completions adapters via built-in `fetch`; the provider is chosen from the model-id prefix (`anthropic/…`, `openai/…`) and both pass one shared conformance suite. |
 | `@irisrun/auth` | The governance layer — principal identity, a declarative who-may-approve policy on the existing approval gate, and a journaled, replayable approval trail (`makeGovernedApprovalPerformer`). Wired into `iris serve --policy`. |
 | `@irisrun/audit` | Whole-session compliance audit — the full retained journal + a completeness check and an offline replay-verified verdict; drives `iris audit`. |
-| `@irisrun/subagents` · `@irisrun/schedule` | Breadth on the journaled substrate — an agent **delegates** to a child agent (its own durable session; the child's output is journaled in the parent, so the parent replays without re-running it), and a **recurring job** parks on durable timers between runs (cadence in the journal), driven by a host-side pump that resumes due sessions at-least-once. Both durably replayable; a schedule's per-tick job can itself be a delegation. |
+| `@irisrun/subagents` · `@irisrun/schedule` | Breadth on the journaled substrate — durable **delegation** to a child agent (its output journaled in the parent, so the parent replays without re-running it) and **recurring jobs** that park on durable timers between runs. Both replayable. |
 | `@irisrun/demo` | The no-model counter machine that parks and resumes across a restart. |
 
 ## Tested & proven
 
-The unit suite is install-free and deterministic — **592/592** on Node 24, `tsc --noEmit` clean — and every claim above is regression-locked: CAS + stale-fence rejection, park/resume across a forced restart, replay purity with the assertion catching injected nondeterminism, the crash matrix (at-least-once, no double-apply), snapshot equivalence, `model_call` as a journaled effect, **10,000-session** determinism, cross-store and **cross-host** resume, swap-tactic-live↔replay byte-identicality, deterministic image digest + loud verify, the channel single-use-token discipline, the streaming layer (the read-only `onRecord` observer preserves determinism, model deltas reconcile to the journaled result, rune-safe SSE parsing, and the hand-rolled WS frame codec), the interactive durable chat client, the `@irisrun/client-sdk` over the serve protocol, the bundled-subprocess starter tool a turn calls + replays, and the `iris deploy` capability-gate + generated Cloudflare Worker.
+The unit suite is **install-free, deterministic, zero-dependency** — **592/592** on Node 24, `tsc --noEmit` clean. Every claim in this README is regression-locked: CAS + fencing, park/resume across a forced restart, replay purity (the always-on assertion catches injected nondeterminism; `IRIS_ASSERT=0` turns it off), the crash matrix (at-least-once, never double-applied), a **10,000-session** determinism run, cross-store and **cross-host** resume, deterministic image digest + loud verify, the single-use-token channel discipline, and the SSE/WebSocket streaming layer.
 
-Real *egress* — pushing to a real OCI registry, a real Anthropic call, the actual `wrangler deploy` / Lambda upload, the live `npm publish`, OTLP export, reachable external REST/WS/MCP/gRPC sockets — stays **env-gated** (manual smokes under `manual/`, outside the suite). The command surface up to that egress — `iris deploy`'s gate + scaffold, the npm packaging — is tested.
+Real *egress* — OCI pushes, live Anthropic calls, `wrangler deploy` / Lambda upload, `npm publish`, OTLP export — stays **env-gated** as manual smokes under `manual/`, outside the suite.
 
 ```sh
 npm test                                 # the whole suite → 592/592
 node manual/portability-demo.ts          # the cross-host proof (install-free)
 node manual/serverless-deploy-smoke.ts   # real Cloudflare DO / Lambda (gated)
 IRIS_SERVE_SMOKE=1 node manual/serve-streaming-smoke.ts  # real serve: REST + SSE + WS (gated)
-IRIS_PACK_SMOKE=1 node manual/npm-pack-smoke.ts          # npx iris-runtime init from an installed tarball (gated)
+IRIS_PACK_SMOKE=1 node manual/npm-pack-smoke.ts          # npx iris-runtime init (gated)
 ```
 
-## Status
-
-Iris is early, but the foundation is deliberately overbuilt and the adoption surface has now landed. **Solid:** the install-free durability core — journal, replay, the always-on consistency assertion, recovery, snapshot, and cross-host migration — is regression-locked by the **592-test** suite, including a 10,000-session determinism run and a byte-identical cross-host resume. On top of it: the full `iris init / build / inspect / schema / verify / run / serve / chat / deploy / audit / eval / schedule` surface, a batteries-included subprocess starter tool (`iris init` scaffolds a working `now` tool), live SSE/WebSocket streaming, a web chat UI + isomorphic client SDK, a one-command **Cloudflare Durable Objects** deploy (`iris deploy`), CLI-reachable governance (`iris serve --policy`), compliance audit (`iris audit`), reproducible evals (`iris eval`), and subagent delegation + recurring schedules (`iris schedule`).
-
-**Packaging:** the workspace publishes as `iris-runtime` (the CLI; its binary is `iris`) plus the `@irisrun/*` libraries at `0.1.0`, compiled to JavaScript for npm — while development still runs `.ts` directly with **no build step** (via the `iris-src` export condition). It is **published on npm at `0.1.0`** — `npx iris-runtime init` works for anyone; cutting a release is a gated step (`IRIS_PUBLISH=1 npm run release`; see [`RELEASING.md`](RELEASING.md)), as are the actual `wrangler deploy` (`IRIS_DEPLOY=1`) and OCI-registry pushes — the project's standing convention for real egress.
-
-**Landed since the core:** a second model provider (OpenAI) behind the provider-agnostic port (both pass one shared conformance suite); identity / authorization / governance via `@irisrun/auth` (a policy-checked approval gate + a journaled, replayable approval trail, wired into `iris serve --policy`); whole-session compliance audit (`@irisrun/audit` / `iris audit`); reproducible evals (`@irisrun/evals` / `iris eval`); subagents + schedules on the journaled substrate (`iris schedule`, `subagents.json` delegation); in-chat human-in-the-loop approval — `iris chat` resolves the approval gate **inline** (`approve? [y/n]`, recorded as a journaled, replayable decision); the published **Agentfile JSON Schema** (`iris schema`, draft 2020-12, drift-locked to the runtime validator); and the guided **[docs funnel](docs/README.md)**. **Still maturing:** the public API is subject to change, and real egress stays env-gated. Treat the architecture and the local/test path as production-minded, the breadth as still filling in.
-
-## Configuration
-
-- `IRIS_ASSERT=0` disables the replay-consistency assertion (default: **on**). It's read by the runner/host and passed into the engine — `core/` **never** reads `process.env`.
-- `ANTHROPIC_API_KEY` enables the real `model_call` path; without it, use the deterministic fake performer (what the suite does).
-- Manual smokes are env-gated (e.g. `IRIS_EDGE_SMOKE` for the Cloudflare Workers smoke) and never run under `npm test`.
+Iris is **early** — `0.1.0`, [published on npm](https://www.npmjs.com/package/iris-runtime), public API still in flux — but the architecture and the install-free local/test path are production-minded. Cutting a release is gated (`IRIS_PUBLISH=1 npm run release`; see [`RELEASING.md`](RELEASING.md)).
 
 ## License
 
