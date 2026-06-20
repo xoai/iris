@@ -46,21 +46,22 @@ test("bridge: two different conversations map to two independent sessions", asyn
   }
 });
 
-test("bridge: a stale token after a server restart is handled (the bridge starts fresh)", async () => {
-  // First server: establish a conversation.
+test("bridge: a fresh bridge against a new server starts a clean session (no cross-server token reuse)", async () => {
+  // First server: establish a conversation, then it goes away.
   const ch1 = makeBridgeDemoChannel();
   const base1 = await ch1.listen();
   const bridge = makeWebhookBridge({ baseUrl: base1 });
   await bridge.onMessage({ conversationId: "C", text: "hi" });
   await ch1.close();
 
-  // A new server has an empty token map; the bridge's stored token is now stale. A
-  // robust bridge surfaces the channel's loud refusal rather than silently double-applying.
+  // A new server has an empty token map. A new bridge instance (the realistic
+  // post-restart shape) holds no stale handle, so the SAME conversation id STARTS a
+  // fresh session cleanly rather than presenting a token the new server never issued.
+  // (Reusing the OLD bridge's stale handle would instead hit the channel's loud 404/409
+  // — the single-use discipline the channel enforces; this test pins the clean path.)
   const ch2 = makeBridgeDemoChannel();
   const base2 = await ch2.listen();
   try {
-    // point a fresh bridge at the new server for the SAME conversation id → it STARTS
-    // a new session cleanly (no stale-token reuse across servers).
     const freshBridge = makeWebhookBridge({ baseUrl: base2 });
     const r = await freshBridge.onMessage({ conversationId: "C", text: "hi again" });
     assert.equal(r.status, "finished");

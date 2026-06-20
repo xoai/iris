@@ -117,7 +117,9 @@ function approveButtonValue(outboundBlocks: unknown): string {
   return actions!.elements!.find((e) => e.action_id === "iris_approve")!.value;
 }
 
-async function runScenario(redeploy: boolean): Promise<{ toolRan: boolean; finalStatus: string; journal: JournalRow[]; root: string }> {
+async function runScenario(
+  redeploy: boolean,
+): Promise<{ toolRan: boolean; finalStatus: string; journal: JournalRow[]; root: string; freshInboxGotSubmit: boolean }> {
   const root = mkdtempSync(join(tmpdir(), "iris-slack-"));
   const model = makeScriptedModel(ONE_TOOL_THEN_DONE); // shared external service across the redeploy
   const log: ToolCallLog = { calls: [] };
@@ -159,6 +161,9 @@ async function runScenario(redeploy: boolean): Promise<{ toolRan: boolean; final
     finalStatus: resumed.kind === "ack" ? resumed.status : "?",
     journal,
     root,
+    // The decision must have landed in the CURRENT (post-redeploy, fresh) inbox — proof
+    // the resume genuinely went through the new instance's components, not leftover state.
+    freshInboxGotSubmit: inbox.get("a") !== undefined,
   };
 }
 
@@ -166,6 +171,7 @@ test("§11 durable HITL: an Approve that survives a redeploy resumes the SAME se
   const r = await runScenario(true);
   assert.equal(r.finalStatus, "finished", "the redeployed instance resumed the parked session to completion");
   assert.equal(r.toolRan, true, "the approved tool ran after the redeploy");
+  assert.equal(r.freshInboxGotSubmit, true, "the FRESH post-redeploy inbox received the decision (resume used the new instance)");
   // the approval is in the durable journal (queryable audit trail), authorized
   const store = new FsStateStore({ root: r.root });
   const trail = await auditApprovals(store, SESSION_ID);
@@ -173,6 +179,37 @@ test("§11 durable HITL: an Approve that survives a redeploy resumes the SAME se
   assert.equal(trail[0].approved, true);
   assert.equal(trail[0].authorized, true);
   assert.equal(trail[0].tool, "rm");
+});
+
+test("§11 durable HITL: a DUPLICATE Approve (Slack retry) does not double-apply the gated tool", async () => {
+  // Slack re-delivers an interaction on timeout. The Approve path calls session.advance
+  // directly (token validation bypassed — the signature already authenticated it), so the
+  // protection against double-apply is engine/store idempotency: the second advance
+  // replays the finished journal and the recorded tool result, never re-running the tool.
+  const root = mkdtempSync(join(tmpdir(), "iris-slack-dup-"));
+  const model = makeScriptedModel(ONE_TOOL_THEN_DONE);
+  const log: ToolCallLog = { calls: [] };
+  const tool = makeFakeTool(() => ({ ok: true, value: { done: 1 } }), log);
+  const store = new FsStateStore({ root });
+  const inbox = createApprovalInbox();
+  const ch = buildChannel(store, inbox, model, tool);
+
+  const slash = "command=/iris&text=deploy&channel_id=C1&user_id=U1";
+  const started = await ch.handleEvent(headers(slash), slash);
+  const ctxValue = approveButtonValue(started.kind === "ack" ? started.outbound?.blocks : undefined);
+  const payload = JSON.stringify({
+    type: "block_actions",
+    actions: [{ action_id: "iris_approve", value: ctxValue }],
+    user: { id: "admin" },
+    channel: { id: "C1" },
+  });
+  const rawBody = `payload=${encodeURIComponent(payload)}`;
+
+  const first = await ch.handleEvent(headers(rawBody), rawBody);
+  const second = await ch.handleEvent(headers(rawBody), rawBody); // the duplicate retry
+  assert.ok(first.kind === "ack" && first.status === "finished", "first Approve finishes");
+  assert.ok(second.kind === "ack" && second.status === "finished", "the duplicate Approve is again-safe (finished)");
+  assert.equal(log.calls.length, 1, "the gated tool ran EXACTLY once despite the duplicate Approve");
 });
 
 test("§11 durable HITL: the redeployed resume is BYTE-IDENTICAL to a no-redeploy control", async () => {

@@ -3,6 +3,9 @@
 // loader. Imported from "iris-runtime" (re-exported from the cli index).
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 import type { Json } from "@irisrun/core";
 import {
   providerNameForModel,
@@ -101,4 +104,20 @@ test("loadModelProvider forwards baseUrl to the streaming performer too", async 
   const out = await perf({ messages: [{ role: "user", content: "hi" }] } as Json);
   assert.ok(out.ok);
   assert.equal(cap.url, custom, "the streaming Anthropic-protocol request was redirected");
+});
+
+// §9 (Gate-3 follow-up): pin the THREE cli-main `--base-url` call sites. The seam tests
+// above prove baseUrl is forwarded to the performer; this guards the cli-main wiring
+// (run/serve/chat) — a regression dropping baseUrl from any provider.buffered/streaming
+// construction would otherwise pass unnoticed. Source-assertion, like docs-funnel.
+test("§9: every provider.buffered/streaming construction in cli-main passes baseUrl", () => {
+  const cliMain = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), "..", "packages", "cli", "src", "cli-main.ts"),
+    "utf8",
+  );
+  const lines = cliMain.split("\n").filter((l) => /provider\.(buffered|streaming)\(/.test(l));
+  assert.ok(lines.length >= 3, `expected the 3 base-url call sites (run/serve/chat), found ${lines.length}`);
+  for (const l of lines) {
+    assert.match(l, /baseUrl/, `a provider performer is constructed WITHOUT baseUrl: ${l.trim()}`);
+  }
 });
