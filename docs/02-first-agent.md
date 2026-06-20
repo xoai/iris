@@ -76,4 +76,30 @@ printf 'still there?\n/exit\n' \
 Use a file path for `--db` to make a session durable; `--db :memory:` is for
 throwaway runs.
 
+## 6. Validate the Agentfile (editor autocomplete)
+
+`iris build` validates the Agentfile, but you can also catch mistakes *while
+editing* with the published JSON Schema. Emit it once into your project:
+
+```sh
+iris schema > agentfile.schema.json
+```
+
+Then point your `agent.json` at it — editors that understand `$schema` (VS Code,
+most JSON/YAML extensions) will autocomplete fields and red-underline a bad
+`tool_locality`, a missing `sandbox`, or a tool ref with the wrong scheme:
+
+```json
+{
+  "$schema": "./agentfile.schema.json",
+  "apiVersion": "iris/v1",
+  "kind": "Agent",
+  "name": "my-agent"
+}
+```
+
+The `$schema` key is editor/CI metadata only — Iris ignores it, so it never
+changes the image digest. The same schema validates Agentfiles offline in CI
+(it is a standard draft 2020-12 document) with no Iris install.
+
 **Next → [03 — Tools](./03-tools.md)**
