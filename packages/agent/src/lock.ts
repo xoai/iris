@@ -2,7 +2,7 @@
 // tactics + capabilities + the embedded content hashes. `imageDigest` is filled by
 // the image build (§3.5). This module owns the tool-resolution + pinning + the
 // capability validation; Task 4 completes content/model/tactics. Host-side.
-import { contractDigest, type ToolContract } from "@iris/tools";
+import { contractDigest, type ToolContract } from "@irisrun/tools";
 import type { CapabilityProfile, ToolRef } from "./agentfile.ts";
 import type { RegistryResolver } from "./resolver.ts";
 

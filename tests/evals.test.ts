@@ -7,10 +7,10 @@
 // swapped tactic → a different-but-reproducible score.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { harnessProgram, defaultBundle, canonicalize } from "@iris/core";
-import type { EngineDeps, HarnessState, Json } from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
-import { runEval, runSuite, type EvalCase, type Scorer } from "@iris/evals";
+import { harnessProgram, defaultBundle, canonicalize } from "@irisrun/core";
+import type { EngineDeps, HarnessState, Json } from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
+import { runEval, runSuite, type EvalCase, type Scorer } from "@irisrun/evals";
 import { TestClock } from "./lib/mem-store.ts";
 import { makeScriptedModel } from "./lib/fake-model.ts";
 import { makeFakeTool } from "./lib/fake-tool.ts";

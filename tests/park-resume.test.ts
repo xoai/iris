@@ -5,10 +5,10 @@ import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { rmSync } from "node:fs";
-import * as core from "@iris/core";
-import { decode } from "@iris/core";
-import type { JournalRecord, Marker } from "@iris/core";
-import { openDatabase, SqliteStateStore } from "@iris/store-sqlite";
+import * as core from "@irisrun/core";
+import { decode } from "@irisrun/core";
+import type { JournalRecord, Marker } from "@irisrun/core";
+import { openDatabase, SqliteStateStore } from "@irisrun/store-sqlite";
 
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const RUN = join(ROOT, "packages", "demo", "src", "run.ts");
@@ -107,7 +107,7 @@ test("A3: the resumed journal is coherent (wait marker before the restart, finis
 
 test("A3: core holds no module-level mutable session state (resume works purely from disk)", () => {
   // The cross-process resume above is the real proof. As a structural guard,
-  // @iris/core's surface is functions/classes only — no session registry,
+  // @irisrun/core's surface is functions/classes only — no session registry,
   // arrays, maps, or other mutable session containers at module scope.
   const sessionishContainers = Object.entries(core).filter(
     ([, v]: [string, unknown]) => {

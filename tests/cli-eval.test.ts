@@ -11,9 +11,9 @@ import assert from "node:assert/strict";
 import { mkdtempSync, writeFileSync, rmSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL, fileURLToPath } from "node:url";
-import { cmdEval, loadEvalSuite } from "iris";
+import { cmdEval, loadEvalSuite } from "iris-runtime";
 
-// Fixtures MUST live UNDER the repo so the .mjs's bare `@iris/*` imports resolve via
+// Fixtures MUST live UNDER the repo so the .mjs's bare `@irisrun/*` imports resolve via
 // the workspace node_modules symlinks + the iris-src condition (a /tmp fixture would
 // not find node_modules). We write into a unique dir beside this test file.
 const TESTS_DIR = fileURLToPath(new URL(".", import.meta.url));
@@ -31,8 +31,8 @@ function writeFixture(body: string): string {
 // `flaky` case advances a MODULE-LEVEL counter NOT reset by build(), so each
 // reproduce run records a different model reply → a non-reproducible journal.
 const SUITE_BODY = `
-import { harnessProgram, defaultBundle } from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
+import { harnessProgram, defaultBundle } from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
 
 function scriptedModel(responses) {
   let i = 0;

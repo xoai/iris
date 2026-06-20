@@ -9,7 +9,7 @@ import type {
   EffectResult,
   Marker,
   Json,
-} from "@iris/core";
+} from "@irisrun/core";
 
 export interface XState extends Record<string, Json> {
   phase: string; // running | parked | done

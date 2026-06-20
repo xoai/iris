@@ -1,5 +1,5 @@
-// @iris/demo — the no-model counter demo.
-export const PACKAGE = "@iris/demo";
+// @irisrun/demo — the no-model counter demo.
+export const PACKAGE = "@irisrun/demo";
 export {
   counterProgram,
   counterInitial,

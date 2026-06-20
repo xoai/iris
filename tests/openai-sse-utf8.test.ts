@@ -1,10 +1,10 @@
 // The OpenAI SSE reader decodes with a STREAMING TextDecoder, so a multibyte UTF-8
 // rune split across two network chunks reassembles intact — never corrupted to
 // U+FFFD. (Iris memory: mid-stream UTF-8 cuts must respect rune boundaries.) Mirror
-// of anthropic-sse-utf8.test.ts for @iris/provider-openai.
+// of anthropic-sse-utf8.test.ts for @irisrun/provider-openai.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readOpenAiSse } from "@iris/provider-openai";
+import { readOpenAiSse } from "@irisrun/provider-openai";
 
 function streamOf(chunks: Uint8Array[]): ReadableStream<Uint8Array> {
   return new ReadableStream<Uint8Array>({

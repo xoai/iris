@@ -6,8 +6,8 @@ import {
   computeImageDigest,
   makeLocalResolver,
   parseAgentfileJson,
-} from "@iris/agent";
-import type { ToolContract } from "@iris/tools";
+} from "@irisrun/agent";
+import type { ToolContract } from "@irisrun/tools";
 
 const resolver = makeLocalResolver({
   "mcp://registry/issue-tracker": {

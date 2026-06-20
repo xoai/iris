@@ -1,6 +1,6 @@
-// @iris/audit — the audit & reproducible-eval product surface (roadmap P2-8).
+// @irisrun/audit — the audit & reproducible-eval product surface (roadmap P2-8).
 // Pure read-only projections over the existing journal; zero kernel change.
-export const PACKAGE = "@iris/audit";
+export const PACKAGE = "@irisrun/audit";
 
 export { auditSession, renderAudit } from "./audit.ts";
 export type { AuditEntry, SessionAudit } from "./audit.ts";

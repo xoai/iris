@@ -10,10 +10,10 @@
 // small script shipped beside the Agentfile, ref scheme = transport.
 import { readdir, readFile } from "node:fs/promises";
 import { isAbsolute, join } from "node:path";
-import { makeLocalResolver } from "@iris/agent";
-import type { RegistryResolver } from "@iris/agent";
-import type { ToolContract, SubprocessSpec } from "@iris/tools";
-import type { Json } from "@iris/core";
+import { makeLocalResolver } from "@irisrun/agent";
+import type { RegistryResolver } from "@irisrun/agent";
+import type { ToolContract, SubprocessSpec } from "@irisrun/tools";
+import type { Json } from "@irisrun/core";
 
 const SUBPROCESS_PREFIX = "subprocess://";
 

@@ -50,6 +50,13 @@ honors it — an edge host that supports only remote tools will **refuse** an im
 that demands local subprocess tools, loudly, rather than silently degrade it (see
 [05 — Deploy](./05-deploy.md)).
 
+## The sandbox floor
+
+Tools don't inherit the host's privileges. The sandbox denies network by default and
+brokers credentials so secrets never enter the tool's environment; the docker backend
+gets real per-host **allowlist egress** through a host-side sidecar egress proxy
+([ADR-0010](./adr-0010-sandbox-egress-proxy.md)).
+
 ## Approvals: tools that touch reality
 
 Some tools are safe to retry (read-only); others are irreversible. Iris's default

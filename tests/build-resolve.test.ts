@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { makeLocalResolver, resolveLockTools, validateCapabilities } from "@iris/agent";
-import type { ToolContract } from "@iris/tools";
+import { makeLocalResolver, resolveLockTools, validateCapabilities } from "@irisrun/agent";
+import type { ToolContract } from "@irisrun/tools";
 
 const issueTracker: ToolContract = {
   name: "issue-tracker",

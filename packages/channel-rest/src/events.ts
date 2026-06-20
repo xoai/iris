@@ -5,7 +5,7 @@
 // `error` surfaces a mid-stream failure loudly (after the stream already opened).
 // Both transports encode the SAME StreamEvent — SSE as `event:/data:` frames, WS
 // as one text frame per event.
-import type { Json, TurnOutcome } from "@iris/core";
+import type { Json, TurnOutcome } from "@irisrun/core";
 
 export type StreamEvent =
   | { type: "record"; record: Json }

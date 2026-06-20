@@ -1,15 +1,15 @@
 // Provider-selection seam (packages/cli/src/providers.ts) — the prefix→provider
 // mapping that makes "bring your own model" real. Pure fns + the dynamic-import
-// loader. Imported from "iris" (re-exported from the cli index).
+// loader. Imported from "iris-runtime" (re-exported from the cli index).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import type { Json } from "@iris/core";
+import type { Json } from "@irisrun/core";
 import {
   providerNameForModel,
   stripModelPrefix,
   providerDescriptor,
   loadModelProvider,
-} from "iris";
+} from "iris-runtime";
 
 test("providerNameForModel: known prefixes, bare default, unknown throws", () => {
   assert.equal(providerNameForModel("anthropic/claude-x"), "anthropic");
@@ -28,14 +28,14 @@ test("providerDescriptor: per-provider package, env key, and export names", () =
   assert.deepEqual(providerDescriptor("openai"), {
     name: "openai",
     envKey: "OPENAI_API_KEY",
-    pkg: "@iris/provider-openai",
+    pkg: "@irisrun/provider-openai",
     bufferedExport: "openaiModelPerformer",
     streamingExport: "openaiStreamingModelPerformer",
   });
   assert.deepEqual(providerDescriptor("anthropic"), {
     name: "anthropic",
     envKey: "ANTHROPIC_API_KEY",
-    pkg: "@iris/provider-anthropic",
+    pkg: "@irisrun/provider-anthropic",
     bufferedExport: "anthropicModelPerformer",
     streamingExport: "anthropicStreamingModelPerformer",
   });

@@ -1,9 +1,9 @@
 // ToolContract + contractDigest (spec §3.2, Spec 05 A1). Host-side: MAY use
 // node:crypto (not core). The digest covers the MODEL-PERCEIVED surface only —
-// transport/location/retrySafe float (ADR-0004) — and reuses @iris/core's
+// transport/location/retrySafe float (ADR-0004) — and reuses @irisrun/core's
 // canonicalize for deterministic bytes.
-import { canonicalize } from "@iris/core";
-import type { Json } from "@iris/core";
+import { canonicalize } from "@irisrun/core";
+import type { Json } from "@irisrun/core";
 import { createHash } from "node:crypto";
 
 export interface ToolContract {

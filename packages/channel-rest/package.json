@@ -1,5 +1,5 @@
 {
-  "name": "@iris/channel-rest",
+  "name": "@irisrun/channel-rest",
   "version": "0.1.0",
   "type": "module",
   "description": "Iris in-process REST channel (ADR-0009) over node:http — the two-identifier protocol: the channel MINTS sessionId and OWNS/ISSUES the continuationToken; every turn rotates the token, and a missing/stale/malformed token is refused with a loud 4xx (never a silent 200). A real external HTTP deploy is a manual smoke.",
@@ -11,8 +11,8 @@
     }
   },
   "dependencies": {
-    "@iris/core": "^0.1.0",
-    "@iris/host": "^0.1.0"
+    "@irisrun/core": "^0.1.0",
+    "@irisrun/host": "^0.1.0"
   },
   "license": "MIT",
   "engines": {

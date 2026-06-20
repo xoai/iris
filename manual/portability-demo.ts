@@ -17,11 +17,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
   runTurn, migrateSession, canonicalize, harnessProgram, defaultBundle,
-} from "@iris/core";
-import { openDatabase, SqliteStateStore, SqliteScheduler } from "@iris/store-sqlite";
-import { FsStateStore, FsScheduler } from "@iris/store-fs";
-import { runTurnOn } from "@iris/host";
-import { buildImage, makeLocalResolver, parseAgentfileJson, governingDigest } from "@iris/agent";
+} from "@irisrun/core";
+import { openDatabase, SqliteStateStore, SqliteScheduler } from "@irisrun/store-sqlite";
+import { FsStateStore, FsScheduler } from "@irisrun/store-fs";
+import { runTurnOn } from "@irisrun/host";
+import { buildImage, makeLocalResolver, parseAgentfileJson, governingDigest } from "@irisrun/agent";
 
 const INPUT = { messages: [{ role: "user", content: "go" }] };
 const ONE_TOOL_THEN_DONE = [

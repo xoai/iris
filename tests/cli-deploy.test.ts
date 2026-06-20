@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { cmdInit, cmdBuild, cmdDeploy, loadBundledTools } from "iris";
+import { cmdInit, cmdBuild, cmdDeploy, loadBundledTools } from "iris-runtime";
 
 const tmp = (p: string): Promise<string> => mkdtemp(join(tmpdir(), p));
 
@@ -79,11 +79,11 @@ test("A1: a remote-only image scaffolds a valid Cloudflare Worker project (no ne
   // core+store-do are edge-native → no compat-flag directive (the word may appear in a comment)
   assert.doesNotMatch(wrangler, /compatibility_flags/);
   assert.doesNotMatch(wrangler, /node_compat\s*=/);
-  assert.match(worker, /import \{ edgeHost \} from "@iris\/store-do"/);
+  assert.match(worker, /import \{ edgeHost \} from "@irisrun\/store-do"/);
   assert.match(worker, /class AgentDO/);
   // the default scaffold model is anthropic/claude-x → the worker wires the
   // Anthropic provider + ANTHROPIC_API_KEY (locks the generalized branch).
-  assert.match(worker, /await import\("@iris\/provider-anthropic"\)/);
+  assert.match(worker, /await import\("@irisrun\/provider-anthropic"\)/);
   assert.match(worker, /env\.ANTHROPIC_API_KEY/);
   assert.match(worker, /anthropicModelPerformer\(\{ apiKey: env\.ANTHROPIC_API_KEY, model: MODEL \}\)/);
   assert.doesNotMatch(worker, /provider-openai/, "an anthropic image must not import the openai provider");
@@ -97,7 +97,7 @@ test("A1: a remote-only image scaffolds a valid Cloudflare Worker project (no ne
   }
 });
 
-test("A1: an OpenAI-pinned image generates a worker wired to @iris/provider-openai", async () => {
+test("A1: an OpenAI-pinned image generates a worker wired to @irisrun/provider-openai", async () => {
   // a remote, tool-less image pinned to an openai/ model
   const { out } = await buildImage({
     requires: { tool_locality: "remote" },
@@ -111,7 +111,7 @@ test("A1: an OpenAI-pinned image generates a worker wired to @iris/provider-open
   assert.deepEqual(result.files, ["wrangler.toml", "worker.mjs"]);
   const worker = fs.writes.find((w) => w.path.endsWith("worker.mjs"))!.data;
   // the OpenAI branch: import the openai provider, read OPENAI_API_KEY, bake MODEL
-  assert.match(worker, /await import\("@iris\/provider-openai"\)/);
+  assert.match(worker, /await import\("@irisrun\/provider-openai"\)/);
   assert.match(worker, /env\.OPENAI_API_KEY/);
   assert.match(worker, /openaiModelPerformer\(\{ apiKey: env\.OPENAI_API_KEY, model: MODEL \}\)/);
   assert.ok(worker.includes(`const MODEL = ${JSON.stringify("gpt-x")}`), "embeds the stripped openai model id");

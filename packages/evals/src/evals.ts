@@ -1,6 +1,6 @@
 // The reproducible-eval arbiter (spec 03 §7): "reproducible evals are the arbiter,
 // not editorial taste." An EvalCase is a DETERMINISTIC scenario; a Scorer reads the
-// recorded session (via @iris/inspect) and the last turn outcome. runEval calls
+// recorded session (via @irisrun/inspect) and the last turn outcome. runEval calls
 // case.build() on EVERY invocation, so it gets a FRESH store AND fresh performers
 // (the scripted-model/-tool closure index resets to 0); within a single run the
 // built performers PERSIST across the `turns` (a park→resume advances the index).
@@ -8,9 +8,9 @@
 // loop-until-finished (a perpetually-parking case must not hang) — and scores the
 // LAST outcome. Same case+scorer → byte-identical score; swapped tactic → different.
 // Runner is core runTurn (no host needed). READ-ONLY scoring.
-import { runTurn } from "@iris/core";
-import type { EngineDeps, Json, TurnOutcome } from "@iris/core";
-import { inspectSession, type SessionInspection } from "@iris/inspect";
+import { runTurn } from "@irisrun/core";
+import type { EngineDeps, Json, TurnOutcome } from "@irisrun/core";
+import { inspectSession, type SessionInspection } from "@irisrun/inspect";
 
 export interface EvalCase<S extends Json> {
   name: string;

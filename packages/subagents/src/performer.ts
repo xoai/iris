@@ -9,7 +9,7 @@
 // EXPECTED outcome (finished/parked/exhausted) is absorbed to {ok:true} — the parent model
 // reads it as a normal observation — and only genuine infra contention (`aborted`) is
 // {ok:false}, which the tool_error seam can retry. Never a {ok:false} the kernel can't handle.
-import type { Performer, Outcome, Json, HarnessState } from "@iris/core";
+import type { Performer, Outcome, Json, HarnessState } from "@irisrun/core";
 import { childSessionId } from "./id.ts";
 import { driveToCompletion, type DriveToCompletionDeps } from "./drive.ts";
 

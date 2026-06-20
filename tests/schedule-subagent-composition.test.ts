@@ -5,14 +5,14 @@
 // substrate, and the whole thing replays identically.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { runTurnOn } from "@iris/host";
-import type { HostAdapter } from "@iris/host";
-import { harnessProgram, defaultBundle, replay } from "@iris/core";
-import type { PerformerRegistry, Json, LogicalClock, StateStore, EffectIntent } from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
-import { makeScheduleRunner, scheduleProgram, type ResumeInputs } from "@iris/schedule";
-import type { ScheduleState } from "@iris/schedule";
-import { makeSubagentPerformer, type ResolvedChild } from "@iris/subagents";
+import { runTurnOn } from "@irisrun/host";
+import type { HostAdapter } from "@irisrun/host";
+import { harnessProgram, defaultBundle, replay } from "@irisrun/core";
+import type { PerformerRegistry, Json, LogicalClock, StateStore, EffectIntent } from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
+import { makeScheduleRunner, scheduleProgram, type ResumeInputs } from "@irisrun/schedule";
+import type { ScheduleState } from "@irisrun/schedule";
+import { makeSubagentPerformer, type ResolvedChild } from "@irisrun/subagents";
 import { makeScriptedModel, type CallCounter } from "./lib/fake-model.ts";
 
 const INTERVAL = 10;

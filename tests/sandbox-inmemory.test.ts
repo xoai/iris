@@ -5,7 +5,7 @@
 // docker broker is asserted by the manual smoke; this is the unit-suite scope.)
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createInMemorySession, makeCredentialBroker, inMemoryBackend } from "@iris/sandbox";
+import { createInMemorySession, makeCredentialBroker, inMemoryBackend } from "@irisrun/sandbox";
 
 const SECRET = "sk-supersecret-123";
 

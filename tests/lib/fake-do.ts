@@ -10,7 +10,7 @@
 //     path without wall-clock time.
 // EVERYTHING in workstream A tests against this. It imports NO @cloudflare/* — it
 // only realizes the DoStorage shape.
-import type { DoStorage } from "@iris/store-do";
+import type { DoStorage } from "@irisrun/store-do";
 
 export class FakeDoStorage implements DoStorage {
   private readonly kv = new Map<string, Uint8Array>();

@@ -16,6 +16,7 @@
     "test": "NODE_OPTIONS=--conditions=iris-src node --test 'tests/**/*.test.ts'",
     "typecheck": "tsc --noEmit -p tsconfig.base.json",
     "build": "node scripts/build.mjs",
+    "version:set": "node scripts/version.mjs",
     "release": "node scripts/release.mjs",
     "release:dry": "node scripts/release.mjs --dry-run"
   },

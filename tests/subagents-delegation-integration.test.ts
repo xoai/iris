@@ -17,7 +17,7 @@ import {
   reactAssembleContext,
   reactDecideNext,
   replay,
-} from "@iris/core";
+} from "@irisrun/core";
 import type {
   EngineDeps,
   HarnessState,
@@ -27,13 +27,13 @@ import type {
   Performer,
   Json,
   StateStore,
-} from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
+} from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
 import { TestClock } from "./lib/mem-store.ts";
 import { makeScriptedModel } from "./lib/fake-model.ts";
 import { makeTacticRouter } from "./lib/fake-tactic.ts";
 import type { CallCounter } from "./lib/fake-model.ts";
-import { makeSubagentPerformer, type ResolvedChild } from "@iris/subagents";
+import { makeSubagentPerformer, type ResolvedChild } from "@irisrun/subagents";
 
 const PARENT_INPUT = { messages: [{ role: "user", content: "go" }] };
 const CHILD_INPUT = { messages: [{ role: "user", content: "sub-task" }] };

@@ -6,10 +6,10 @@
 // error — never a silent OK. `handle(req)` is the testable core (no real stdio).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import type { Program, Json, JournalRecord } from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
-import { makeMcpChannel, type TurnInputs } from "@iris/channel-mcp";
-import type { HostAdapter } from "@iris/host";
+import type { Program, Json, JournalRecord } from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
+import { makeMcpChannel, type TurnInputs } from "@irisrun/channel-mcp";
+import type { HostAdapter } from "@irisrun/host";
 import { TestClock } from "./lib/mem-store.ts";
 
 type ChState = { turns: number };

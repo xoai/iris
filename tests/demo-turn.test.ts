@@ -1,9 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { runTurn, decode } from "@iris/core";
-import type { JournalRecord, Marker } from "@iris/core";
-import { openDatabase, SqliteStateStore, SqliteScheduler } from "@iris/store-sqlite";
-import { counterProgram, makeDemoPerformers } from "@iris/demo";
+import { runTurn, decode } from "@irisrun/core";
+import type { JournalRecord, Marker } from "@irisrun/core";
+import { openDatabase, SqliteStateStore, SqliteScheduler } from "@irisrun/store-sqlite";
+import { counterProgram, makeDemoPerformers } from "@irisrun/demo";
 import { TestClock } from "./lib/mem-store.ts";
 
 // 13: in-process end-to-end — the program parks on the timer, then a re-entry

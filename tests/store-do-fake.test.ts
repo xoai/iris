@@ -8,7 +8,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { FakeDoStorage } from "./lib/fake-do.ts";
-import type { DoStorage } from "@iris/store-do";
+import type { DoStorage } from "@irisrun/store-do";
 
 const enc = (s: string): Uint8Array => new TextEncoder().encode(s);
 const dec = (b: Uint8Array): string => new TextDecoder().decode(b);

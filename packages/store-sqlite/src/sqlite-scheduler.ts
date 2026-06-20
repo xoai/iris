@@ -3,7 +3,7 @@
 // re-arm it (spec §3.8, §4.3). Host-side `dueWakeups` lets the runner discover
 // which sessions to re-enter at a given logical time.
 import type { DatabaseSync } from "node:sqlite";
-import type { Scheduler } from "@iris/core";
+import type { Scheduler } from "@irisrun/core";
 
 export interface Wakeup {
   sessionId: string;

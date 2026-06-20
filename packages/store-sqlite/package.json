@@ -1,5 +1,5 @@
 {
-  "name": "@iris/store-sqlite",
+  "name": "@irisrun/store-sqlite",
   "version": "0.1.0",
   "type": "module",
   "description": "Iris host adapter — StateStore + Scheduler over node:sqlite (DatabaseSync).",
@@ -11,7 +11,7 @@
     }
   },
   "dependencies": {
-    "@iris/core": "^0.1.0"
+    "@irisrun/core": "^0.1.0"
   },
   "license": "MIT",
   "engines": {

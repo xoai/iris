@@ -4,7 +4,7 @@
 // provider to load. Used by `iris run/serve/chat` and (via providerDescriptor) the
 // generated deploy worker. Pure functions are unit-tested; loadModelProvider
 // dynamic-imports the chosen package so the no-key path stays light.
-import type { Performer } from "@iris/core";
+import type { Performer } from "@irisrun/core";
 
 export type ProviderName = "anthropic" | "openai";
 
@@ -20,14 +20,14 @@ const DESCRIPTORS: Record<ProviderName, ProviderDescriptor> = {
   anthropic: {
     name: "anthropic",
     envKey: "ANTHROPIC_API_KEY",
-    pkg: "@iris/provider-anthropic",
+    pkg: "@irisrun/provider-anthropic",
     bufferedExport: "anthropicModelPerformer",
     streamingExport: "anthropicStreamingModelPerformer",
   },
   openai: {
     name: "openai",
     envKey: "OPENAI_API_KEY",
-    pkg: "@iris/provider-openai",
+    pkg: "@irisrun/provider-openai",
     bufferedExport: "openaiModelPerformer",
     streamingExport: "openaiStreamingModelPerformer",
   },

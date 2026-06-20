@@ -6,12 +6,12 @@
 //     the child's reply rides back as the parent's tool result. Both are durable sessions.
 // (2) SCHEDULE: a recurring job parks on durable timers between runs; a host-side pump
 //     advances logical time, resumes each due cycle, and confirms after the turn commits.
-import { runTurn, harnessProgram, defaultBundle } from "@iris/core";
-import { runTurnOn, type HostAdapter } from "@iris/host";
-import type { Json, Performer, PerformerRegistry, LogicalClock } from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
-import { makeSubagentPerformer, type ResolvedChild } from "@iris/subagents";
-import { makeScheduleRunner, scheduleProgram } from "@iris/schedule";
+import { runTurn, harnessProgram, defaultBundle } from "@irisrun/core";
+import { runTurnOn, type HostAdapter } from "@irisrun/host";
+import type { Json, Performer, PerformerRegistry, LogicalClock } from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
+import { makeSubagentPerformer, type ResolvedChild } from "@irisrun/subagents";
+import { makeScheduleRunner, scheduleProgram } from "@irisrun/schedule";
 
 function emit(event: string, data: Json): void {
   process.stdout.write(`${JSON.stringify({ event, ...(data as object) })}\n`);

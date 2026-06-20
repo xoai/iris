@@ -20,12 +20,12 @@ import {
   subagentPerformers,
   type ChatDeps,
   type CliSubagents,
-} from "iris";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
-import { harnessProgram, defaultBundle } from "@iris/core";
+} from "iris-runtime";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
+import { harnessProgram, defaultBundle } from "@irisrun/core";
 import { TestClock } from "./lib/mem-store.ts";
 import { makeScriptedModel } from "./lib/fake-model.ts";
-import { childSessionId, type ResolvedChild } from "@iris/subagents";
+import { childSessionId, type ResolvedChild } from "@irisrun/subagents";
 
 const tmp = (p: string): Promise<string> => mkdtemp(join(tmpdir(), p));
 const scaffoldResolver = async (src: string) => (await loadBundledTools(join(src, "tools"))).resolver;

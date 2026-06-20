@@ -1,16 +1,16 @@
 // MANUAL smoke — NOT in the unit suite, NOT typechecked (repo-root manual/).
 //   IRIS_OTLP_SMOKE=1 node manual/otlp-export-smoke.ts
 //
-// The install-free core (@iris/observe.toSpans) derives OTel-shaped spans from a
+// The install-free core (@irisrun/observe.toSpans) derives OTel-shaped spans from a
 // recorded session; exporting them to a REAL backend over OTLP needs
 // @opentelemetry/* (future). When enabled, this records a session, builds the spans
 // (install-free), then attempts a real OTLP export — refusing LOUDLY with install
 // guidance if the OTel SDK is absent.
 import assert from "node:assert/strict";
-import { runTurn, harnessProgram, defaultBundle } from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
-import { inspectSession } from "@iris/inspect";
-import { toSpans } from "@iris/observe";
+import { runTurn, harnessProgram, defaultBundle } from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
+import { inspectSession } from "@irisrun/inspect";
+import { toSpans } from "@irisrun/observe";
 
 const INPUT = { messages: [{ role: "user", content: "go" }] };
 const ONE_TOOL_THEN_DONE = [

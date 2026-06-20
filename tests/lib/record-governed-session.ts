@@ -9,15 +9,15 @@ import {
   composeDecideNext,
   reactAssembleContext,
   reactDecideNext,
-} from "@iris/core";
-import type { EngineDeps, HarnessState, ReadonlyHarnessView, ModelContext, Performer, Json, Reducer } from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
+} from "@irisrun/core";
+import type { EngineDeps, HarnessState, ReadonlyHarnessView, ModelContext, Performer, Json, Reducer } from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
 import { TestClock } from "./mem-store.ts";
 import { makeScriptedModel, makeFakeModel } from "./fake-model.ts";
 import { makeTacticRouter } from "./fake-tactic.ts";
 import { makeFakeTool } from "./fake-tool.ts";
-import { createApprovalInbox, makeGovernedApprovalPerformer } from "@iris/auth";
-import type { ApprovalPolicy, GovernedAction, RawApproval } from "@iris/auth";
+import { createApprovalInbox, makeGovernedApprovalPerformer } from "@irisrun/auth";
+import type { ApprovalPolicy, GovernedAction, RawApproval } from "@irisrun/auth";
 import assert from "node:assert/strict";
 
 export const INPUT = { messages: [{ role: "user", content: "go" }] };

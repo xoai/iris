@@ -5,9 +5,9 @@
 // state with no performer (C6, assertReplay ON); resume re-invokes nothing.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { runTurn, replay, canonicalize, decode, harnessProgram } from "@iris/core";
-import type { EngineDeps, JournalRecord, EffectIntent, HarnessState } from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
+import { runTurn, replay, canonicalize, decode, harnessProgram } from "@irisrun/core";
+import type { EngineDeps, JournalRecord, EffectIntent, HarnessState } from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
 import { TestClock } from "./lib/mem-store.ts";
 import { makeFakeModel, type CallCounter } from "./lib/fake-model.ts";
 import { makeFakeTacticBySeam } from "./lib/fake-tactic.ts";

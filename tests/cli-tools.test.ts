@@ -8,10 +8,10 @@ import assert from "node:assert/strict";
 import { mkdtemp, mkdir, writeFile, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { loadBundledTools, cmdInit, cmdBuild, cmdRun } from "iris";
-import { makeSubprocessTransport, makeToolInvoker } from "@iris/tools";
-import { decode } from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
+import { loadBundledTools, cmdInit, cmdBuild, cmdRun } from "iris-runtime";
+import { makeSubprocessTransport, makeToolInvoker } from "@irisrun/tools";
+import { decode } from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
 import { TestClock } from "./lib/mem-store.ts";
 import { makeScriptedModel } from "./lib/fake-model.ts";
 

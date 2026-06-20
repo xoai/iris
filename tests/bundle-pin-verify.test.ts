@@ -19,9 +19,9 @@ import {
   bundleDigest,
   makeLocalResolver,
   parseAgentfileJson,
-} from "@iris/agent";
-import type { BundleDefinition, BundleResolver, AgentImage } from "@iris/agent";
-import type { ToolContract } from "@iris/tools";
+} from "@irisrun/agent";
+import type { BundleDefinition, BundleResolver, AgentImage } from "@irisrun/agent";
+import type { ToolContract } from "@irisrun/tools";
 
 const toolResolver = makeLocalResolver({
   "mcp://registry/issue-tracker": {

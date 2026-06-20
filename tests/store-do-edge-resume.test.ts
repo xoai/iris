@@ -31,7 +31,7 @@ import {
   defaultBundle,
   composeAssemble,
   reactAssembleContext,
-} from "@iris/core";
+} from "@irisrun/core";
 import type {
   EngineDeps,
   HarnessState,
@@ -40,11 +40,11 @@ import type {
   Performer,
   ReadonlyHarnessView,
   ModelContext,
-} from "@iris/core";
-import { openDatabase, SqliteStateStore, SqliteScheduler } from "@iris/store-sqlite";
-import { FsStateStore, FsScheduler } from "@iris/store-fs";
-import { runTurnOn, type HostAdapter } from "@iris/host";
-import { DoStateStore, DoScheduler, edgeHost } from "@iris/store-do";
+} from "@irisrun/core";
+import { openDatabase, SqliteStateStore, SqliteScheduler } from "@irisrun/store-sqlite";
+import { FsStateStore, FsScheduler } from "@irisrun/store-fs";
+import { runTurnOn, type HostAdapter } from "@irisrun/host";
+import { DoStateStore, DoScheduler, edgeHost } from "@irisrun/store-do";
 import { FakeDoStorage } from "./lib/fake-do.ts";
 import { TestClock } from "./lib/mem-store.ts";
 import { makeScriptedModel } from "./lib/fake-model.ts";

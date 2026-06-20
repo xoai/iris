@@ -16,7 +16,7 @@ import {
   reactAssembleContext,
   reactDecideNext,
   windowCompaction,
-} from "@iris/core";
+} from "@irisrun/core";
 import type {
   EngineDeps,
   JournalRecord,
@@ -26,8 +26,8 @@ import type {
   ModelContext,
   Budget,
   Json,
-} from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
+} from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
 import { TestClock } from "./lib/mem-store.ts";
 import { makeScriptedModel } from "./lib/fake-model.ts";
 import { makeTacticRouter } from "./lib/fake-tactic.ts";

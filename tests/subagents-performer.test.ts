@@ -3,14 +3,14 @@
 // aborted/unknown/malformed → {ok:false, code}.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { harnessProgram, defaultBundle } from "@iris/core";
-import type { HostAdapter } from "@iris/host";
-import type { PerformerRegistry, Json, StateStore, Outcome } from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
+import { harnessProgram, defaultBundle } from "@irisrun/core";
+import type { HostAdapter } from "@irisrun/host";
+import type { PerformerRegistry, Json, StateStore, Outcome } from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
 import { TestClock } from "./lib/mem-store.ts";
 import { makeScriptedModel } from "./lib/fake-model.ts";
 import { makeContendedStore, makeAbortOnAppendStore } from "./lib/flaky-store.ts";
-import { makeSubagentPerformer, type ResolvedChild } from "@iris/subagents";
+import { makeSubagentPerformer, type ResolvedChild } from "@irisrun/subagents";
 
 const INPUT = { messages: [{ role: "user", content: "hi" }] };
 const REPLY: Json = { role: "assistant", content: "child-done", stopReason: "end_turn" };

@@ -17,7 +17,7 @@
 // host.name — with name "Cloudflare" it is byte-identical to ADR-0008's example.
 // `assertDeployable` throws an Error joining every gap's message: refuse LOUDLY,
 // never silently degrade (graceful auto-degrade is explicitly out of scope).
-import type { CapabilityProfile } from "@iris/agent";
+import type { CapabilityProfile } from "@irisrun/agent";
 import type { HostAdapter } from "./adapter.ts";
 
 // The boolean capability keys (tool_locality is the STRING dimension, handled

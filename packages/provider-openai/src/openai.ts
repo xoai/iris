@@ -1,12 +1,12 @@
 // Direct OpenAI Chat Completions adapter — a model_call performer behind the same
-// model port as @iris/provider-anthropic. Host-side; uses the built-in `fetch`
+// model port as @irisrun/provider-anthropic. Host-side; uses the built-in `fetch`
 // (zero deps); `fetch` is injectable so unit tests run with no network/key. A
 // missing key is a CONSTRUCTION-time config error (loud) — never a mid-turn
 // laundered failure. Mirrors packages/provider-anthropic/src/anthropic.ts exactly,
 // including the buffered/streaming SYMMETRY (req.model ?? opts.model + a loud
 // {ok:false} guard) — see the Iris memory lesson on the buffered Anthropic variant
 // that once shipped without it and 400'd a standalone caller.
-import type { Performer, Json, Outcome } from "@iris/core";
+import type { Performer, Json, Outcome } from "@irisrun/core";
 import type { ModelCallRequest, ModelCallResult, ModelMessage } from "./types.ts";
 import { readOpenAiSse } from "./sse.ts";
 

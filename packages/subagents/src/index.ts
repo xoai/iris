@@ -1,7 +1,7 @@
-// @iris/subagents — public surface (host-side). Wires the `subagent` EffectKind: an agent
+// @irisrun/subagents — public surface (host-side). Wires the `subagent` EffectKind: an agent
 // delegates a sub-task to a child agent (its own durable session). Pure id derivation +
 // a host-side child runner + the `subagent` performer.
-export const PACKAGE = "@iris/subagents";
+export const PACKAGE = "@irisrun/subagents";
 
 export { childSessionId } from "./id.ts";
 export { driveToCompletion, DEFAULT_MAX_TURNS } from "./drive.ts";

@@ -1,13 +1,14 @@
 # Releasing Iris to npm
 
-The package tree is publish-ready: a `tsc` build compiles each package to JS, the
-metadata is set (names, versions, `publishConfig`, `files`, `repository`), and
-`npm run release` is wired and gated behind `IRIS_PUBLISH=1`.
+Iris is **published on npm at `0.1.0`** — `iris-runtime` (the CLI) plus the
+`@irisrun/*` libraries. This document is how to cut the next release: a `tsc` build
+compiles each package to JS, the metadata is set (names, versions, `publishConfig`,
+`files`, `repository`), and `npm run release` is wired and gated behind `IRIS_PUBLISH=1`.
 
 ## How the build works (no dev build step)
 
 Iris is authored as raw TypeScript and runs with **no build step in development** —
-Node 24 strips the types at load, and the workspace resolves `@iris/*` to each
+Node 24 strips the types at load, and the workspace resolves `@irisrun/*` to each
 package's `src/` via a custom export **condition** (`iris-src`). `npm test` and
 `npm run typecheck` carry that condition (`NODE_OPTIONS=--conditions=iris-src` /
 tsconfig `customConditions`), so day-to-day work needs no compile.
@@ -22,7 +23,7 @@ default** (and `./src/index.ts` only under the `iris-src` condition):
   ".": {
     "iris-src": "./src/index.ts",   // dev (workspace + tests)
     "types":    "./dist/index.d.ts", // published types
-    "default":  "./dist/index.js"    // published consumers / npx iris
+    "default":  "./dist/index.js"    // published consumers / npx iris-runtime
   }
 }
 ```
@@ -30,7 +31,7 @@ default** (and `./src/index.ts` only under the `iris-src` condition):
 `npm run build` (`scripts/build.mjs`) compiles every publishable package's
 `src/*.ts` → `dist/*.js` (+ `.d.ts`) with `tsc` (already a devDependency — no new
 dep). It uses `rewriteRelativeImportExtensions`, so the explicit `./x.ts` import
-specifiers become `./x.js` in the emitted JS; bare `@iris/*` imports are kept and
+specifiers become `./x.js` in the emitted JS; bare `@irisrun/*` imports are kept and
 resolve to each dep's published `dist` at install time. (`tsc` 6.0 does not apply
 that rewrite to the emitted `.d.ts`, so the build does a post-emit pass that
 rewrites relative `.ts` → `.js` in the declaration files — without it, a strict
@@ -39,9 +40,36 @@ Packages compile independently (cross-package types resolve to `src` via the
 `iris-src` condition), so order doesn't matter. `dist/` and the generated
 `tsconfig.build.json` are git-ignored build artifacts.
 
-## How to publish
+## Cutting a release (recommended: CI/CD)
 
-1. `npm login` (an account with publish rights to `iris` and the `@iris` scope).
+Releases are automated by `.github/workflows/release.yml`, which keeps the git tag
+and the npm version **in sync** and publishes on a version tag.
+
+**One-time setup:** add an npm **Automation** access token as the repo secret
+`NPM_TOKEN` (npmjs.com → Access Tokens → Generate → Automation → then GitHub repo
+→ Settings → Secrets and variables → Actions → `NPM_TOKEN`). An automation token
+bypasses 2FA, which non-interactive publishing requires (a normal token fails with
+`EOTP` in CI).
+
+**To release version `X.Y.Z`:**
+
+```sh
+node scripts/version.mjs X.Y.Z      # or: npm run version:set -- X.Y.Z
+git commit -am "release: vX.Y.Z"
+git tag vX.Y.Z
+git push --follow-tags
+```
+
+`scripts/version.mjs` sets every `packages/*` version **and** rewrites the internal
+`@irisrun/*` dependency ranges to `^X.Y.Z` (they move in lockstep). On the pushed
+tag, the workflow: verifies `vX.Y.Z` equals `packages/cli/package.json` (fails
+loudly on drift), runs typecheck + the full suite, publishes via `npm run release`
+(skipping packages whose version is already live — so re-pushing a tag is safe),
+and cuts a GitHub Release. `v0.0.1` predates this; `v0.1.0` is the first synced tag.
+
+## How to publish manually (fallback)
+
+1. `npm login` (an account with publish rights to `iris-runtime` and the `@irisrun` scope).
 2. Preview what ships — builds, then lists tarball contents (no upload, no registry):
    ```sh
    npm run release:dry
@@ -53,14 +81,15 @@ Packages compile independently (cross-package types resolve to `src` via the
    `scripts/release.mjs` **always builds first**, then runs
    `npm publish --workspaces --access public` and, as a safety net, refuses if any
    publishable package is missing its `dist/`. npm skips `private` workspaces, so
-   `iris-workspace` (the repo root) and `@iris/demo` are not published.
+   `iris-workspace` (the repo root) and `@irisrun/demo` are not published.
 
 ## What gets published
 
-- **`iris`** — the unscoped CLI (`bin.iris` → `./dist/cli-main.js`); the package
-  behind `npx iris` / `npm i -g iris`. (Renamed from `@iris/cli`; the old scoped
-  name is **not** published.)
-- **`@iris/*`** — the libraries: `core`, `tools`, `agent`, `host`,
+- **`iris-runtime`** — the unscoped CLI package (`bin.iris` → `./dist/cli-main.js`,
+  so the installed command is `iris`); the package behind `npx iris-runtime` /
+  `npm i -g iris-runtime`. (Named `iris-runtime` because the bare `iris` name and
+  the `@iris` scope are owned by others on npm; the binary stays `iris`.)
+- **`@irisrun/*`** — the libraries: `core`, `tools`, `agent`, `host`,
   `channel-rest`, `channel-web`, `channel-mcp`, `client-sdk`, `store-do`,
   `store-fs`, `store-memory`, `store-sqlite`, `provider-anthropic`,
   `provider-openai`, `auth`, `audit`, `subagents`, `schedule`,
@@ -69,12 +98,12 @@ Packages compile independently (cross-package types resolve to `src` via the
 All publishable packages share one lockstep version (currently `0.1.0`) and
 publish with public access via `publishConfig`.
 
-**Not published:** `iris-workspace` (the private monorepo root) and `@iris/demo`
+**Not published:** `iris-workspace` (the private monorepo root) and `@irisrun/demo`
 (an in-repo example, consumed from source).
 
 ## Running the CLI from source (without installing)
 
-Because dev resolves `@iris/*` to `src`, run the CLI from the workspace with the
+Because dev resolves `@irisrun/*` to `src`, run the CLI from the workspace with the
 condition flag (no build needed):
 
 ```sh

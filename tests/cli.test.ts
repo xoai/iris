@@ -15,9 +15,9 @@ import {
   cmdPull,
   cmdRun,
   loadBundledTools,
-} from "iris";
-import { governingDigest, checkAgainstSchema, validateAgentfile } from "@iris/agent";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
+} from "iris-runtime";
+import { governingDigest, checkAgainstSchema, validateAgentfile } from "@irisrun/agent";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
 import { TestClock } from "./lib/mem-store.ts";
 import { makeScriptedModel } from "./lib/fake-model.ts";
 

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { replay, canonicalize } from "@iris/core";
-import type { JournalRecord, Json } from "@iris/core";
+import { replay, canonicalize } from "@irisrun/core";
+import type { JournalRecord, Json } from "@irisrun/core";
 
 // B3 — replay determinism over 10k randomized sessions (framework Spec 01 §8).
 // Stresses canonicalization (random key order) + replay first-wins dedupe.

@@ -4,7 +4,7 @@
 // cuts must respect rune boundaries.)
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readAnthropicSse } from "@iris/provider-anthropic";
+import { readAnthropicSse } from "@irisrun/provider-anthropic";
 
 function streamOf(chunks: Uint8Array[]): ReadableStream<Uint8Array> {
   return new ReadableStream<Uint8Array>({

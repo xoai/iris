@@ -5,8 +5,8 @@
 // rotation, and the ADR-0008 capability-gate refusal.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { harnessProgram, defaultBundle } from "@iris/core";
-import type { Performer, Json } from "@iris/core";
+import { harnessProgram, defaultBundle } from "@irisrun/core";
+import type { Performer, Json } from "@irisrun/core";
 import {
   makeRestChannel,
   type StreamEvent,
@@ -15,8 +15,8 @@ import {
   encodePongFrame,
   encodeCloseFrame,
   makeWsFramer,
-} from "@iris/channel-rest";
-import type { HostAdapter } from "@iris/host";
+} from "@irisrun/channel-rest";
+import type { HostAdapter } from "@irisrun/host";
 import { MemStateStore, MemScheduler, TestClock } from "./lib/mem-store.ts";
 
 const REPLY = "hello there world";

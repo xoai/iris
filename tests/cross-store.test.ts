@@ -1,9 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { runTurn, migrateSession, canonicalize } from "@iris/core";
-import type { EngineDeps, Json } from "@iris/core";
-import { openDatabase, SqliteStateStore, SqliteScheduler } from "@iris/store-sqlite";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
+import { runTurn, migrateSession, canonicalize } from "@irisrun/core";
+import type { EngineDeps, Json } from "@irisrun/core";
+import { openDatabase, SqliteStateStore, SqliteScheduler } from "@irisrun/store-sqlite";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
 import { TestClock } from "./lib/mem-store.ts";
 import { makeCrossProgram, type XState } from "./lib/cross-store-program.ts";
 

@@ -1,7 +1,7 @@
 // The uniform ToolInvoker (spec §3.3, Spec 05 A3): one invoke(...) interface
 // over N transports, dispatched by contract.transport. Host-side; transports
 // MAY use node: builtins. A missing transport fails loudly (no silent success).
-import type { Json } from "@iris/core";
+import type { Json } from "@irisrun/core";
 import type { ToolContract } from "./contract.ts";
 
 export type ToolResult =

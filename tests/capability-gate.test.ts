@@ -7,9 +7,9 @@
 // gaps for inspection. The remote-only profile passes with zero gaps.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { assertDeployable, diffCapabilities } from "@iris/host";
-import { edgeHost } from "@iris/store-do";
-import type { CapabilityProfile } from "@iris/agent";
+import { assertDeployable, diffCapabilities } from "@irisrun/host";
+import { edgeHost } from "@irisrun/store-do";
+import type { CapabilityProfile } from "@irisrun/agent";
 import { FakeDoStorage } from "./lib/fake-do.ts";
 
 // The byte-identical ADR-0008 refusal (agent-framework.md:682, host.name="Cloudflare").

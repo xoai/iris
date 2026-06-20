@@ -3,8 +3,8 @@
 // `iris serve` SSE/WS stream is demonstrable WITHOUT an ANTHROPIC_API_KEY — the
 // turnkey no-key path. It ignores `request.model` (independent of the Anthropic
 // contract). Pure: no env, no network → also a deterministic streaming fixture.
-import type { Performer, Json, Outcome } from "@iris/core";
-import type { ModelCallResult } from "@iris/provider-anthropic";
+import type { Performer, Json, Outcome } from "@irisrun/core";
+import type { ModelCallResult } from "@irisrun/provider-anthropic";
 
 export function echoStreamingPerformer(onDelta?: (text: string) => void): Performer {
   return async (request: Json): Promise<Outcome> => {

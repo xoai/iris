@@ -15,7 +15,7 @@ export type RecordKind =
 // harness seam consultation (ADR-0007) — performed host-side via the existing
 // PerformerRegistry exactly like model_call, so replay never re-invokes it. The
 // rest are reserved entry types (each wired by the package that owns its effect,
-// e.g. `subagent` by @iris/subagents).
+// e.g. `subagent` by @irisrun/subagents).
 export type EffectKind =
   | "clock"
   | "random"

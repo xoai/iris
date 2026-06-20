@@ -1,10 +1,10 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { encode, decode } from "@iris/core";
-import type { Version } from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
+import { encode, decode } from "@irisrun/core";
+import type { Version } from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
 
-// @iris/store-memory enforces the SAME invariants as SQLite (CAS, fencing, hwm).
+// @irisrun/store-memory enforces the SAME invariants as SQLite (CAS, fencing, hwm).
 
 test("memory-store: cas — two writers with same expected, one wins", async () => {
   const s = new MemoryStateStore();

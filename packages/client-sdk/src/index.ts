@@ -1,14 +1,14 @@
-// @iris/client-sdk — a thin, isomorphic client over the `iris serve` protocol
+// @irisrun/client-sdk — a thin, isomorphic client over the `iris serve` protocol
 // (spec §1). The channel MINTS the sessionId and OWNS/ROTATES the single-use
 // continuationToken; this client mirrors that discipline EXACTLY: it adopts the
 // rotated token the server returns and presents it on the next turn. Zero runtime
 // deps — only global `fetch` / `TextDecoder` / `ReadableStream` (Node ≥24 + browser).
-// It defines its OWN local StreamEvent union (NOT imported from @iris/channel-rest,
+// It defines its OWN local StreamEvent union (NOT imported from @irisrun/channel-rest,
 // which pulls node:http and would break the browser build). No silent failures: a
 // non-2xx, a mid-stream `error` event, or a transport failure all reject LOUDLY.
-import type { Json } from "@iris/core";
+import type { Json } from "@irisrun/core";
 
-export const PACKAGE = "@iris/client-sdk";
+export const PACKAGE = "@irisrun/client-sdk";
 
 /** What a durable session is addressed by: the channel's id + the current token. */
 export interface SessionHandle {
@@ -28,8 +28,8 @@ export interface IrisClientOptions {
 }
 
 /**
- * The SDK's OWN request type (NOT a @iris/core type). The server's `bodyToInput`
- * normalizes a missing/empty `messages`, so the SDK keeps it optional; `@iris/core`'s
+ * The SDK's OWN request type (NOT a @irisrun/core type). The server's `bodyToInput`
+ * normalizes a missing/empty `messages`, so the SDK keeps it optional; `@irisrun/core`'s
  * `HarnessInput` requires it.
  */
 export interface TurnInput {
@@ -41,7 +41,7 @@ export type TurnStatus = "finished" | "parked" | "contended" | "aborted";
 
 /**
  * The wire event union — defined LOCALLY (pure data mirroring channel-rest/events.ts),
- * deliberately NOT imported from @iris/channel-rest (keeps the SDK node:-free).
+ * deliberately NOT imported from @irisrun/channel-rest (keeps the SDK node:-free).
  */
 export type StreamEvent =
   | { type: "record"; record: Json }

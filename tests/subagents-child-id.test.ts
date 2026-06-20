@@ -2,7 +2,7 @@
 // re-perform of a `subagent` effect idempotent (it re-finds the SAME child session).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { childSessionId } from "@iris/subagents";
+import { childSessionId } from "@irisrun/subagents";
 
 test("childSessionId is deterministic: same (parent, callId) → same id", () => {
   assert.equal(childSessionId("parent-1", "a"), childSessionId("parent-1", "a"));

@@ -1,5 +1,5 @@
 // Bundle resolution + digest (spec §4.2, ADR-0004) — the M6 strengthening of the
-// M4 tactic pin. A tactic BUNDLE (e.g. `@iris/bundle-coding`) is distributed like
+// M4 tactic pin. A tactic BUNDLE (e.g. `@irisrun/bundle-coding`) is distributed like
 // a tool contract: an Agentfile `harness.bundle` ref (e.g. "iris/coding@^1")
 // resolves — via an injected BundleResolver, mirroring the M4 RegistryResolver —
 // to a concrete BundleDefinition, and the image pins `bundleDigest(def)` (a real
@@ -7,9 +7,9 @@
 // placeholder. The digest is STABLE across a floating `location` (re-resolve by
 // stable ref, not by location — [[lrn-resolve-by-stable-ref-not-floating-location]])
 // yet detects any change to the behavior surface (id/version/seams/...).
-// Host-side (node:crypto + @iris/core canonicalize).
+// Host-side (node:crypto + @irisrun/core canonicalize).
 import { createHash } from "node:crypto";
-import { canonicalize, type Json } from "@iris/core";
+import { canonicalize, type Json } from "@irisrun/core";
 
 // The resolvable bundle surface. `id`/`version`/`seams` (and any further behavior
 // fields) form the model-perceived BEHAVIOR SURFACE the digest covers. `location`

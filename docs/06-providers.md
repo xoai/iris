@@ -15,8 +15,8 @@ An agent's model is a single string in `agent.json` with a `<provider>/` prefix:
 { "model": "openai/gpt-x" }
 ```
 
-- `anthropic/…` → `@iris/provider-anthropic`, key `ANTHROPIC_API_KEY`.
-- `openai/…` → `@iris/provider-openai`, key `OPENAI_API_KEY`.
+- `anthropic/…` → `@irisrun/provider-anthropic`, key `ANTHROPIC_API_KEY`.
+- `openai/…` → `@irisrun/provider-openai`, key `OPENAI_API_KEY`.
 - a bare id with no prefix → Anthropic (backward-compatible default).
 - any other prefix → a **loud** error listing the supported providers (never a
   silent call to the wrong API).
@@ -63,7 +63,7 @@ is a literal, executed guarantee, not a slogan.
 
 A provider is just a `model_call` performer — a function from the request JSON to an
 outcome carrying a `{ role, content, stopReason, usage? }` result. Mirror
-`@iris/provider-anthropic` / `@iris/provider-openai`:
+`@irisrun/provider-anthropic` / `@irisrun/provider-openai`:
 
 1. Map the port request to your API's request (system prompt, messages, max tokens).
 2. Parse the response back into the result shape.

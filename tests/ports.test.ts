@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { encode, decode } from "@iris/core";
-import type { Json } from "@iris/core";
+import { encode, decode } from "@irisrun/core";
+import type { Json } from "@irisrun/core";
 import { MemStateStore, MemScheduler, TestClock } from "./lib/mem-store.ts";
 
 // Structural-conformance check: the in-memory mocks implement the ports and

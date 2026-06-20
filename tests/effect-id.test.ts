@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { effectId } from "@iris/core";
+import { effectId } from "@irisrun/core";
 
 test("effectId: deterministic for the same (seq, kind)", () => {
   assert.equal(effectId(7, "echo"), effectId(7, "echo"));

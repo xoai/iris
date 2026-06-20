@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { contractDigest, makeToolRegistry } from "@iris/tools";
-import type { ToolContract } from "@iris/tools";
+import { contractDigest, makeToolRegistry } from "@irisrun/tools";
+import type { ToolContract } from "@irisrun/tools";
 
 const base: ToolContract = {
   name: "weather",

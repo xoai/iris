@@ -4,7 +4,7 @@
 // scripted outcome so harness tests can drive success / error / repair paths
 // deterministically. `callIndex` (0-based, per performer instance) lets a test
 // sequence outcomes — e.g. fail on the first attempt, succeed on the retry.
-import type { Performer, Json, Outcome } from "@iris/core";
+import type { Performer, Json, Outcome } from "@irisrun/core";
 
 export interface ToolCallLog {
   calls: Array<{ name: string; args: Json }>;

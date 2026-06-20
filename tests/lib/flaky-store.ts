@@ -3,7 +3,7 @@
 // concurrent-writer race). Each wrapper DELEGATES every method to the inner store except
 // the one fault it injects. Used by the subagent driver tests (exhausted/aborted) and the
 // schedule-pump at-least-once test (an aborted resume must NOT consume its wakeup).
-import type { StateStore, CasResult, AppendResult, JournalRow, Version } from "@iris/core";
+import type { StateStore, CasResult, AppendResult, JournalRow, Version } from "@irisrun/core";
 
 // A store whose `cas` ALWAYS fails → `acquireLease` returns {ok:false} → runTurn returns
 // `{status:"contended"}` every time. (Reads/journal still delegate so replay is sane.)

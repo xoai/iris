@@ -1,5 +1,5 @@
-// @iris/agent — public surface (host-side; zero external deps).
-export const PACKAGE = "@iris/agent";
+// @irisrun/agent — public surface (host-side; zero external deps).
+export const PACKAGE = "@irisrun/agent";
 
 export {
   parseAgentfileJson,

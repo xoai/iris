@@ -9,9 +9,9 @@
 // journal only when the case does not truncate (the eval norm — short cases, default
 // no snapshot, or keepHistory). If a case truncates, the digest covers the retained
 // tail; the reproducibility verdict stays sound (both runs truncate identically).
-import { runTurn, canonicalize, decode } from "@iris/core";
-import type { Json, TurnOutcome } from "@iris/core";
-import { inspectSession } from "@iris/inspect";
+import { runTurn, canonicalize, decode } from "@irisrun/core";
+import type { Json, TurnOutcome } from "@irisrun/core";
+import { inspectSession } from "@irisrun/inspect";
 import type { EvalCase, Scorer, EvalResult } from "./evals.ts";
 
 export type ReproReport = {
@@ -24,7 +24,7 @@ export type ReproReport = {
 };
 
 // A tiny pure FNV-1a (32-bit) hex hash — a short fingerprint, not a security hash.
-// Inlined so @iris/evals adds no dependency (mirrors @iris/audit's fnv.ts).
+// Inlined so @irisrun/evals adds no dependency (mirrors @irisrun/audit's fnv.ts).
 function fnv1a32hex(s: string): string {
   let h = 0x811c9dc5;
   for (let i = 0; i < s.length; i++) {

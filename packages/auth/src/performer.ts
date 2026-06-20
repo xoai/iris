@@ -4,11 +4,11 @@
 // journaled value.
 //
 // HARD RULE (memory: journal-poison gotcha): this performer is folded in the kernel's
-// `recv_hitl` phase, which has NO failure handler (@iris/core kernel.ts:262-275). A
+// `recv_hitl` phase, which has NO failure handler (@irisrun/core kernel.ts:262-275). A
 // {ok:false} there is journaled and re-throws forever on replay. So this ALWAYS
 // returns {ok:true} — an unauthorized/denied/absent decision is a well-formed
 // {ok:true, value:{approved:false,…}}, never an error.
-import type { Json, Performer, Outcome } from "@iris/core";
+import type { Json, Performer, Outcome } from "@irisrun/core";
 import type { GovernedAction } from "./identity.ts";
 import type { RawApproval } from "./approval.ts";
 import { decideApproval } from "./approval.ts";

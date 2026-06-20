@@ -4,7 +4,7 @@
 // line, spawn failure, AND a hung child (bounded by a timeout) — maps to a clean
 // `{ok:false}` (spec §7: no hang, no silent success). Host-side (node:child_process).
 import { spawn } from "node:child_process";
-import type { Json } from "@iris/core";
+import type { Json } from "@irisrun/core";
 import type { Transport, ToolResult } from "../invoker.ts";
 import { locationHandle, messageOf, toolFailure } from "../invoker.ts";
 

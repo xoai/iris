@@ -3,8 +3,8 @@
 // principals). Any granting rule → permit; else policy.default ("deny" by default).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { authorize } from "@iris/auth";
-import type { ApprovalPolicy, Principal, GovernedAction } from "@iris/auth";
+import { authorize } from "@irisrun/auth";
+import type { ApprovalPolicy, Principal, GovernedAction } from "@irisrun/auth";
 
 const rm: GovernedAction = { name: "rm", callId: "c1" };
 const alice: Principal = { id: "alice", roles: ["dev", "admin"] };

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { runTurn, ReplayDivergenceError } from "@iris/core";
+import { runTurn, ReplayDivergenceError } from "@irisrun/core";
 import type {
   EngineDeps,
   JournalRecord,
@@ -8,7 +8,7 @@ import type {
   Action,
   PerformerRegistry,
   Json,
-} from "@iris/core";
+} from "@irisrun/core";
 import { MemStateStore, MemScheduler, TestClock } from "./lib/mem-store.ts";
 import {
   addProgram,
@@ -161,7 +161,7 @@ test("10a: seq conflict mid-turn → aborted seq_conflict; a clean re-entry comp
 });
 
 // tiny local decode/encode helpers (avoid top-level await churn)
-import { decode, encode } from "@iris/core";
+import { decode, encode } from "@irisrun/core";
 function require_decode(b: Uint8Array): Json {
   return decode(b);
 }

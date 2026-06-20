@@ -1,4 +1,4 @@
-// Phase A (P0 items 3+4) — @iris/client-sdk over the `iris serve` two-identifier
+// Phase A (P0 items 3+4) — @irisrun/client-sdk over the `iris serve` two-identifier
 // protocol. Buffered start/send round-trip + token rotation; a stale token is a
 // LOUD IrisError(409); send() with no session refuses loudly; a SECOND client built
 // from a stored handle resumes the SAME session AGAINST THE SAME RUNNING CHANNEL
@@ -7,9 +7,9 @@
 // helpers parseSseFrames / decideStartOrResume, and the loud ws-unsupported refusal.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import type { Program, JournalRecord } from "@iris/core";
-import { makeRestChannel, type TurnInputs } from "@iris/channel-rest";
-import type { HostAdapter } from "@iris/host";
+import type { Program, JournalRecord } from "@irisrun/core";
+import { makeRestChannel, type TurnInputs } from "@irisrun/channel-rest";
+import type { HostAdapter } from "@irisrun/host";
 import { MemStateStore, MemScheduler, TestClock } from "./lib/mem-store.ts";
 import {
   IrisClient,
@@ -17,7 +17,7 @@ import {
   parseSseFrames,
   decideStartOrResume,
   type SessionHandle,
-} from "@iris/client-sdk";
+} from "@irisrun/client-sdk";
 
 // A trivial finishing program: each turn folds a finish marker to bump a counter, so
 // successive turns produce distinguishable output {turn: N} (channel-rest.test.ts).

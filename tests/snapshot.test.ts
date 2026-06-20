@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { replay, canonicalize, decode, runTurn } from "@iris/core";
-import type { JournalRecord } from "@iris/core";
+import { replay, canonicalize, decode, runTurn } from "@irisrun/core";
+import type { JournalRecord } from "@irisrun/core";
 import { resultRec, rec } from "./lib/journal-helpers.ts";
 import { sumReducer, sumInitial } from "./lib/sample-program.ts";
 import { MemStateStore, MemScheduler, TestClock } from "./lib/mem-store.ts";

@@ -1,4 +1,4 @@
-// @iris/channel-web — the web channel's HOST side (spec §2.2). `makeWebHandler`
+// @irisrun/channel-web — the web channel's HOST side (spec §2.2). `makeWebHandler`
 // returns a pre-POST GET hook for `makeRestChannel`'s `webHandler` seam: it serves
 // the two static assets (the chat page + its browser shell) and returns `false` for
 // everything else, so `/v1/*` POST and the WebSocket upgrade are untouched. Host-side
@@ -7,7 +7,7 @@
 import { readFileSync } from "node:fs";
 import type { IncomingMessage, ServerResponse } from "node:http";
 
-export const PACKAGE = "@iris/channel-web";
+export const PACKAGE = "@irisrun/channel-web";
 
 export interface WebAsset {
   contentType: string;

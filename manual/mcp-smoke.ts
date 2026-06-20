@@ -2,7 +2,7 @@
 // external MCP server over stdio:
 //   IRIS_MCP_SMOKE_CMD="npx -y @modelcontextprotocol/server-everything" \
 //   IRIS_MCP_TOOL=echo IRIS_MCP_INPUT='{"message":"hi"}' node manual/mcp-smoke.ts
-import { makeMcpStdioTransport } from "@iris/tools";
+import { makeMcpStdioTransport } from "@irisrun/tools";
 
 async function main() {
   const cmdline = process.env.IRIS_MCP_SMOKE_CMD;

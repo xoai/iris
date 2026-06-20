@@ -7,7 +7,7 @@
 
 ## Context
 
-`@iris/sandbox` is the security floor for untrusted tool code: a `SandboxSession`
+`@irisrun/sandbox` is the security floor for untrusted tool code: a `SandboxSession`
 rooted at `/workspace` with a **deny-all** network default and **credential
 brokering** so a secret is injected only at the egress boundary and never
 materializes inside the sandbox.
@@ -79,8 +79,8 @@ un-gate** the docker backend.
 - Additive and opt-in (zero-value-off): a session with no proxy and a
   deny-all/allow-all policy behaves byte-identically to before — no existing test
   re-baselined. This initiative added 11 unit tests (9 proxy + 2 docker
-  with-proxy); after integrating concurrent `main`, the full suite stands at 559.
-- No runtime dependency added (`node:http`/`node:net` only; `@iris/core` and the
+  with-proxy); after integrating concurrent `main` and the later merges, the full suite stands at 592.
+- No runtime dependency added (`node:http`/`node:net` only; `@irisrun/core` and the
   kernel untouched).
 - **Out of scope (pre-existing gap):** wiring the docker sandbox / sandboxed tool
   execution into the runtime (host/tools/agent/cli). The sandbox package is the

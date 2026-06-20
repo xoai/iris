@@ -9,10 +9,10 @@ import assert from "node:assert/strict";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { Program, Json, JournalRecord } from "@iris/core";
-import { FsStateStore, FsScheduler } from "@iris/store-fs";
-import { makeRestChannel, type TurnInputs } from "@iris/channel-rest";
-import type { HostAdapter } from "@iris/host";
+import type { Program, Json, JournalRecord } from "@irisrun/core";
+import { FsStateStore, FsScheduler } from "@irisrun/store-fs";
+import { makeRestChannel, type TurnInputs } from "@irisrun/channel-rest";
+import type { HostAdapter } from "@irisrun/host";
 import { TestClock } from "./lib/mem-store.ts";
 
 type ChState = { turns: number };

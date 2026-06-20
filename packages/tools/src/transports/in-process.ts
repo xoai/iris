@@ -1,7 +1,7 @@
 // In-process transport (spec §3.3): calls a registered JS function directly —
 // trusted, same-language, fastest; the `tool_locality:"in-process"` case. The
 // contract's location ("inproc://<id>") selects the registered fn. Host-side.
-import type { Json } from "@iris/core";
+import type { Json } from "@irisrun/core";
 import type { Transport } from "../invoker.ts";
 import { locationHandle, messageOf, toolFailure } from "../invoker.ts";
 

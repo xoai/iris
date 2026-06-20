@@ -11,7 +11,7 @@ import type {
   EffectResult,
   Marker,
   Json,
-} from "@iris/core";
+} from "@irisrun/core";
 
 export interface TState extends Record<string, Json> {
   phase: string; // consult | decided | done

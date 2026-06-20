@@ -8,8 +8,8 @@ import assert from "node:assert/strict";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { cmdInit, cmdBuild, cmdServe, echoStreamingPerformer, loadBundledTools, type ServeHandle } from "iris";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
+import { cmdInit, cmdBuild, cmdServe, echoStreamingPerformer, loadBundledTools, type ServeHandle } from "iris-runtime";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
 
 const tmp = (p: string): Promise<string> => mkdtemp(join(tmpdir(), p));
 

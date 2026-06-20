@@ -2,7 +2,7 @@
 // outside the tsconfig include + the tests/**/*.test.ts runner glob).
 //   IRIS_MCP_SERVER_SMOKE=1 node manual/mcp-server-smoke.ts
 //
-// Exercises the @iris/channel-mcp `serve()` stdio FRAMING path (newline-delimited
+// Exercises the @irisrun/channel-mcp `serve()` stdio FRAMING path (newline-delimited
 // JSON-RPC over a stream) — the part the in-memory `handle()` unit test cannot
 // stand in for. It is the agent-AS-MCP-server channel; distinct from the existing
 // M3 `manual/mcp-smoke.ts` (agent-AS-CONSUMER-of-MCP-tools). Install-free: it pipes
@@ -10,9 +10,9 @@
 // further future smoke).
 import assert from "node:assert/strict";
 import { PassThrough } from "node:stream";
-import { harnessProgram, defaultBundle } from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
-import { makeMcpChannel } from "@iris/channel-mcp";
+import { harnessProgram, defaultBundle } from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
+import { makeMcpChannel } from "@irisrun/channel-mcp";
 
 const INPUT = { messages: [{ role: "user", content: "go" }] };
 const program = {

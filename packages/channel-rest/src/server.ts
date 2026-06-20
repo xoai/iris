@@ -7,7 +7,7 @@
 import { createServer, type Server, type IncomingMessage, type ServerResponse } from "node:http";
 import { randomUUID } from "node:crypto";
 import type { Duplex } from "node:stream";
-import { runTurnOn, type HostAdapter } from "@iris/host";
+import { runTurnOn, type HostAdapter } from "@irisrun/host";
 import type {
   Program,
   PerformerRegistry,
@@ -15,7 +15,7 @@ import type {
   Json,
   JournalRecord,
   TurnOutcome,
-} from "@iris/core";
+} from "@irisrun/core";
 import { type StreamEvent, toOutcomeEvent } from "./events.ts";
 import { wantsStream, openSse } from "./sse.ts";
 import {

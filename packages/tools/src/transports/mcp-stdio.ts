@@ -4,7 +4,7 @@
 // Map the result (`isError` / JSON-RPC `error`) to a ToolResult. Host-side
 // (node:child_process); the real external-server path is the manual smoke.
 import { spawn } from "node:child_process";
-import type { Json } from "@iris/core";
+import type { Json } from "@irisrun/core";
 import type { Transport, ToolResult } from "../invoker.ts";
 import { locationHandle, messageOf, toolFailure } from "../invoker.ts";
 

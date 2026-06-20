@@ -2,7 +2,7 @@
 // streaming `/v1/chat/completions` response, fires `onDelta` per content delta, and
 // accumulates the SAME logical result the buffered path produces (text joined +
 // finish_reason + usage). Host-side; zero deps (Web-standard ReadableStream /
-// TextDecoder). Mirrors @iris/provider-anthropic/src/sse.ts.
+// TextDecoder). Mirrors @irisrun/provider-anthropic/src/sse.ts.
 //
 // Rune safety: a multibyte UTF-8 character can be split across network chunks. We
 // decode with a STREAMING TextDecoder so a half-rune at a chunk boundary is held

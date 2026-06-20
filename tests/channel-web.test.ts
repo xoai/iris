@@ -1,15 +1,15 @@
-// Phase B (P0 items 3+4) — @iris/channel-web `makeWebHandler` (routes + content-type
+// Phase B (P0 items 3+4) — @irisrun/channel-web `makeWebHandler` (routes + content-type
 // + false-fallthrough, never throws) AND the additive `channel-rest` webHandler seam
 // (GET / is served while POST /v1/session still round-trips, proving the seam does
 // not shadow the API). The browser shell render itself is an env-gated manual smoke.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import type { Program, JournalRecord } from "@iris/core";
-import { makeRestChannel, type TurnInputs } from "@iris/channel-rest";
-import type { HostAdapter } from "@iris/host";
+import type { Program, JournalRecord } from "@irisrun/core";
+import { makeRestChannel, type TurnInputs } from "@irisrun/channel-rest";
+import type { HostAdapter } from "@irisrun/host";
 import { MemStateStore, MemScheduler, TestClock } from "./lib/mem-store.ts";
-import { makeWebHandler, webAssets } from "@iris/channel-web";
+import { makeWebHandler, webAssets } from "@irisrun/channel-web";
 
 function fakeReq(method: string, url: string): IncomingMessage {
   return { method, url } as IncomingMessage;

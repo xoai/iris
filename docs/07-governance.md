@@ -1,8 +1,9 @@
 # 07 — Governance & audit
 
 The last stop is trust: who is allowed to do what, and how you prove what happened.
-This is where Iris's durability substrate pays off — and it's also where some of
-the story is still roadmap. This page is honest about both.
+This is where Iris's durability substrate pays off: the approval gate, principal
+identity & policy, and the journaled approval trail are all real today — reachable
+from the CLI (`iris serve --policy`) and resolvable inline in `iris chat`.
 
 ## What exists today: the approval gate
 
@@ -32,7 +33,7 @@ it's a property a system without an event-sourced substrate can't easily retrofi
 
 ## The governance layer (P1-5, landed)
 
-The gate mechanism is now wrapped by a real **governance layer**, the `@iris/auth`
+The gate mechanism is now wrapped by a real **governance layer**, the `@irisrun/auth`
 package — opt-in, with zero change to the default behavior:
 
 - **Identity** — who an approver *is* (`Principal`: an id and roles).
@@ -41,8 +42,9 @@ package — opt-in, with zero change to the default behavior:
 - A first-class, queryable **approval audit** over the journal (`auditApprovals`),
   reading the *full retained journal* so the trail stays complete across snapshots.
 
-It's wired into `iris run`/`serve` as an opt-in `governance` option, so the default
-(ungoverned) path is byte-identical to before. For the whole-session compliance
+It's wired into the `cmdRun`/`cmdServe` runtime as an opt-in `governance` option, so
+the default (ungoverned) path is byte-identical to before (the CLI exposes it via
+`iris serve --policy` and `iris chat --policy`, below). For the whole-session compliance
 audit and reproducible evals built on top of this, continue to chapter 08.
 
 ## Turn it on from the CLI: `iris serve --policy`

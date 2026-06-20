@@ -3,8 +3,8 @@
 // already stamps every record). Pinning/migration ride the EXISTING per-record
 // defDigest + the `upgraded` marker; this module uses only the StateStore port +
 // journal types + the lease. Host-side.
-import { acquireLease, releaseLease, encode, decode } from "@iris/core";
-import type { StateStore, JournalRecord, Json } from "@iris/core";
+import { acquireLease, releaseLease, encode, decode } from "@irisrun/core";
+import type { StateStore, JournalRecord, Json } from "@irisrun/core";
 
 /**
  * The latest journal record, read SNAPSHOT-SAFELY. After a snapshot the journal

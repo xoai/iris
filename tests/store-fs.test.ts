@@ -1,4 +1,4 @@
-// T1 (M-Proof) — @iris/store-fs FsStateStore conformance. The fs store is host B
+// T1 (M-Proof) — @irisrun/store-fs FsStateStore conformance. The fs store is host B
 // (serverless cold-per-turn over node:fs); it MUST enforce the SAME invariants the
 // sqlite/memory stores enforce: true CAS (O_EXCL), fenced+dense append, an hwm that
 // survives truncation, writeSnapshot-seeds-hwm (the migrate-into-fs contract), and
@@ -10,9 +10,9 @@ import { mkdtempSync, existsSync } from "node:fs";
 import { readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { acquireLease } from "@iris/core";
-import type { Version } from "@iris/core";
-import { FsStateStore, FsScheduler } from "@iris/store-fs";
+import { acquireLease } from "@irisrun/core";
+import type { Version } from "@irisrun/core";
+import { FsStateStore, FsScheduler } from "@irisrun/store-fs";
 
 function freshRoot(): string {
   return mkdtempSync(join(tmpdir(), "iris-fs-"));

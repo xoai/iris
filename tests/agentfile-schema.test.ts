@@ -5,7 +5,7 @@ import {
   agentfileSchemaJson,
   checkAgainstSchema,
   validateAgentfile,
-} from "@iris/agent";
+} from "@irisrun/agent";
 
 // A canonical valid Agentfile (mirrors tests/agentfile.test.ts VALID — kept
 // local so this suite does not depend on the non-exported CLI SCAFFOLD_AGENT;

@@ -3,8 +3,8 @@
 // permits this principal. Unauthorized "approve" → approved:false (tool skipped).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { decideApproval } from "@iris/auth";
-import type { ApprovalPolicy, Principal, GovernedAction } from "@iris/auth";
+import { decideApproval } from "@irisrun/auth";
+import type { ApprovalPolicy, Principal, GovernedAction } from "@irisrun/auth";
 
 const rm: GovernedAction = { name: "rm", callId: "c1" };
 const alice: Principal = { id: "alice", roles: ["admin"] };

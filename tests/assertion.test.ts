@@ -3,8 +3,8 @@ import assert from "node:assert/strict";
 import {
   assertReplayConsistency,
   ReplayDivergenceError,
-} from "@iris/core";
-import type { JournalRecord, Json } from "@iris/core";
+} from "@irisrun/core";
+import type { JournalRecord, Json } from "@irisrun/core";
 import { intentRec, resultRec, rec } from "./lib/journal-helpers.ts";
 import { sumReducer, sumInitial } from "./lib/sample-program.ts";
 

@@ -13,7 +13,7 @@ import {
   harnessProgram,
   composeAssemble,
   reactAssembleContext,
-} from "@iris/core";
+} from "@irisrun/core";
 import type {
   EngineDeps,
   JournalRecord,
@@ -22,8 +22,8 @@ import type {
   ModelContext,
   Json,
   Version,
-} from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
+} from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
 import { TestClock } from "./lib/mem-store.ts";
 import { makeScriptedModel } from "./lib/fake-model.ts";
 import { makeTacticRouter } from "./lib/fake-tactic.ts";
@@ -32,8 +32,8 @@ import {
   makeToolRegistry,
   makeToolInvoker,
   makeInProcessTransport,
-} from "@iris/tools";
-import type { ToolContract, InProcessFn } from "@iris/tools";
+} from "@irisrun/tools";
+import type { ToolContract, InProcessFn } from "@irisrun/tools";
 
 const INPUT = { messages: [{ role: "user", content: "go" }] };
 const TOOL_OUTPUT: Json[] = [

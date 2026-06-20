@@ -13,12 +13,12 @@ iris deploy ./image --out ./iris-edge
 This reads the image, runs the capability gate, and writes a self-contained
 Cloudflare Worker project into `./iris-edge`:
 
-- `wrangler.toml` — the Worker + a Durable Object binding (`AGENT`, class `AgentDO`). `@iris/core`
-  and `@iris/store-do` are edge-native (no `node:` built-ins), so no compatibility
+- `wrangler.toml` — the Worker + a Durable Object binding (`AGENT`, class `AgentDO`). `@irisrun/core`
+  and `@irisrun/store-do` are edge-native (no `node:` built-ins), so no compatibility
   flags are needed.
 - `worker.mjs` — the Worker. The agent's durable state lives in the Durable Object
   (single-writer lease + transactional storage + alarms = `sleepUntil`). The DO
-  runs the **same `@iris/core`** unchanged on the edge.
+  runs the **same `@irisrun/core`** unchanged on the edge.
 
 The generated worker selects the model provider from your image's model-id prefix
 and reads that provider's key from a secret (e.g. `ANTHROPIC_API_KEY` or

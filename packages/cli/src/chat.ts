@@ -9,7 +9,7 @@
 // (`wrapModelForImage`, `makeChatFakeModel`, `renderOutcome`, `chatTurn`,
 // `runChat`) take injected deps so they unit-test without a TTY, a key, or a real
 // model; `cli-main.ts` wires the real fs/host/stdin defaults.
-import { runTurn, harnessProgram } from "@iris/core";
+import { runTurn, harnessProgram } from "@irisrun/core";
 import type {
   Performer,
   PerformerRegistry,
@@ -20,13 +20,13 @@ import type {
   LogicalClock,
   HarnessState,
   TurnOutcome,
-} from "@iris/core";
-import { normalizeContentKey } from "@iris/agent";
-import type { AgentImage } from "@iris/agent";
+} from "@irisrun/core";
+import { normalizeContentKey } from "@irisrun/agent";
+import type { AgentImage } from "@irisrun/agent";
 import { stripModelPrefix } from "./providers.ts";
 import { subagentPerformers, type CliSubagents } from "./iris.ts";
-import { makeGovernedApprovalPerformer, decideApproval } from "@iris/auth";
-import type { ApprovalPolicy, ApprovalInbox, Principal } from "@iris/auth";
+import { makeGovernedApprovalPerformer, decideApproval } from "@irisrun/auth";
+import type { ApprovalPolicy, ApprovalInbox, Principal } from "@irisrun/auth";
 
 // --- model-call wrapper ------------------------------------------------------
 
@@ -204,7 +204,7 @@ export interface HitlRequest {
  *  pending tool call (name + args); otherwise null. PURE and TOTAL — every Json
  *  shape is guarded and it never throws. The current tool call is read INLINE from
  *  the parked `HarnessState` (the kernel's `toolCallsOf`/`currentToolCall` are
- *  private to @iris/core): `state.modelOut.toolCalls[state.toolCursor]`. The
+ *  private to @irisrun/core): `state.modelOut.toolCalls[state.toolCursor]`. The
  *  authoritative `callId` is taken from the signal name (what the inbox is keyed
  *  on); the call's own name/args are for display. A malformed/absent call still
  *  yields a request (with empty name) so the human can still decide. */

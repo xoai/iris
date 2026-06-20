@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { encode } from "@iris/core";
-import type { Version } from "@iris/core";
-import { openDatabase, SqliteStateStore } from "@iris/store-sqlite";
+import { encode } from "@irisrun/core";
+import type { Version } from "@irisrun/core";
+import { openDatabase, SqliteStateStore } from "@irisrun/store-sqlite";
 
 // Task 2: writeSnapshot seeds the high-water mark (spec §3.4).
 

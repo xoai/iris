@@ -13,8 +13,8 @@
 //  3. totality: replay does not throw.
 // It deliberately does NOT claim snapshot-fidelity (that needs the original input,
 // which is not journaled for no-snapshot sessions — see the initiative decisions).
-import { replay, canonicalize, canonicalEqual, decode } from "@iris/core";
-import type { Reducer, JournalRecord, EffectIntent, EffectResult, StateStore, Json } from "@iris/core";
+import { replay, canonicalize, canonicalEqual, decode } from "@irisrun/core";
+import type { Reducer, JournalRecord, EffectIntent, EffectResult, StateStore, Json } from "@irisrun/core";
 import { fnv1a32hex } from "./fnv.ts";
 
 export type VerifyResult = {

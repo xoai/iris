@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { runTurn, decode } from "@iris/core";
-import type { JournalRecord, Marker } from "@iris/core";
+import { runTurn, decode } from "@irisrun/core";
+import type { JournalRecord, Marker } from "@irisrun/core";
 import { MemStateStore, MemScheduler, TestClock } from "./lib/mem-store.ts";
 import { parkProgram, makePerformers } from "./lib/engine-fixtures.ts";
 

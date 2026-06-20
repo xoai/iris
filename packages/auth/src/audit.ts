@@ -5,7 +5,7 @@
 //
 // RETENTION CONTRACT (important): the trail is only as complete as the RETAINED
 // journal. The engine snapshots and TRUNCATES the journal past each snapshot unless a
-// turn runs with `keepHistory: true` (@iris/core engine.ts). So:
+// turn runs with `keepHistory: true` (@irisrun/core engine.ts). So:
 //   • `auditApprovals` reads the FULL retained journal (from seq 0) — it sees every
 //     approval still on disk, INCLUDING ones before a snapshot boundary. For a
 //     COMPLETE compliance trail across a long session, retain history (run governed
@@ -15,10 +15,10 @@
 //     `inspectSession` reads only the POST-snapshot tail, so it OMITS approvals before
 //     the snapshot boundary even when history is retained — prefer `auditApprovals`
 //     for a complete trail.
-import { inspectSession } from "@iris/inspect";
-import type { SessionInspection } from "@iris/inspect";
-import { decode } from "@iris/core";
-import type { StateStore, JournalRecord, Json } from "@iris/core";
+import { inspectSession } from "@irisrun/inspect";
+import type { SessionInspection } from "@irisrun/inspect";
+import { decode } from "@irisrun/core";
+import type { StateStore, JournalRecord, Json } from "@irisrun/core";
 import type { Principal } from "./identity.ts";
 
 const HITL_PREFIX = "hitl:";

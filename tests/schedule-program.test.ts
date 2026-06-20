@@ -3,9 +3,9 @@
 // (folding the same records twice yields the same state). No engine, no I/O.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { replay } from "@iris/core";
-import type { JournalRecord, Json } from "@iris/core";
-import { scheduleProgram } from "@iris/schedule";
+import { replay } from "@irisrun/core";
+import type { JournalRecord, Json } from "@irisrun/core";
+import { scheduleProgram } from "@irisrun/schedule";
 
 // Minimal record builders — the reducer reads only `kind` + `payload`. effectId must be
 // UNIQUE per record: replay (replay.ts) dedupes effect_results by effectId (first wins), so

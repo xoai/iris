@@ -9,10 +9,10 @@
 // effect or a `{kind:"user"}` wait marker) and pick the matching harness reducer +
 // initial. `iris run/serve/chat` set no program invariants, so this covers every
 // --db-auditable session (the deploy-scaffolded worker's invariants are out of scope).
-import { harnessProgram } from "@iris/core";
-import type { StateStore, HarnessState, Reducer, Json } from "@iris/core";
-import { auditSession, renderAudit, verifySession } from "@iris/audit";
-import type { SessionAudit, VerifyResult } from "@iris/audit";
+import { harnessProgram } from "@irisrun/core";
+import type { StateStore, HarnessState, Reducer, Json } from "@irisrun/core";
+import { auditSession, renderAudit, verifySession } from "@irisrun/audit";
+import type { SessionAudit, VerifyResult } from "@irisrun/audit";
 
 export interface CliAuditOptions {
   store: StateStore;

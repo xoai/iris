@@ -5,7 +5,7 @@
 // (ADR-0007 quarantine), and danglingIntent recovery re-performs exactly once.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { runTurn, replay, canonicalize, decode, encode, acquireLease } from "@iris/core";
+import { runTurn, replay, canonicalize, decode, encode, acquireLease } from "@irisrun/core";
 import type {
   EngineDeps,
   JournalRecord,
@@ -13,8 +13,8 @@ import type {
   EffectResult,
   Json,
   Version,
-} from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
+} from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
 import { TestClock } from "./lib/mem-store.ts";
 import { makeFakeTactic, type CallCounter } from "./lib/fake-tactic.ts";
 import { tacticProgram, type TState } from "./lib/tactic-program.ts";

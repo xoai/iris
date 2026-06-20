@@ -1,10 +1,10 @@
-// iris CLI command functions (spec §3.8). Each is a thin shell over @iris/agent +
-// @iris/core, with deps INJECTED so they are unit-testable without a registry, a
+// iris CLI command functions (spec §3.8). Each is a thin shell over @irisrun/agent +
+// @irisrun/core, with deps INJECTED so they are unit-testable without a registry, a
 // real model, or Docker. The argv dispatcher (cli-main.ts) wires real fs/host
 // defaults. Host-side; zero external deps (only node: builtins + workspace pkgs).
 import { mkdir, writeFile, readFile, cp } from "node:fs/promises";
 import { join, dirname } from "node:path";
-import { runTurn, harnessProgram, defaultBundle } from "@iris/core";
+import { runTurn, harnessProgram, defaultBundle } from "@irisrun/core";
 import type {
   Performer,
   StateStore,
@@ -14,9 +14,9 @@ import type {
   HarnessState,
   TurnOutcome,
   Json,
-} from "@iris/core";
-import { makeToolPerformer, makeToolRegistry, makeToolInvoker } from "@iris/tools";
-import type { ToolContract, ToolInvoker } from "@iris/tools";
+} from "@irisrun/core";
+import { makeToolPerformer, makeToolRegistry, makeToolInvoker } from "@irisrun/tools";
+import type { ToolContract, ToolInvoker } from "@irisrun/tools";
 import {
   parseAgentfileJson,
   parseAgentfileYaml,
@@ -26,22 +26,22 @@ import {
   readOciLayout,
   verifyImage,
   governingDigest,
-} from "@iris/agent";
-import type { AgentImage, ImageInspection, RegistryResolver, CapabilityProfile } from "@iris/agent";
-import { makeRestChannel, type StreamEvent } from "@iris/channel-rest";
-import { makeWebHandler } from "@iris/channel-web";
-import { assertDeployable, type HostAdapter } from "@iris/host";
-import { edgeHost, type DoStorage } from "@iris/store-do";
+} from "@irisrun/agent";
+import type { AgentImage, ImageInspection, RegistryResolver, CapabilityProfile } from "@irisrun/agent";
+import { makeRestChannel, type StreamEvent } from "@irisrun/channel-rest";
+import { makeWebHandler } from "@irisrun/channel-web";
+import { assertDeployable, type HostAdapter } from "@irisrun/host";
+import { edgeHost, type DoStorage } from "@irisrun/store-do";
 import {
   providerNameForModel,
   providerDescriptor,
   stripModelPrefix,
   type ProviderDescriptor,
 } from "./providers.ts";
-import { makeGovernedApprovalPerformer } from "@iris/auth";
-import type { ApprovalPolicy, ApprovalInbox, Principal, RawApproval } from "@iris/auth";
-import { makeSubagentPerformer } from "@iris/subagents";
-import type { SubagentPerformerDeps } from "@iris/subagents";
+import { makeGovernedApprovalPerformer } from "@irisrun/auth";
+import type { ApprovalPolicy, ApprovalInbox, Principal, RawApproval } from "@irisrun/auth";
+import { makeSubagentPerformer } from "@irisrun/subagents";
+import type { SubagentPerformerDeps } from "@irisrun/subagents";
 
 // Opt-in governance (roadmap P1-5): when a policy + inbox are configured, register the
 // governed `signal_recv` performer so the HITL gate becomes policy-checked and
@@ -94,7 +94,7 @@ export function loadApprovalPolicy(text: string, source = "--policy"): ApprovalP
   if (o.default !== undefined && o.default !== "deny" && o.default !== "permit") {
     throw new Error(`iris ${source}: policy "default" must be "deny" or "permit" (got ${JSON.stringify(o.default)})`);
   }
-  // Rules are validated structurally by @iris/auth's `authorize` at decision time
+  // Rules are validated structurally by @irisrun/auth's `authorize` at decision time
   // (each field is optional); we guard only the envelope here.
   return o as ApprovalPolicy;
 }
@@ -385,7 +385,7 @@ export interface CliServeOptions {
   host?: string; // default 127.0.0.1
   clock?: LogicalClock; // default { now: () => 0 }
   onWarn?: (message: string) => void;
-  web?: boolean; // serve the @iris/channel-web chat UI at GET / (same port)
+  web?: boolean; // serve the @irisrun/channel-web chat UI at GET / (same port)
   toolInvoker?: ToolInvoker; // default: an empty invoker (no transport configured)
   safeTools?: string[]; // tools allowed without an approval gate (bundled retrySafe)
   // Opt-in governance (same shape as cmdRun): policy + inbox. Absent → ungoverned.
@@ -541,7 +541,7 @@ function wranglerToml(name: string, compatDate: string): string {
     `compatibility_date = "${compatDate}"`,
     ``,
     `# The agent's durable state lives in this Durable Object (single-writer lease +`,
-    `# transactional storage + alarms = sleepUntil). @iris/core + @iris/store-do are`,
+    `# transactional storage + alarms = sleepUntil). @irisrun/core + @irisrun/store-do are`,
     `# edge-native (node:-free, Web btoa/atob), so no nodejs_compat flag is needed.`,
     `[[durable_objects.bindings]]`,
     `name = "AGENT"`,
@@ -558,19 +558,19 @@ function workerMjs(model: string, defDigest: string, desc: ProviderDescriptor): 
   const M = JSON.stringify(model);
   const D = JSON.stringify(defDigest);
   const ENVKEY = desc.envKey; // e.g. ANTHROPIC_API_KEY | OPENAI_API_KEY
-  const PKG = desc.pkg; // @iris/provider-anthropic | @iris/provider-openai
+  const PKG = desc.pkg; // @irisrun/provider-anthropic | @irisrun/provider-openai
   const PERF = desc.bufferedExport; // anthropicModelPerformer | openaiModelPerformer
   return `// GENERATED by \`iris deploy\` — a Cloudflare Worker + Durable Object running the
-// SAME @iris/core unchanged on workerd (generalizes manual/cloudflare-workers-smoke.ts).
+// SAME @irisrun/core unchanged on workerd (generalizes manual/cloudflare-workers-smoke.ts).
 // Bundled by wrangler/esbuild on deploy; core is node:-free so it targets the isolate.
-import { edgeHost } from "@iris/store-do";
-import { harnessProgram, defaultBundle } from "@iris/core";
-import { runTurnOn } from "@iris/host";
+import { edgeHost } from "@irisrun/store-do";
+import { harnessProgram, defaultBundle } from "@irisrun/core";
+import { runTurnOn } from "@irisrun/host";
 
 const MODEL = ${M};
 const DEF_DIGEST = ${D};
 
-// Adapt a real Cloudflare DurableObjectStorage to @iris/store-do's narrow DoStorage
+// Adapt a real Cloudflare DurableObjectStorage to @irisrun/store-do's narrow DoStorage
 // (inlined from the smoke's doStorageAdapter so the worker is self-contained).
 function doStorageAdapter(storage) {
   const wrap = (s) => ({

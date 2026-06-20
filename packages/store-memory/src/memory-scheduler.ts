@@ -1,6 +1,6 @@
 // In-memory Scheduler mirroring SqliteScheduler semantics: dueWakeups peeks,
 // confirmWoken consumes (at-least-once wakeup).
-import type { Scheduler } from "@iris/core";
+import type { Scheduler } from "@irisrun/core";
 
 export interface Wakeup {
   sessionId: string;

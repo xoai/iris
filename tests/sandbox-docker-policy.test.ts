@@ -6,7 +6,7 @@
 // egress). The real container path is the manual smoke. (spec §3/§4.2, ADR-0010.)
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createDockerSession, startEgressProxy } from "@iris/sandbox";
+import { createDockerSession, startEgressProxy } from "@irisrun/sandbox";
 
 test("docker: WITHOUT a proxy, a per-host allowlist at create is refused loudly (secure floor)", async () => {
   await assert.rejects(

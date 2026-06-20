@@ -4,7 +4,7 @@ import type {
   RecordKind,
   RecordPayload,
   Json,
-} from "@iris/core";
+} from "@irisrun/core";
 
 const DIGEST = "sha256:test-image";
 

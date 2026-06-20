@@ -6,10 +6,10 @@
 // stream opens. The buffered path is unchanged (see channel-rest.test.ts).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { harnessProgram, defaultBundle } from "@iris/core";
-import type { Performer, Json, Program, Version, CasResult } from "@iris/core";
-import { makeRestChannel, type StreamEvent } from "@iris/channel-rest";
-import type { HostAdapter } from "@iris/host";
+import { harnessProgram, defaultBundle } from "@irisrun/core";
+import type { Performer, Json, Program, Version, CasResult } from "@irisrun/core";
+import { makeRestChannel, type StreamEvent } from "@irisrun/channel-rest";
+import type { HostAdapter } from "@irisrun/host";
 import { MemStateStore, MemScheduler, TestClock } from "./lib/mem-store.ts";
 
 // A store that can be told to fail the NEXT lease-key CAS once — deterministically

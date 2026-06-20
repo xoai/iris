@@ -7,7 +7,7 @@
 // an allowlisted host is reachable, a non-allowlisted host is blocked at the
 // proxy, the brokered secret arrives UPSTREAM, and the secret never enters the
 // container.
-import { createDockerSession, startEgressProxy, makeCredentialBroker } from "@iris/sandbox";
+import { createDockerSession, startEgressProxy, makeCredentialBroker } from "@irisrun/sandbox";
 import http from "node:http";
 
 function check(cond, msg) {

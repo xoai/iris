@@ -12,9 +12,9 @@ import {
   decode,
   harnessProgram,
   defaultBundle,
-} from "@iris/core";
-import type { EngineDeps, JournalRecord, HarnessState, Json } from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
+} from "@irisrun/core";
+import type { EngineDeps, JournalRecord, HarnessState, Json } from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
 import { TestClock } from "./lib/mem-store.ts";
 import { makeScriptedModel } from "./lib/fake-model.ts";
 import { makeFakeTool, type ToolCallLog, type ToolScript } from "./lib/fake-tool.ts";

@@ -1,6 +1,6 @@
 // Deterministic fake model performer — the test default for model_call (no
 // network, no key, no cost). Reply is derived from the last user message.
-import type { Performer, Json, Outcome } from "@iris/core";
+import type { Performer, Json, Outcome } from "@irisrun/core";
 
 export interface CallCounter {
   n: number;

@@ -3,13 +3,13 @@
 // assembleContext = ordered pipeline. Pure functions — no engine, no effects.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { composeGate, composeDecideNext, composeAssemble } from "@iris/core";
+import { composeGate, composeDecideNext, composeAssemble } from "@irisrun/core";
 import type {
   Tactic,
   ToolCall,
   ReadonlyHarnessView,
   DecideNext,
-} from "@iris/core";
+} from "@irisrun/core";
 
 const call: ToolCall = { callId: "c1", name: "rm", args: {} };
 const view: ReadonlyHarnessView = {

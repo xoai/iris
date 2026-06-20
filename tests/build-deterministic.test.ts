@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildImage, makeLocalResolver, parseAgentfileJson } from "@iris/agent";
-import type { ToolContract } from "@iris/tools";
+import { buildImage, makeLocalResolver, parseAgentfileJson } from "@irisrun/agent";
+import type { ToolContract } from "@irisrun/tools";
 
 const issueTracker: ToolContract = {
   name: "issue-tracker", description: "track", inputSchema: { type: "object" },

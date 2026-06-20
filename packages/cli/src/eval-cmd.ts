@@ -8,9 +8,9 @@
 // loadBundledTools precedent (a project ships a small JS module the CLI imports). The
 // module must export `cases: EvalCase[]` and `scorer: Scorer`; both are validated
 // LOUDLY before any case runs (no silent empty suite).
-import { runSuite, reproduce } from "@iris/evals";
-import type { EvalCase, Scorer, EvalResult, ReproReport } from "@iris/evals";
-import type { Json } from "@iris/core";
+import { runSuite, reproduce } from "@irisrun/evals";
+import type { EvalCase, Scorer, EvalResult, ReproReport } from "@irisrun/evals";
+import type { Json } from "@irisrun/core";
 
 export interface EvalSuite {
   cases: EvalCase<Json>[];

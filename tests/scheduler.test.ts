@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { openDatabase, SqliteScheduler } from "@iris/store-sqlite";
+import { openDatabase, SqliteScheduler } from "@irisrun/store-sqlite";
 
 test("scheduler: timer is not due before its wake time", async () => {
   const sched = new SqliteScheduler(openDatabase(":memory:"));

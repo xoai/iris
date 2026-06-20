@@ -1,5 +1,5 @@
 // iris — public surface (the command functions; the bin is cli-main.ts).
-export const PACKAGE = "iris";
+export const PACKAGE = "iris-runtime";
 
 export {
   cmdInit,

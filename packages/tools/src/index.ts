@@ -1,5 +1,5 @@
-// @iris/tools — public surface (host-side; zero external deps).
-export const PACKAGE = "@iris/tools";
+// @irisrun/tools — public surface (host-side; zero external deps).
+export const PACKAGE = "@irisrun/tools";
 
 export { makeToolPerformer } from "./performer.ts";
 

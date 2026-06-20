@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import type { Json } from "@iris/core";
-import type { ModelCallResult } from "@iris/provider-anthropic";
+import type { Json } from "@irisrun/core";
+import type { ModelCallResult } from "@irisrun/provider-anthropic";
 import { makeFakeModel, type CallCounter } from "./lib/fake-model.ts";
 
 test("fake-model: deterministic, request-derived reply; counts calls", async () => {

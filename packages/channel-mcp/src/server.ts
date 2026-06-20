@@ -8,8 +8,8 @@
 // JSON-RPC error, never a silent OK. Host-side (node:crypto); core stays pure.
 import { randomUUID } from "node:crypto";
 import type { Readable, Writable } from "node:stream";
-import { runTurnOn, type HostAdapter } from "@iris/host";
-import type { Program, PerformerRegistry, LogicalClock, Json, TurnOutcome } from "@iris/core";
+import { runTurnOn, type HostAdapter } from "@irisrun/host";
+import type { Program, PerformerRegistry, LogicalClock, Json, TurnOutcome } from "@irisrun/core";
 
 export interface TurnInputs<S extends Json> {
   program: Program<S>;

@@ -1,4 +1,4 @@
-// M6 T2 — @iris/store-do DoStateStore conformance (spec §2.2). The edge store
+// M6 T2 — @irisrun/store-do DoStateStore conformance (spec §2.2). The edge store
 // (Cloudflare Durable Objects, cold-per-isolate over a narrow DoStorage) MUST
 // enforce the SAME invariants the sqlite/fs stores enforce: true CAS (compare-
 // and-write inside ONE storage.transaction — atomic, no check→await→mutate gap),
@@ -8,9 +8,9 @@
 // reads identical state). Same conformance shape as store-fs.test.ts.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { acquireLease } from "@iris/core";
-import type { Version } from "@iris/core";
-import { DoStateStore } from "@iris/store-do";
+import { acquireLease } from "@irisrun/core";
+import type { Version } from "@irisrun/core";
+import { DoStateStore } from "@irisrun/store-do";
 import { FakeDoStorage } from "./lib/fake-do.ts";
 
 const enc = (s: string): Uint8Array => new TextEncoder().encode(s);
