@@ -1,6 +1,6 @@
 {
   "name": "@irisrun/channel-mcp",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "Iris MCP-server channel (MCP dual-use) — the agent exposed AS an MCP server over JSON-RPC 2.0 (stdio). Same two-identifier protocol as channel-rest: the channel mints the sessionId, issues + rotates the continuationToken (atomically single-use), and surfaces every failure as a loud JSON-RPC error. A real MCP stdio client is a manual smoke.",
   "exports": {
@@ -11,9 +11,9 @@
     }
   },
   "dependencies": {
-    "@irisrun/core": "^0.1.0",
-    "@irisrun/channel-core": "^0.1.0",
-    "@irisrun/host": "^0.1.0"
+    "@irisrun/core": "^0.2.0",
+    "@irisrun/channel-core": "^0.2.0",
+    "@irisrun/host": "^0.2.0"
   },
   "license": "MIT",
   "engines": {

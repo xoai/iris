@@ -1,6 +1,6 @@
 {
   "name": "@irisrun/bundle-coding",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "Iris first domain tactic bundle — coding-specialized seam tactics (read-only tools allow / writes+shell gated to ask, a tool-loop decideNext, window-compaction + tool-repair) composed HOST-SIDE from @irisrun/core's exported primitives. Produces the defaultBundle shape {tacticPerformer, invariants}; journaled {seam, tacticId, choice} outcomes inherit the replay quarantine. @irisrun/core dependency only; core stays byte-untouched.",
   "exports": {
@@ -11,7 +11,7 @@
     }
   },
   "dependencies": {
-    "@irisrun/core": "^0.1.0"
+    "@irisrun/core": "^0.2.0"
   },
   "license": "MIT",
   "engines": {

@@ -1,6 +1,6 @@
 {
   "name": "@irisrun/channel-slack",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "Iris Slack channel for durable human-in-the-loop — built on the channel port to showcase the moat where a buyer feels it: a Slack approval that pauses for hours, survives a redeploy, and resumes the SAME session byte-identically, because the durable session lives in the StateStore journal and the approval context rides the signed Slack button value, not server memory. Zero runtime deps: node:crypto signature verification + built-in fetch (injectable).",
   "exports": {
@@ -11,9 +11,9 @@
     }
   },
   "dependencies": {
-    "@irisrun/core": "^0.1.0",
-    "@irisrun/channel-core": "^0.1.0",
-    "@irisrun/auth": "^0.1.0"
+    "@irisrun/core": "^0.2.0",
+    "@irisrun/channel-core": "^0.2.0",
+    "@irisrun/auth": "^0.2.0"
   },
   "license": "MIT",
   "engines": {

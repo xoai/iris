@@ -1,6 +1,6 @@
 {
   "name": "@irisrun/auth",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "Journaled, replayable approval audit you own — identity + a declarative who-may-approve policy on the existing HITL gate, where every approval decision is recorded in the same event log as model calls and tool effects (not a side log), so the approval trail replays and verifies from the journal. Pure: enriches the journaled signal_recv approval value (zero kernel change). Deps @irisrun/core + @irisrun/inspect only.",
   "exports": {
@@ -11,8 +11,8 @@
     }
   },
   "dependencies": {
-    "@irisrun/core": "^0.1.0",
-    "@irisrun/inspect": "^0.1.0"
+    "@irisrun/core": "^0.2.0",
+    "@irisrun/inspect": "^0.2.0"
   },
   "license": "MIT",
   "engines": {

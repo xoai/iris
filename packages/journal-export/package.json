@@ -1,6 +1,6 @@
 {
   "name": "@irisrun/journal-export",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "Iris verifiable portable journal — a self-contained, content-addressed (SHA-256 + tamper-evident hash chain) export of a session's snapshot + journal tail, with two-tier verification (Tier 1 file-only structure + content-address; Tier 2 replay-determinism given the harness reducer) and cross-host import. The host-side home of node:crypto; keeps @irisrun/core and @irisrun/audit Node-free. Deps @irisrun/core + @irisrun/audit only.",
   "exports": {
@@ -11,8 +11,8 @@
     }
   },
   "dependencies": {
-    "@irisrun/core": "^0.1.0",
-    "@irisrun/audit": "^0.1.0"
+    "@irisrun/core": "^0.2.0",
+    "@irisrun/audit": "^0.2.0"
   },
   "license": "MIT",
   "engines": {

@@ -1,6 +1,6 @@
 # Releasing Iris to npm
 
-Iris is **published on npm at `0.1.0`** — `iris-runtime` (the CLI) plus the
+Iris is **published on npm at `0.2.0`** — `iris-runtime` (the CLI) plus the
 `@irisrun/*` libraries. This document is how to cut the next release: a `tsc` build
 compiles each package to JS, the metadata is set (names, versions, `publishConfig`,
 `files`, `repository`), and `npm run release` is wired and gated behind `IRIS_PUBLISH=1`.
@@ -96,7 +96,7 @@ and cuts a GitHub Release. `v0.0.1` predates this; `v0.1.0` is the first synced 
   `subagents`, `schedule`, `bundle-coding`, `inspect`, `observe`, `evals`,
   `journal-export`, `sandbox`.
 
-All publishable packages share one lockstep version (currently `0.1.0`) and
+All publishable packages share one lockstep version (currently `0.2.0`) and
 publish with public access via `publishConfig`.
 
 **Not published:** `iris-workspace` (the private monorepo root) and `@irisrun/demo`

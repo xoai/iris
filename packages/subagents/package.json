@@ -1,6 +1,6 @@
 {
   "name": "@irisrun/subagents",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "Iris subagents — an agent (a harness session) delegates a sub-task to a child agent (its own durable session + journal). The child's final output is journaled in the parent as the delegating effect's result, so the parent replays deterministically (never re-running the child) while the child replays independently. Wires the `subagent` EffectKind via a host-side performer. Deps @irisrun/core + @irisrun/host only.",
   "exports": {
@@ -11,8 +11,8 @@
     }
   },
   "dependencies": {
-    "@irisrun/core": "^0.1.0",
-    "@irisrun/host": "^0.1.0"
+    "@irisrun/core": "^0.2.0",
+    "@irisrun/host": "^0.2.0"
   },
   "license": "MIT",
   "engines": {

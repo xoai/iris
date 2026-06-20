@@ -1,6 +1,6 @@
 {
   "name": "@irisrun/observe",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "Iris observability — OTel-shaped spans derived from a recorded session's inspection (root turn span + child effect spans + marker spans), with deterministic spanIds (sessionId#seq, no RNG) and timing from record.ts. Emitted to an injected Sink (collecting/console); real OTLP export is a manual smoke. Derived from the journal so replay determinism is unaffected. Deps @irisrun/core + @irisrun/inspect.",
   "exports": {
@@ -11,8 +11,8 @@
     }
   },
   "dependencies": {
-    "@irisrun/core": "^0.1.0",
-    "@irisrun/inspect": "^0.1.0"
+    "@irisrun/core": "^0.2.0",
+    "@irisrun/inspect": "^0.2.0"
   },
   "license": "MIT",
   "engines": {

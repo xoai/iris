@@ -7,6 +7,13 @@ packages (`iris-runtime` + the `@irisrun/*` libraries) share one lockstep versio
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-06-21
+
+The **roadmap-v0.2** cycle: a verifiable portable journal, breadth across
+providers and channels, Agentfile secrets/environment, and a depth-hardening
+pass (adversarial sandbox review + chaos/concurrency + live-provider
+conformance). One lockstep version across `iris-runtime` + every `@irisrun/*`.
+
 ### Added
 
 - **Agentfile secrets & environment** — declare `secrets:` (names of required
@@ -70,6 +77,20 @@ packages (`iris-runtime` + the `@irisrun/*` libraries) share one lockstep versio
   list / shell history) — prefer `--env-file` or `--secret-files`. This is a
   distinct layer from the sandbox egress credential broker (see
   `docs/reference/security-sandbox-threat-model.md`).
+- **Sandbox egress proxy hardened under an adversarial review** — the docker-backend
+  host-side sidecar (deny-all by default, per-host allowlist brokering) was
+  re-examined against an adversarial threat model and locked down by a dedicated
+  adversarial test suite. The analysis is documented in
+  `docs/reference/security-sandbox-threat-model.md`.
+
+### Hardened
+
+- **Replay fidelity across real providers** — provider request/response
+  canonicalization plus a model-call replay-fidelity pass and live-provider
+  conformance gates confirm that the deterministic-replay guarantee holds against
+  actual OpenAI- and Anthropic-protocol endpoints, not just recorded fixtures.
+- **Chaos & concurrency** — a crash-injection suite exercises recovery
+  (at-least-once + idempotency, checkpoint-before-effect) under concurrent sessions.
 
 The suite stands at **801 passing** (+6 env-gated live-provider tests); zero new
 runtime dependencies; the pure core and `@irisrun/audit` stay Node-free.
@@ -118,5 +139,6 @@ The CLI publishes as **`iris-runtime`** (binary `iris`); the libraries as
 - **CLI surface** — `init · build · inspect · schema · verify · push · pull · run
   · serve · chat · deploy · audit · eval · schedule`.
 
-[Unreleased]: https://github.com/xoai/iris/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/xoai/iris/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/xoai/iris/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/xoai/iris/releases/tag/v0.1.0

@@ -1,6 +1,6 @@
 {
   "name": "@irisrun/audit",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "Iris audit & reproducible-eval product surface — whole-session, compliance-grade audit over the FULL retained journal (every effect/marker/approval, with completeness) plus offline replay-verification (structural integrity + in-process replay-determinism + totality). Pure: a read-only projection over the existing journal, zero kernel change. Deps @irisrun/core + @irisrun/auth only.",
   "exports": {
@@ -11,8 +11,8 @@
     }
   },
   "dependencies": {
-    "@irisrun/core": "^0.1.0",
-    "@irisrun/auth": "^0.1.0"
+    "@irisrun/core": "^0.2.0",
+    "@irisrun/auth": "^0.2.0"
   },
   "license": "MIT",
   "engines": {
