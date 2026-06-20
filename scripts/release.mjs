@@ -111,8 +111,15 @@ const isLive = (name, version) => {
 };
 
 console.log(`iris release: publishing ${publishable.length} public workspaces to npm (per-package, idempotent)…`);
+
+const PUBLISH_TIMEOUT_MS = 60_000; // npm's PUT hangs ~70s under a throttle — bound it
+const ATTEMPTS = 2; // per package, within a single run
+const ABORT_AFTER_CONSECUTIVE = 3; // a SUSTAINED throttle — stop; a post-cooldown re-run resumes
+
 let published = 0;
 let skipped = 0;
+let consecutiveFailures = 0;
+const failed = [];
 for (const pkg of publishable) {
   if (isLive(pkg.name, pkg.version)) {
     console.log(`  = ${pkg.name}@${pkg.version} already live — skip`);
@@ -120,37 +127,53 @@ for (const pkg of publishable) {
     continue;
   }
   let ok = false;
-  for (let attempt = 1; attempt <= 6; attempt++) {
+  for (let attempt = 1; attempt <= ATTEMPTS; attempt++) {
     const r = spawnSync("npm", ["publish", "--workspace", pkg.name, "--access", "public"], {
       cwd: root,
       stdio: "inherit",
+      timeout: PUBLISH_TIMEOUT_MS,
     });
-    if (r.status === 0) {
+    // status 0, or a PUT that raced through despite a non-zero exit, both count as live.
+    if (r.status === 0 || isLive(pkg.name, pkg.version)) {
       ok = true;
       break;
     }
-    // A failure that nonetheless landed (a race / retried PUT) counts as done.
-    if (isLive(pkg.name, pkg.version)) {
-      ok = true;
-      break;
+    if (attempt < ATTEMPTS) {
+      console.error(
+        `  ! ${pkg.name} publish failed (attempt ${attempt}/${ATTEMPTS}) — retrying in 15s ` +
+          "(npm rate-limit E429 is the usual cause).",
+      );
+      await sleep(15_000);
     }
-    if (attempt === 6) break;
-    const backoffMs = Math.min(60_000, 5_000 * 2 ** (attempt - 1)); // 5s,10s,20s,40s,60s
-    console.error(
-      `  ! ${pkg.name} publish failed (attempt ${attempt}/6) — retrying in ${backoffMs / 1000}s ` +
-        `(npm rate-limit E429 is the usual cause).`,
-    );
-    await sleep(backoffMs);
   }
-  if (!ok) {
-    console.error(
-      `iris release: FAILED to publish ${pkg.name}@${pkg.version} after retries.\n` +
-        "  Re-running is safe — already-published packages are skipped, so a re-push of the\n" +
-        "  version tag completes the remaining packages.",
-    );
-    process.exit(1);
+  if (ok) {
+    published++;
+    consecutiveFailures = 0;
+    await sleep(5_000); // gentle spacing to stay under npm's burst limit
+    continue;
   }
-  published++;
-  await sleep(2_000); // gentle inter-publish spacing to stay under the burst limit
+  failed.push(pkg.name);
+  consecutiveFailures++;
+  console.error(`  ✗ ${pkg.name}@${pkg.version} not published.`);
+  // A run of failures means npm is throttling the whole token, not one package —
+  // grinding the rest just hammers the registry. Stop; the re-run picks up here.
+  if (consecutiveFailures >= ABORT_AFTER_CONSECUTIVE) {
+    console.error(
+      `iris release: ${consecutiveFailures} consecutive failures — npm is rate-limiting this token. ` +
+        "Aborting this run.",
+    );
+    break;
+  }
+}
+
+if (failed.length > 0 || published + skipped < publishable.length) {
+  const remaining = publishable.filter((p) => !isLive(p.name, p.version)).map((p) => p.name);
+  console.error(
+    `iris release: ${published} published, ${skipped} already live, ${remaining.length} still missing:\n` +
+      `  ${remaining.join(", ")}\n` +
+      "  Re-run the release after the npm rate-limit cools down (~15-30 min). It is idempotent —\n" +
+      "  already-published packages are skipped, so the re-run only does what remains.",
+  );
+  process.exit(1);
 }
 console.log(`iris release: done — ${published} published, ${skipped} already live (of ${publishable.length}).`);
