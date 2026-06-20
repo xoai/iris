@@ -82,6 +82,34 @@ my-agent/
 
 Tools and connections aren't local files — the manifest **references** them by URI (`mcp://`, `grpc://`, `subprocess://`), because behavior lives across a protocol boundary, free to be written in any language:
 
+```yaml
+apiVersion: iris/v1
+kind: Agent
+name: my-agent
+model: anthropic/claude-x
+instructions: ./instructions.md
+skills:
+  - ./skills/triage.md
+tools:
+  - ref: mcp://search
+  - ref: grpc://billing@^2
+connections:
+  - ref: mcp://crm
+harness:
+  bundle: default
+  tactics:
+    decideNext: iris/tool-loop@^1
+requires:
+  tool_locality: remote
+  long_running: true
+sandbox:
+  backend: inmemory
+  network: deny-all
+```
+
+<details>
+<summary>The same manifest as <code>agent.json</code></summary>
+
 ```json
 {
   "apiVersion": "iris/v1",
@@ -106,6 +134,8 @@ Tools and connections aren't local files — the manifest **references** them by
   }
 }
 ```
+
+</details>
 
 `build` validates loudly: an unknown `apiVersion`/`kind`, an inline-behavior field (`code`/`script`/`source`), or an unrecognized ref scheme is rejected (`subprocess://` also requires `local_subprocess: true` and rules out `tool_locality: "remote"`). The whole contract ships as a JSON Schema (draft 2020-12) — run **`iris schema`** for the authoritative field reference, editor autocomplete, and CI validation.
 
@@ -286,7 +316,7 @@ Drop the `Accept` header for one buffered JSON reply, or hold a whole conversati
 The install-free portability proof: the **same image** starts on host A (sqlite, long-running), parks at a human-in-the-loop boundary, and resumes on host B (serverless-style, no held process) — same journal, byte-identical output.
 
 ```sh
-node tests/manual/portability-demo.ts        # prints the proof, exits 0 on PASS
+node tests/examples/portability-demo.ts        # prints the proof, exits 0 on PASS
 ```
 
 ```text
@@ -371,14 +401,14 @@ A monorepo (npm workspaces). The **pure core** imports nothing host/transport/No
 
 The unit suite is **install-free, deterministic, zero-dependency** — **801 passing** on Node 24 (plus **6** live-provider conformance tests gated on API keys), `tsc --noEmit` clean. Every claim in this README is regression-locked: CAS + fencing, park/resume across a forced restart, replay purity (the always-on assertion catches injected nondeterminism; `IRIS_ASSERT=0` turns it off), the crash matrix (at-least-once, never double-applied), a **10,000-session** determinism run, cross-store and **cross-host** resume, a **chaos/concurrency suite** that stresses contention, a simulated partition, and redeploy-recovery against the **real fs + sqlite backends**, an **adversarial sandbox-egress** [threat model](docs/reference/security-sandbox-threat-model.md) (bypass + secret-leak attempts), **provider canonicalization** + a **conformance-verified provider compatibility matrix** + **model-call record-replay fidelity**, the **channel-port conformance suite** (two channels behind one port), **Slack durable-HITL across a redeploy**, deterministic image digest + loud verify, the single-use-token channel discipline, and the SSE/WebSocket streaming layer.
 
-Real *egress* — OCI pushes, live Anthropic calls, `wrangler deploy` / Lambda upload, `npm publish`, OTLP export — stays **env-gated** as manual smokes under `tests/manual/`, outside the suite.
+Real *egress* — OCI pushes, live Anthropic calls, `wrangler deploy` / Lambda upload, `npm publish`, OTLP export — stays **env-gated** as smoke tests under `tests/smoke/`, outside the suite.
 
 ```sh
 npm test                                 # the whole suite → 801 passing (6 live-conformance tests gated on API keys)
-node tests/manual/portability-demo.ts          # the cross-host proof (install-free)
-node tests/manual/serverless-deploy-smoke.ts   # real Cloudflare DO / Lambda (gated)
-IRIS_SERVE_SMOKE=1 node tests/manual/serve-streaming-smoke.ts  # real serve: REST + SSE + WS (gated)
-IRIS_PACK_SMOKE=1 node tests/manual/npm-pack-smoke.ts          # npx iris-runtime init (gated)
+node tests/examples/portability-demo.ts          # the cross-host proof (install-free)
+node tests/smoke/serverless-deploy-smoke.ts   # real Cloudflare DO / Lambda (gated)
+IRIS_SERVE_SMOKE=1 node tests/smoke/serve-streaming-smoke.ts  # real serve: REST + SSE + WS (gated)
+IRIS_PACK_SMOKE=1 node tests/smoke/npm-pack-smoke.ts          # npx iris-runtime init (gated)
 ```
 
 Iris is **early** — `0.1.0`, [published on npm](https://www.npmjs.com/package/iris-runtime), public API still in flux — but the architecture and the install-free local/test path are production-minded. Cutting a release is gated (`IRIS_PUBLISH=1 npm run release`; see [`RELEASING.md`](RELEASING.md)).

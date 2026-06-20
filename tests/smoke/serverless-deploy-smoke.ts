@@ -1,6 +1,6 @@
-// MANUAL smoke — NOT in the unit suite, NOT typechecked (tests/manual/ is outside the
+// MANUAL smoke — NOT in the unit suite, NOT typechecked (tests/smoke/ is outside the
 // tsconfig include and the tests/**/*.test.ts runner glob).
-//   IRIS_SERVERLESS_SMOKE=1 node tests/manual/serverless-deploy-smoke.ts
+//   IRIS_SERVERLESS_SMOKE=1 node tests/smoke/serverless-deploy-smoke.ts
 //
 // The REAL target is a serverless host (Cloudflare Durable Objects / AWS Lambda):
 // no held process, a cold invocation per turn, durable state in the platform's

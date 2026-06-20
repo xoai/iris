@@ -1,5 +1,5 @@
-// MANUAL smoke — NOT in the unit suite, NOT typechecked (tests/manual/).
-//   IRIS_OTLP_SMOKE=1 node tests/manual/otlp-export-smoke.ts
+// MANUAL smoke — NOT in the unit suite, NOT typechecked (tests/smoke/).
+//   IRIS_OTLP_SMOKE=1 node tests/smoke/otlp-export-smoke.ts
 //
 // The install-free core (@irisrun/observe.toSpans) derives OTel-shaped spans from a
 // recorded session; exporting them to a REAL backend over OTLP needs

@@ -1,6 +1,6 @@
-// MANUAL smoke — NOT in the unit suite, NOT typechecked (tests/manual/ is outside the
+// MANUAL smoke — NOT in the unit suite, NOT typechecked (tests/smoke/ is outside the
 // tsconfig include and the tests/**/*.test.ts runner glob).
-//   IRIS_EDGE_SMOKE=1 node tests/manual/cloudflare-workers-smoke.ts
+//   IRIS_EDGE_SMOKE=1 node tests/smoke/cloudflare-workers-smoke.ts
 //
 // The REAL target is Cloudflare Workers + Durable Objects (an edge V8 isolate: no
 // held process, remote-only tools, durable state in the DO's transactional storage,

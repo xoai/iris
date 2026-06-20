@@ -18,7 +18,7 @@ A bridge is a small, standalone process (in **any language**) that:
 2. **Speaks only the wire protocol.** It calls the Iris REST channel —
    `POST /v1/session` to start, `POST /v1/session/{sessionId}/message` to continue —
    and needs nothing from any `@irisrun/*` package. (The reference bridge,
-   `tests/manual/webhook-bridge.ts`, imports zero Iris packages; a test asserts this.)
+   `tests/examples/webhook-bridge.ts`, imports zero Iris packages; a test asserts this.)
 3. **Mirrors the two-identifier discipline.** It holds a
    `platformConversationId → { sessionId, continuationToken }` map and **adopts the
    rotated token** the channel returns on every turn — the same single-use rule the
@@ -43,7 +43,7 @@ Discord / Telegram / webhook  ──(platform API)──►  BRIDGE  ──(HTTP
 
 ## Reference bridge
 
-`tests/manual/webhook-bridge.ts` — `makeWebhookBridge({ baseUrl })` — a generic-webhook
+`tests/examples/webhook-bridge.ts` — `makeWebhookBridge({ baseUrl })` — a generic-webhook
 bridge that maps `{conversationId, text}` ↔ the REST channel using only `fetch`. Run
 the demo:
 
@@ -66,9 +66,9 @@ platform is an adapter, never a core change.
 
 | Platform | File | Inbound auth | Inbound → text | Outbound |
 | --- | --- | --- | --- | --- |
-| **Discord** | `tests/manual/bridges/discord.ts` | Ed25519 over `timestamp + body` vs the app public key (`X-Signature-Ed25519`); PING→PONG | slash command (`type:2`) → `data.options[0].value`; conversation = `channel_id` | interaction response `{type:4, data:{content}}` |
-| **Telegram** | `tests/manual/bridges/telegram.ts` | `X-Telegram-Bot-Api-Secret-Token` (constant-time) | `message.text`; conversation = `message.chat.id` | webhook-response `{method:"sendMessage", chat_id, text}` |
-| **Teams** | `tests/manual/bridges/teams.ts` | Outgoing-Webhook HMAC-SHA256 (base64) `Authorization: HMAC <sig>` | Activity `text` (leading `<at>…</at>` mention stripped); conversation = `conversation.id` | Activity `{type:"message", text}` |
+| **Discord** | `tests/examples/bridges/discord.ts` | Ed25519 over `timestamp + body` vs the app public key (`X-Signature-Ed25519`); PING→PONG | slash command (`type:2`) → `data.options[0].value`; conversation = `channel_id` | interaction response `{type:4, data:{content}}` |
+| **Telegram** | `tests/examples/bridges/telegram.ts` | `X-Telegram-Bot-Api-Secret-Token` (constant-time) | `message.text`; conversation = `message.chat.id` | webhook-response `{method:"sendMessage", chat_id, text}` |
+| **Teams** | `tests/examples/bridges/teams.ts` | Outgoing-Webhook HMAC-SHA256 (base64) `Authorization: HMAC <sig>` | Activity `text` (leading `<at>…</at>` mention stripped); conversation = `conversation.id` | Activity `{type:"message", text}` |
 
 Each enforces the same discipline as the generic bridge: **verify first** (an
 unverified body is never processed → 401), normalize, drive the durable session

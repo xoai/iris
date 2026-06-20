@@ -1,10 +1,10 @@
 // Manual smoke (heavy real-npm IO; OUTSIDE the test glob + tsc include, like the
-// other tests/manual/* smokes). Proves the STRANGER FLOW end-to-end: build → pack the
+// other tests/smoke/* smokes). Proves the STRANGER FLOW end-to-end: build → pack the
 // `npx iris-runtime` closure → install the tarballs into a clean dir OUTSIDE the repo →
 // run the INSTALLED `iris` bin to scaffold + build a project. This exercises the
 // compiled dist + the bin shebang + cross-package resolution exactly as a real
 // `npm i -g iris-runtime` / `npx iris-runtime` user would.
-// Run: IRIS_PACK_SMOKE=1 node tests/manual/npm-pack-smoke.ts
+// Run: IRIS_PACK_SMOKE=1 node tests/smoke/npm-pack-smoke.ts
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { mkdtemp, rm, readFile, writeFile, readdir } from "node:fs/promises";

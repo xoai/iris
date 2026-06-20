@@ -1,7 +1,7 @@
 // MANUAL smoke — NOT in the unit suite, NOT typechecked. Point it at a REAL
 // external MCP server over stdio:
 //   IRIS_MCP_SMOKE_CMD="npx -y @modelcontextprotocol/server-everything" \
-//   IRIS_MCP_TOOL=echo IRIS_MCP_INPUT='{"message":"hi"}' node tests/manual/mcp-smoke.ts
+//   IRIS_MCP_TOOL=echo IRIS_MCP_INPUT='{"message":"hi"}' node tests/smoke/mcp-smoke.ts
 import { makeMcpStdioTransport } from "@irisrun/tools";
 
 async function main() {

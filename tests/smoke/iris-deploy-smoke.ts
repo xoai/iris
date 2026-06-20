@@ -1,6 +1,6 @@
-// MANUAL smoke — NOT in the unit suite, NOT typechecked (tests/manual/ is outside the
+// MANUAL smoke — NOT in the unit suite, NOT typechecked (tests/smoke/ is outside the
 // tsconfig include and the tests/**/*.test.ts runner glob).
-//   IRIS_DEPLOY_SMOKE=1 node tests/manual/iris-deploy-smoke.ts
+//   IRIS_DEPLOY_SMOKE=1 node tests/smoke/iris-deploy-smoke.ts
 //
 // Proves `iris deploy`'s GENERATED worker.mjs actually boots the SAME @irisrun/core
 // unchanged: scaffold the project, dynamically import the generated worker, and drive
@@ -12,7 +12,7 @@
 //   cd <outDir> && wrangler deploy        # bundles @irisrun/* (esbuild) + uploads to CF
 //   wrangler secret put ANTHROPIC_API_KEY # for a real model (else the worker echoes)
 // (A miniflare run of the bundled worker is the other manual option, cf.
-//  tests/manual/cloudflare-workers-smoke.ts.)
+//  tests/smoke/cloudflare-workers-smoke.ts.)
 import assert from "node:assert/strict";
 import { mkdtemp, rm, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";

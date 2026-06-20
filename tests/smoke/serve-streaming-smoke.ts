@@ -1,6 +1,6 @@
-// MANUAL smoke — NOT in the unit suite, NOT typechecked (tests/manual/ is outside the
+// MANUAL smoke — NOT in the unit suite, NOT typechecked (tests/smoke/ is outside the
 // tsconfig include and the tests/**/*.test.ts runner glob).
-//   IRIS_SERVE_SMOKE=1 node tests/manual/serve-streaming-smoke.ts
+//   IRIS_SERVE_SMOKE=1 node tests/smoke/serve-streaming-smoke.ts
 //
 // Exercises the TURNKEY `iris serve` over a REAL sqlite-backed host on a reachable
 // port: the buffered REST path, the SSE streaming path (records + model token

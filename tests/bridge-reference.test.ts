@@ -9,8 +9,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { makeWebhookBridge } from "./manual/webhook-bridge.ts";
-import { makeBridgeDemoChannel } from "./manual/bridge-reference.ts";
+import { makeWebhookBridge } from "./examples/webhook-bridge.ts";
+import { makeBridgeDemoChannel } from "./examples/bridge-reference.ts";
 
 test("bridge: a two-turn conversation flows through the bridge; the session continues across turns", async () => {
   const channel = makeBridgeDemoChannel();
@@ -72,7 +72,7 @@ test("bridge: a fresh bridge against a new server starts a clean session (no cro
 });
 
 test("bridge: the reference bridge imports NOTHING from @irisrun/* (any-language, zero core changes)", () => {
-  const src = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "manual", "webhook-bridge.ts"), "utf8");
+  const src = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "examples", "webhook-bridge.ts"), "utf8");
   // Match real ES import statements only (a comment may mention the scope by name).
   const importsIris = /\bfrom\s+["']@irisrun\//.test(src) || /\bimport\s*\(\s*["']@irisrun\//.test(src);
   assert.ok(!importsIris, "webhook-bridge.ts must not import any @irisrun package — a bridge needs only the wire protocol");
