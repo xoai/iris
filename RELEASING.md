@@ -40,7 +40,34 @@ Packages compile independently (cross-package types resolve to `src` via the
 `iris-src` condition), so order doesn't matter. `dist/` and the generated
 `tsconfig.build.json` are git-ignored build artifacts.
 
-## How to publish
+## Cutting a release (recommended: CI/CD)
+
+Releases are automated by `.github/workflows/release.yml`, which keeps the git tag
+and the npm version **in sync** and publishes on a version tag.
+
+**One-time setup:** add an npm **Automation** access token as the repo secret
+`NPM_TOKEN` (npmjs.com → Access Tokens → Generate → Automation → then GitHub repo
+→ Settings → Secrets and variables → Actions → `NPM_TOKEN`). An automation token
+bypasses 2FA, which non-interactive publishing requires (a normal token fails with
+`EOTP` in CI).
+
+**To release version `X.Y.Z`:**
+
+```sh
+node scripts/version.mjs X.Y.Z      # or: npm run version:set -- X.Y.Z
+git commit -am "release: vX.Y.Z"
+git tag vX.Y.Z
+git push --follow-tags
+```
+
+`scripts/version.mjs` sets every `packages/*` version **and** rewrites the internal
+`@irisrun/*` dependency ranges to `^X.Y.Z` (they move in lockstep). On the pushed
+tag, the workflow: verifies `vX.Y.Z` equals `packages/cli/package.json` (fails
+loudly on drift), runs typecheck + the full suite, publishes via `npm run release`
+(skipping packages whose version is already live — so re-pushing a tag is safe),
+and cuts a GitHub Release. `v0.0.1` predates this; `v0.1.0` is the first synced tag.
+
+## How to publish manually (fallback)
 
 1. `npm login` (an account with publish rights to `iris-runtime` and the `@irisrun` scope).
 2. Preview what ships — builds, then lists tarball contents (no upload, no registry):
