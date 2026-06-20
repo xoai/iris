@@ -40,9 +40,14 @@ export {
   makeStreamSink,
   renderOutcome,
   chatTurn,
+  resumeTurn,
   runChat,
+  hitlRequest,
+  parseApproval,
+  renderHitlRequest,
+  renderApprovalResult,
 } from "./chat.ts";
-export type { ChatDeps, StreamSink } from "./chat.ts";
+export type { ChatDeps, StreamSink, HitlRequest } from "./chat.ts";
 export { loadBundledTools } from "./tools.ts";
 export type { BundledTools } from "./tools.ts";
 export {

@@ -74,6 +74,33 @@ denied approval skips the tool rather than honoring it. Every decision then appe
 in `iris audit` (chapter 08) as part of the replayable approval trail. Omit
 `--policy` and serve is ungoverned — byte-identical to before.
 
+## In-chat approvals: `iris chat`
+
+The same gate works inline in the terminal REPL. When the agent calls a non-safe
+tool, `iris chat` pauses and asks you to decide — right there in the conversation:
+
+```text
+⚠️ approval needed — the agent wants to run tool 'rm' (call c1) with args {"path":"/tmp/a"}
+approve? [y/n] y
+· approved — running the tool (approved by 'local')
+agent> done
+```
+
+Reply `y` (approve) or `n` (deny); the session resumes on the same durable journal —
+running the tool on approve, skipping it on deny. Because the local terminal user is
+the human-in-the-loop, no policy file is required (an approve just runs the tool).
+Add identity-checked governance the same way as serve:
+
+```sh
+iris chat ./image --session s1 --db s1.sqlite --policy policy.json --as alice --role admin
+```
+
+`--as`/`--role` set the approving principal (repeat `--role` for several roles). The
+decision is the *same* journaled `GovernedApproval` serve produces, so a chat session's
+approvals show up in `iris audit` (chapter 08) too. Leaving an approval pending and
+exiting keeps the session parked — resume later (chat or serve) to decide; nothing is
+auto-approved.
+
 ## Beyond approvals: the whole-session audit
 
 This page covered the *approval* trail. Chapter 08 turns the same substrate into a
