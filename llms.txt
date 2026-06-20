@@ -28,6 +28,7 @@
 - [Frontend & the client SDK](docs/guides/frontend.md): the web chat UI (iris serve --web) and the isomorphic @irisrun/client-sdk over the serve SSE two-identifier protocol.
 
 ## Reference
+- [Agentfile reference](docs/reference/agentfile.md): every Agentfile field, the JSON form, and the build-time validation rules.
 - [CLI](docs/reference/cli.md): every iris command and its flags.
 - [Harness seams](docs/reference/harness-seams.md): the normative tactic/bundle contract — seam signatures, composition, the journaled effect, invariant caps.
 - [Channel-port spec](docs/reference/channel-port-spec.md): the contract every channel passes.

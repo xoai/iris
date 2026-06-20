@@ -71,6 +71,7 @@ Add a capability when you need it.
 
 Normative specs and lookups, in [`reference/`](./reference/):
 
+- [Agentfile reference](./reference/agentfile.md) — every Agentfile field, the JSON form, and the build-time validation rules.
 - [CLI](./reference/cli.md) — every `iris <cmd>` with its flags, in one place.
 - [Harness seams](./reference/harness-seams.md) — the normative tactic/bundle contract:
   the five seam signatures, composition rules, and the journaled `{seam, tacticId, choice}`.
@@ -100,6 +101,6 @@ Start with **[CONTRIBUTING](../CONTRIBUTING.md)** — the dev loop (install-free
   [add a store](./contributing/adding-a-store.md) ·
   [add a tactic](./contributing/adding-a-tactic.md).
 
-<!-- Growing next: Guides → secrets & env; Reference → Agentfile schema. -->
+<!-- Growing next: Guides → secrets & env. -->
 
 **Next → [Introduction](./introduction.md)**
