@@ -69,7 +69,7 @@ test("byte-identity: subagentPerformers(undefined,…) adds no subagent key", ()
 
 test("cmdRun with subagents: a `delegate` toolCall delegates to a child agent; parent finishes", async () => {
   const src = await tmp("iris-sub-src-");
-  await cmdInit(src);
+  await cmdInit(src, { json: true });
   const out = await tmp("iris-sub-out-");
   await cmdBuild({ file: join(src, "agent.json"), out, resolver: await scaffoldResolver(src) });
 
@@ -112,7 +112,7 @@ test("cmdRun WITHOUT subagents: a `delegate` call is an ordinary tool (no subage
   // Zero-value-off: with no subagents config, `delegate` is NOT a subagent tool, so the
   // kernel emits a normal tool_call (which, unregistered + non-safe, gates to ask → parks).
   const src = await tmp("iris-sub-off-src-");
-  await cmdInit(src);
+  await cmdInit(src, { json: true });
   const out = await tmp("iris-sub-off-out-");
   await cmdBuild({ file: join(src, "agent.json"), out, resolver: await scaffoldResolver(src) });
 

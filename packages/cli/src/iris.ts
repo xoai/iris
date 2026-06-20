@@ -225,14 +225,84 @@ process.stdin.on("data", (d) => {
 });
 `;
 
-// Scaffold a self-contained agent project: agent.json + instructions.md + a
-// bundled `tools/now.{mjs,tool.json}` the agent can call immediately.
-export async function cmdInit(dir: string): Promise<void> {
+// The YAML authoring of SCAFFOLD_AGENT (initiative 20260620-agentfile-env-secrets).
+// Parses to the SAME model as the JSON scaffold (`skills: []`/`connections: []` use
+// the empty-flow literal the YAML reader now supports). Ships `secrets:`/
+// `environment:` examples COMMENTED OUT, so the default scaffolded agent declares
+// neither and stays in legacy mode (byte-compatible). Uncommenting opts into the
+// least-privilege env scoping; secret VALUES are supplied at run time, never here.
+const SCAFFOLD_AGENT_YAML = `# Iris Agentfile (authored in YAML). Build with: iris build  (auto-detects agent.yaml)
+apiVersion: iris/v1
+kind: Agent
+name: my-agent
+model: anthropic/claude-x
+instructions: ./instructions.md
+skills: []
+tools:
+  - ref: subprocess://now
+connections: []
+harness:
+  bundle: default
+# A subprocess tool needs local_subprocess; a "local" (not "remote") locality.
+requires:
+  local_subprocess: true
+  tool_locality: local
+sandbox:
+  backend: inmemory
+  network: deny-all
+# Secrets & environment (optional). \`secrets\` are NAMES only — supply VALUES at run
+# time with --env-file / --env (NEVER commit a secret value). \`environment\` are
+# non-secret literal defaults. A subprocess tool then sees ONLY the declared env
+# plus a fixed PATH/HOME base (least-privilege). Uncomment to use:
+# secrets:
+#   - GITHUB_TOKEN
+# environment:
+#   LOG_LEVEL: info
+`;
+
+// Scaffold a self-contained agent project: agent.{yaml|json} + instructions.md + a
+// bundled `tools/now.{mjs,tool.json}` the agent can call immediately. The DEFAULT is
+// YAML (self-documenting — JSON cannot carry the commented secrets/environment
+// examples); `json: true` authors JSON. Both formats are first-class to `iris build`.
+export async function cmdInit(dir: string, opts: { json?: boolean } = {}): Promise<void> {
   await mkdir(join(dir, "tools"), { recursive: true }); // also creates `dir`
-  await writeFile(join(dir, "agent.json"), `${JSON.stringify(SCAFFOLD_AGENT, null, 2)}\n`);
+  if (opts.json) {
+    await writeFile(join(dir, "agent.json"), `${JSON.stringify(SCAFFOLD_AGENT, null, 2)}\n`);
+  } else {
+    await writeFile(join(dir, "agent.yaml"), SCAFFOLD_AGENT_YAML);
+  }
   await writeFile(join(dir, "instructions.md"), SCAFFOLD_INSTRUCTIONS);
   await writeFile(join(dir, "tools", "now.mjs"), STARTER_TOOL_JS);
   await writeFile(join(dir, "tools", "now.tool.json"), `${JSON.stringify(STARTER_TOOL_DESCRIPTOR, null, 2)}\n`);
+}
+
+export interface ResolveBuildFileResult {
+  file: string;
+  warning?: string;
+}
+
+/**
+ * Pick the default Agentfile when `iris build` runs without `--file`: the first
+ * existing of `agent.json`, `agent.yaml`, `agent.yml` (in that order). Warns when
+ * more than one exists (so a YAML build isn't silently shadowed by a stray JSON).
+ * None exist → `agent.json` (the historical default; the build's readFile then
+ * yields the same ENOENT error). `exists` is injected so this is unit-testable.
+ */
+export function resolveBuildFile(
+  dir: string,
+  deps: { exists: (path: string) => boolean },
+): ResolveBuildFileResult {
+  const candidates = ["agent.json", "agent.yaml", "agent.yml"];
+  const present = candidates.filter((c) => deps.exists(join(dir, c)));
+  if (present.length === 0) return { file: join(dir, "agent.json") };
+  const file = join(dir, present[0]);
+  if (present.length > 1) {
+    return {
+      file,
+      warning: `iris build: multiple Agentfiles present (${present.join(", ")}); building ${present[0]} — pass --file to choose`,
+    };
+  }
+  return { file };
 }
 
 export interface CliBuildOptions {

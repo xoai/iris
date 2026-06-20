@@ -27,7 +27,7 @@ A client calls the `start` tool to begin a session and `message` to continue it,
 presenting the issued `continuationToken` each turn.
 
 See **[docs/04 — Channels](../../docs/04-channels.md)** and the normative
-**[channel-port spec](../../docs/channel-port-spec.md)**.
+**[channel-port spec](../../docs/reference/channel-port-spec.md)**.
 
 ---
 Part of [Iris](../../README.md) — own, portable, verifiable state.

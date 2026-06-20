@@ -95,6 +95,14 @@ const REJECTS: Array<{ name: string; bad: unknown; match: RegExp }> = [
   { name: "missing sandbox", bad: omit(VALID, "sandbox"), match: /sandbox/ },
   { name: "empty sandbox.backend", bad: { ...VALID, sandbox: { backend: "", network: "deny-all" } }, match: /sandbox\.backend/ },
   { name: "non-string sandbox.workspace", bad: { ...VALID, sandbox: { backend: "docker", network: "deny-all", workspace: 9 } }, match: /sandbox\.workspace/ },
+  // secrets/environment — ONLY the constraints BOTH surfaces enforce identically.
+  // Runtime-only constraints (uniqueness, overlap, env key pattern, env value
+  // type) live in tests/agentfile.test.ts and must NOT appear here (the schema
+  // accepts them → adding one would break the T3 agreement invariant).
+  { name: "secrets not array", bad: { ...VALID, secrets: "GITHUB_TOKEN" }, match: /secrets/ },
+  { name: "secret entry not string", bad: { ...VALID, secrets: [1] }, match: /secrets\[0\]/ },
+  { name: "secret name bad pattern", bad: { ...VALID, secrets: ["1BAD"] }, match: /secrets\[0\]/ },
+  { name: "environment not object", bad: { ...VALID, environment: ["LOG_LEVEL=info"] }, match: /environment/ },
 ];
 
 for (const c of REJECTS) {
@@ -141,6 +149,12 @@ const ACCEPTS: unknown[] = [
   { ...VALID, tools: [{ ref: "grpc://svc/method" }] },
   { ...VALID, tools: [{ ref: "mcp://a\nmore" }] }, // scheme on the first segment → both accept
   { ...VALID, harness: {}, requires: {}, sandbox: { backend: "inmemory", network: "deny-all" } },
+  // secrets/environment accept cases — valid names + a STRING env value (a numeric
+  // value also passes the schema AND the runtime coerces it, but a string keeps the
+  // shared accept case unambiguous).
+  { ...VALID, secrets: ["GITHUB_TOKEN", "OPENAI_API_KEY"] },
+  { ...VALID, environment: { LOG_LEVEL: "info", REGION: "us-east-1" } },
+  { ...VALID, secrets: ["TOKEN"], environment: { LOG_LEVEL: "info" } },
 ];
 
 const INVALIDS: unknown[] = [

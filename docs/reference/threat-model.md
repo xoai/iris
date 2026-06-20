@@ -82,5 +82,5 @@ This is the important half.
 ---
 
 Back to the **[spec](./verifiable-journal-spec.md)** · the
-**[funnel chapter](./09-verifiable-journal.md)** · the
-**[project README](../README.md)**.
+**[funnel chapter](../09-verifiable-journal.md)** · the
+**[project README](../../README.md)**.

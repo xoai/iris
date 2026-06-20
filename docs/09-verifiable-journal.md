@@ -86,9 +86,9 @@ reproduce.
 
 ## Go deeper
 
-- **[The verifiable-journal spec](./verifiable-journal-spec.md)** — the exact
+- **[The verifiable-journal spec](./reference/verifiable-journal-spec.md)** — the exact
   file format and the hash construction, reproducible in any language.
-- **[The threat model](./threat-model.md)** — precisely what verification proves,
+- **[The threat model](./reference/threat-model.md)** — precisely what verification proves,
   and (just as important) what it does *not*.
 
 > **Precision (read this):** verification proves *faithful record-replay and

@@ -12,7 +12,7 @@
   <a href="https://www.npmjs.com/package/iris-runtime"><img alt="npm version" src="https://img.shields.io/npm/v/iris-runtime?style=for-the-badge&logo=npm&logoColor=white&label=iris-runtime&color=CB3837&labelColor=000000"></a>
   <a href="https://nodejs.org"><img alt="Node ≥ 24" src="https://img.shields.io/badge/node-%E2%89%A5%2024-339933?style=for-the-badge&logo=nodedotjs&logoColor=white&labelColor=000000"></a>
   <img alt="TypeScript — no build step" src="https://img.shields.io/badge/TypeScript-no%20build%20step-3178C6?style=for-the-badge&logo=typescript&logoColor=white&labelColor=000000">
-  <img alt="tests: 754 passing" src="https://img.shields.io/badge/tests-754%20passing-44CC11?style=for-the-badge&labelColor=000000">
+  <img alt="tests: 801 passing" src="https://img.shields.io/badge/tests-801%20passing-44CC11?style=for-the-badge&labelColor=000000">
   <a href="LICENSE"><img alt="license: MIT" src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge&labelColor=000000"></a>
 </p>
 
@@ -34,7 +34,7 @@ Iris is a portable runtime for durable AI agents — built so an agent is never 
 - **Talk to it, deploy it in one command** — a built-in web chat UI (`iris serve --web`) and a small isomorphic client SDK (`@irisrun/client-sdk`) put a human in front of the agent, and `iris deploy` lands it on a real edge host (Cloudflare Durable Objects), where a tab close or a host migration resumes the same session.
 - **Bring your own model** — the model call is just another recorded step behind a small adapter. Anthropic and OpenAI adapters ship (both pass one shared conformance suite), and any OpenAI- or Anthropic-compatible endpoint (Groq, Together, DeepSeek, vLLM, Ollama, …) is reachable via `--base-url` — classified replay-safe vs known-divergent by a conformance-tested matrix (`iris providers --matrix`). No provider is baked into the core.
 - **A small, safe core you can extend** — a thin kernel enforces the safety rules; the agent's decisions (when to summarize context, when to stop, when to ask a human) are pluggable, and every choice is recorded so replay stays exact.
-- **Secure by default** — tools run sandboxed with networking denied by default, and credentials are brokered so secrets never enter the sandbox. Real per-host allowlist egress + brokering for the docker backend ride a host-side sidecar egress proxy.
+- **Secure by default** — tools run sandboxed with networking denied by default, and credentials are brokered so secrets never enter the sandbox. Real per-host allowlist egress + brokering for the docker backend ride a host-side sidecar egress proxy. Subprocess tools get a **least-privilege, declared environment** — secrets are named in the Agentfile (docker-compose style) and their values supplied at run time (`--env-file` / `--env`), never baked into the image or journal.
 
 ## When to use Iris
 
@@ -74,7 +74,7 @@ Iris's two neighbors each made one simplifying trade. **Docker Agent** keeps age
 
 ```text
 my-agent/
-├── agent.json          # the Agentfile — declarative manifest (agent.yaml also works)
+├── agent.yaml          # the Agentfile — declarative manifest (agent.json also works)
 ├── instructions.md     # the always-on system prompt (embedded by hash at build)
 └── skills/             # procedures loaded on demand (embedded by hash)
     └── triage.md
@@ -174,7 +174,7 @@ TypeScript runs directly via Node's native type-stripping — no build step. Fro
 
 ```sh
 npm install        # links the local workspaces (offline)
-npm test           # 754 passing (+6 live-conformance tests gated on API keys)
+npm test           # 801 passing (+6 live-conformance tests gated on API keys)
 npm run typecheck  # tsc --noEmit — clean
 # run the CLI straight from source, no install:
 node --conditions=iris-src packages/cli/src/cli-main.ts <cmd>
@@ -193,12 +193,12 @@ From nothing to a running, resumable agent in **three steps** — no build step,
 npx iris-runtime init ./my-agent
 ```
 
-Drops a self-contained agent on disk: `agent.json` + `instructions.md` + a working bundled `now` tool.
+Drops a self-contained agent on disk: `agent.yaml` + `instructions.md` + a working bundled `now` tool. (Prefer JSON? `iris init ./my-agent --json`.)
 
 **2 · Build it into an image**
 
 ```sh
-iris build --file ./my-agent/agent.json --out ./image
+iris build --out ./image   # run from ./my-agent, or pass --file; auto-detects agent.yaml/json
 # → {"imageDigest":"sha256:…"}
 ```
 
@@ -222,8 +222,8 @@ That's the core loop. The rest of the command surface is below.
 `init → build → inspect → schema → providers → verify → run → serve/chat → deploy → audit/eval/schedule → journal`
 
 ```sh
-iris init    ./my-agent                                   # scaffold a project: agent.json + instructions.md + a bundled `now` tool
-iris build   --file ./my-agent/agent.json --out ./image   # → {"imageDigest":"sha256:…"}
+iris init    ./my-agent                                   # scaffold a project: agent.yaml + instructions.md + a bundled `now` tool (--json for JSON)
+iris build   --file ./my-agent/agent.yaml --out ./image   # → {"imageDigest":"sha256:…"} (auto-detects when --file is omitted)
 iris inspect ./image                                      # read the image at the intent level
 iris schema  > agentfile.schema.json                      # emit the Agentfile JSON Schema (draft 2020-12) for editor/CI
 iris verify  ./image                                      # loud failure on any tamper or pin mismatch
@@ -233,7 +233,9 @@ iris chat    ./image --session s1 --db /tmp/s1.sqlite     # durable, resumable, 
 iris deploy  ./image --out ./iris-edge                    # scaffold a Cloudflare Worker + Durable Object for edge deploy
 ```
 
-`audit`, `eval`, and `schedule` round out the surface.
+`audit`, `eval`, and `schedule` round out the surface. Declare secrets/env in the
+Agentfile and pass them at run time with `--env-file` / `--env` (or `--secret-files`
+for file-mounted secrets) — see [Tools → Secrets & environment](docs/03-tools.md).
 
 **Running from a clone** (no published package, no build step) — swap `iris` for the source bin:
 `node --conditions=iris-src packages/cli/src/cli-main.ts <cmd> …`
@@ -367,12 +369,12 @@ A monorepo (npm workspaces). The **pure core** imports nothing host/transport/No
 
 ## Tested & proven
 
-The unit suite is **install-free, deterministic, zero-dependency** — **754 passing** on Node 24 (plus **6** live-provider conformance tests gated on API keys), `tsc --noEmit` clean. Every claim in this README is regression-locked: CAS + fencing, park/resume across a forced restart, replay purity (the always-on assertion catches injected nondeterminism; `IRIS_ASSERT=0` turns it off), the crash matrix (at-least-once, never double-applied), a **10,000-session** determinism run, cross-store and **cross-host** resume, a **chaos/concurrency suite** that stresses contention, a simulated partition, and redeploy-recovery against the **real fs + sqlite backends**, an **adversarial sandbox-egress** [threat model](docs/security-sandbox-threat-model.md) (bypass + secret-leak attempts), **provider canonicalization** + a **conformance-verified provider compatibility matrix** + **model-call record-replay fidelity**, the **channel-port conformance suite** (two channels behind one port), **Slack durable-HITL across a redeploy**, deterministic image digest + loud verify, the single-use-token channel discipline, and the SSE/WebSocket streaming layer.
+The unit suite is **install-free, deterministic, zero-dependency** — **801 passing** on Node 24 (plus **6** live-provider conformance tests gated on API keys), `tsc --noEmit` clean. Every claim in this README is regression-locked: CAS + fencing, park/resume across a forced restart, replay purity (the always-on assertion catches injected nondeterminism; `IRIS_ASSERT=0` turns it off), the crash matrix (at-least-once, never double-applied), a **10,000-session** determinism run, cross-store and **cross-host** resume, a **chaos/concurrency suite** that stresses contention, a simulated partition, and redeploy-recovery against the **real fs + sqlite backends**, an **adversarial sandbox-egress** [threat model](docs/reference/security-sandbox-threat-model.md) (bypass + secret-leak attempts), **provider canonicalization** + a **conformance-verified provider compatibility matrix** + **model-call record-replay fidelity**, the **channel-port conformance suite** (two channels behind one port), **Slack durable-HITL across a redeploy**, deterministic image digest + loud verify, the single-use-token channel discipline, and the SSE/WebSocket streaming layer.
 
 Real *egress* — OCI pushes, live Anthropic calls, `wrangler deploy` / Lambda upload, `npm publish`, OTLP export — stays **env-gated** as manual smokes under `tests/manual/`, outside the suite.
 
 ```sh
-npm test                                 # the whole suite → 754 passing (6 live-conformance tests gated on API keys)
+npm test                                 # the whole suite → 801 passing (6 live-conformance tests gated on API keys)
 node tests/manual/portability-demo.ts          # the cross-host proof (install-free)
 node tests/manual/serverless-deploy-smoke.ts   # real Cloudflare DO / Lambda (gated)
 IRIS_SERVE_SMOKE=1 node tests/manual/serve-streaming-smoke.ts  # real serve: REST + SSE + WS (gated)

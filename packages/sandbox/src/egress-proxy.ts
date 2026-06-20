@@ -75,7 +75,7 @@ function parseTarget(req: http.IncomingMessage): { host: string; port: number; p
 // read from the authority's trailing `:<digits>` (defaulting to 443) — NOT from
 // `URL.port`, which drops a default-for-HTTP port like 80. Defensive textual
 // fallback if URL parsing rejects the authority. (See
-// docs/security-sandbox-threat-model.md.)
+// docs/reference/security-sandbox-threat-model.md.)
 function parseAuthority(authority: string): { host: string; port: number } {
   const portMatch = authority.match(/:(\d{1,5})$/); // trailing :port (after a `]` for IPv6)
   const port = portMatch ? Number(portMatch[1]) : 443;

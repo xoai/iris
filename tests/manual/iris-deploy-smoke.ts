@@ -48,7 +48,7 @@ async function main() {
     return;
   }
   const src = await mkdtemp(join(tmpdir(), "iris-deploy-src-"));
-  await cmdInit(src);
+  await cmdInit(src, { json: true });
   // The edge (Cloudflare DO) can't spawn subprocesses, so the deploy gate refuses
   // the default LOCAL scaffold. Rewrite to a remote, tool-less agent for deploy.
   const agentPath = join(src, "agent.json");

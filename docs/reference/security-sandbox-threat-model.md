@@ -21,6 +21,19 @@ secret inside the sandbox. The one real defect found was a *consistency* gap
 (HTTP and CONNECT normalized hostnames differently), now closed and pinned — see
 Findings.
 
+## Scope — this is the *sandbox egress* layer, not subprocess-tool env
+
+This document covers the sandbox's **network-egress broker**, where an untrusted
+tool *names* a secret and never holds it. It is a **separate layer** from host-side
+**subprocess-tool env** (initiative 20260620-agentfile-env-secrets): a bundled
+`subprocess://` tool runs host-side and legitimately receives its declared secrets
+in its environment. That path is **least-privilege-scoped** — the tool gets ONLY the
+Agentfile-declared `secrets`/`environment` plus a fixed non-secret base (PATH/HOME/
+proxy/TLS), never the operator's whole shell, and an undeclared `--env`/`--env-file`
+key is refused. Secret VALUES still never enter the manifest, image, journal, or any
+error message — they are supplied at run time via `--env-file`/`--env`. See
+[Tools → Secrets & environment](../03-tools.md) for the user-facing model.
+
 ## Assets
 
 1. **Brokered secrets.** API keys / bearer tokens held host-side in the

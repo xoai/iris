@@ -19,7 +19,7 @@ atomic single-use claim, and the loud refusal taxonomy — lives in
 **[`@irisrun/channel-core`](../channel-core/README.md)**, the shared channel **port**;
 this package is the HTTP/SSE/WS transport over it and passes the shared channel-port
 conformance suite (see the normative
-**[channel-port spec](../../docs/channel-port-spec.md)**).
+**[channel-port spec](../../docs/reference/channel-port-spec.md)**).
 
 ## Use it
 

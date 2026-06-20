@@ -14,7 +14,8 @@ import type { Performer, Json, StateStore, Scheduler } from "@irisrun/core";
 import { makeToolPerformer, makeToolRegistry, makeToolInvoker, makeSubprocessTransport } from "@irisrun/tools";
 import type { ToolContract } from "@irisrun/tools";
 import { readFile } from "node:fs/promises";
-import { cmdInit, cmdBuild, cmdInspect, cmdVerify, cmdPush, cmdPull, cmdRun, cmdServe, cmdDeploy, loadApprovalPolicy, type CliSubagents } from "./iris.ts";
+import { cmdInit, cmdBuild, cmdInspect, cmdVerify, cmdPush, cmdPull, cmdRun, cmdServe, cmdDeploy, loadApprovalPolicy, resolveBuildFile, type CliSubagents } from "./iris.ts";
+import { existsSync, rmSync } from "node:fs";
 import { cmdAudit } from "./audit-cmd.ts";
 import { cmdJournalExport, cmdJournalVerify, cmdJournalImport } from "./journal-cmd.ts";
 import { writeFile } from "node:fs/promises";
@@ -24,6 +25,9 @@ import { loadSubagents } from "./subagents-cfg.ts";
 import { createApprovalInbox } from "@irisrun/auth";
 import type { ApprovalPolicy, Principal } from "@irisrun/auth";
 import { loadBundledTools } from "./tools.ts";
+import { resolveToolEnvForImage, secretFileEnv, type EnvMap } from "./env.ts";
+import { mkdtemp } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { echoStreamingPerformer } from "./echo.ts";
 import { runChat, wrapModelForImage, makeChatFakeModel, makeChatStreamingFakeModel, makeStreamSink } from "./chat.ts";
 import {
@@ -57,13 +61,75 @@ function flagAll(argv: string[], name: string): string[] {
 async function bundledToolWiring(
   argv: string[],
   layout: string,
+  toolEnv?: EnvMap,
 ): Promise<{ toolInvoker: ReturnType<typeof makeToolInvoker>; safeTools: string[] }> {
   const toolsDir = flag(argv, "--tools") ?? join(dirname(layout), "tools");
   const bundled = await loadBundledTools(toolsDir);
+  // A scoped `toolEnv` (from --env-file/--env + the image's secrets/environment)
+  // is the SAME for every bundled tool — pass it transport-level. Absent → inherit
+  // process.env (byte-identical to before this feature).
   return {
-    toolInvoker: makeToolInvoker({ subprocess: makeSubprocessTransport(bundled.subprocessSpecs) }),
+    toolInvoker: makeToolInvoker({
+      subprocess: makeSubprocessTransport(bundled.subprocessSpecs, toolEnv ? { env: toolEnv } : {}),
+    }),
     safeTools: bundled.safeToolNames,
   };
+}
+
+// Resolve the runtime env a project's subprocess tools should receive (initiative
+// 20260620-agentfile-env-secrets). Reads `--env-file <path>` (repeatable) + `--env
+// KEY=VAL` (repeatable), then delegates to the TESTED resolveToolEnvForImage seam
+// (least-privilege scoping, missing-secret + undeclared-key refusal). The argv/fs
+// glue here is manual-smoke (the bin is not unit-tested); the behavior-bearing logic
+// is the seam. Returns undefined in legacy mode with no flags (transport inherits).
+async function resolveRuntimeEnv(
+  argv: string[],
+  image: AgentImage,
+  command: string,
+): Promise<EnvMap | undefined> {
+  const envFilePaths = flagAll(argv, "--env-file");
+  const envInline = flagAll(argv, "--env");
+  const envFiles: Array<{ source: string; text: string }> = [];
+  for (const p of envFilePaths) {
+    envFiles.push({ source: p, text: await readFile(p, "utf8") });
+  }
+  const resolved = resolveToolEnvForImage({
+    ...(image.agentfile.secrets !== undefined ? { secrets: image.agentfile.secrets } : {}),
+    ...(image.agentfile.environment !== undefined ? { environment: image.agentfile.environment } : {}),
+    platform: process.platform,
+    hostEnv: process.env as EnvMap,
+    envFiles,
+    envInline,
+    command,
+    onWarn: (m) => console.warn(m),
+  });
+
+  // Opt-in file-mount secrets (Docker "Very Low" tier): materialize each resolved
+  // secret to a 0600 temp file and hand the tool `<NAME>_FILE=<path>` instead of the
+  // value — the secret VALUE then never enters the tool's env. The temp dir is removed
+  // on process exit (synchronous rmSync; covers run completion + serve/chat SIGINT).
+  const wantSecretFiles = argv.includes("--secret-files");
+  const secrets = image.agentfile.secrets;
+  if (resolved && wantSecretFiles && secrets !== undefined && secrets.length > 0) {
+    const dir = await mkdtemp(join(tmpdir(), "iris-secrets-"));
+    // Register cleanup BEFORE the write loop — so a mid-loop writeFile failure still
+    // removes the dir and any 0600 secret files already written (no secret-bearing
+    // file left behind on an error path).
+    process.once("exit", () => {
+      try {
+        rmSync(dir, { recursive: true, force: true });
+      } catch {
+        // best-effort cleanup; the OS reaps the tmp dir regardless.
+      }
+    });
+    const { env, files } = secretFileEnv(resolved, secrets, dir);
+    for (const f of files) await writeFile(f.path, f.value, { mode: 0o600 });
+    return env;
+  }
+  if (wantSecretFiles && (secrets === undefined || secrets.length === 0)) {
+    console.warn(`${command}: --secret-files had no effect — this image declares no secrets`);
+  }
+  return resolved;
 }
 
 // The delegated task for a child: a `task` string in the call args, else the args JSON.
@@ -113,6 +179,13 @@ async function buildSubagents(
       ? (await loadModelProvider(providerName)).buffered({ model: stripModelPrefix(image.lock.model.id) })
       : makeChatFakeModel(); // keyless: a delegation still runs, echoing the task
     const bundled = await loadBundledTools(join(dirname(childLayout), "tools"));
+    // INTENTIONAL non-goal (initiative 20260620-agentfile-env-secrets): a SUBAGENT
+    // child's subprocess tools are NOT env-scoped — they inherit the host process.env
+    // (no transport-level `env`), even when the child image declares secrets/environment.
+    // Per-image env scoping is wired for the top-level run/serve/chat path only;
+    // threading a child's resolved env here is deferred (subagents are the separate
+    // P2-9 feature). This is privilege-BROADENING for the child (it gets more than it
+    // declared), not a leak of the parent's scoped secrets. Recorded in decisions.md.
     children.set(entry.name, {
       image,
       model,
@@ -150,7 +223,7 @@ async function buildSubagents(
 
 async function runCommand(argv: string[]): Promise<void> {
   const layout = argv[1];
-  if (!layout) throw new Error("usage: iris run <layoutdir> --session <id> [--db <path>] [--tools <dir>] [--subagents <file>]");
+  if (!layout) throw new Error("usage: iris run <layoutdir> --session <id> [--db <path>] [--tools <dir>] [--subagents <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]");
   const session = flag(argv, "--session") ?? "default";
   const db = flag(argv, "--db") ?? ":memory:";
   // §9: a deploy-time endpoint override. The model-id prefix still selects the
@@ -168,7 +241,8 @@ async function runCommand(argv: string[]): Promise<void> {
   const handle = sqlite.openDatabase(db);
   const store = new sqlite.SqliteStateStore(handle);
   const scheduler = new sqlite.SqliteScheduler(handle);
-  const { toolInvoker, safeTools } = await bundledToolWiring(argv, layout);
+  const toolEnv = await resolveRuntimeEnv(argv, image, "iris run");
+  const { toolInvoker, safeTools } = await bundledToolWiring(argv, layout, toolEnv);
   const subagents = await buildSubagents(argv, layout, store, scheduler);
   const outcome = await cmdRun(layout, {
     sessionId: session,
@@ -190,7 +264,7 @@ async function serveCommand(argv: string[]): Promise<void> {
   const layout = argv[1];
   if (!layout)
     throw new Error(
-      "usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--model auto|anthropic|openai|echo] [--web] [--policy <file.json>] [--subagents <file>]",
+      "usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--model auto|anthropic|openai|echo] [--web] [--policy <file.json>] [--subagents <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]",
     );
   const port = Number(flag(argv, "--port") ?? 8787);
   const host = flag(argv, "--host") ?? "127.0.0.1";
@@ -241,7 +315,8 @@ async function serveCommand(argv: string[]): Promise<void> {
       provider.streaming({ model: stripModelPrefix(model), onDelta, baseUrl });
   }
 
-  const { toolInvoker, safeTools } = await bundledToolWiring(argv, layout);
+  const toolEnv = await resolveRuntimeEnv(argv, image, "iris serve");
+  const { toolInvoker, safeTools } = await bundledToolWiring(argv, layout, toolEnv);
   const subagents = await buildSubagents(argv, layout, store, scheduler);
   const serve = await cmdServe(layout, {
     store,
@@ -282,7 +357,7 @@ async function serveCommand(argv: string[]): Promise<void> {
 async function chatCommand(argv: string[]): Promise<void> {
   const layout = argv[1];
   if (!layout) {
-    throw new Error("usage: iris chat <layoutdir> --session <id> [--db <path>] [--tools <dir>] [--subagents <file>] [--policy <file.json>] [--as <id>] [--role <r>] [--fake]");
+    throw new Error("usage: iris chat <layoutdir> --session <id> [--db <path>] [--tools <dir>] [--subagents <file>] [--policy <file.json>] [--as <id>] [--role <r>] [--env-file <file>] [--env KEY=VAL] [--secret-files] [--fake]");
   }
   const session = flag(argv, "--session") ?? "default";
   const db = flag(argv, "--db") ?? ":memory:";
@@ -330,7 +405,8 @@ async function chatCommand(argv: string[]): Promise<void> {
   // bundled retrySafe tools allow-listed so a read-only tool call doesn't park on
   // approval), a lock-derived tool performer over the project's subprocess tools,
   // and a model performer (wrapped Anthropic, or the deterministic fake).
-  const { toolInvoker, safeTools } = await bundledToolWiring(argv, layout);
+  const toolEnv = await resolveRuntimeEnv(argv, image, "iris chat");
+  const { toolInvoker, safeTools } = await bundledToolWiring(argv, layout, toolEnv);
   const subagents = await buildSubagents(argv, layout, store, scheduler);
   // Fold any delegate names into the SAME bundle the gate consults, so a delegation
   // auto-allows (not parks) — the kernel reads this one bundle's safeTools.
@@ -677,18 +753,30 @@ async function main(argv: string[]): Promise<void> {
   const cmd = argv[0];
   switch (cmd) {
     case "init": {
-      const dir = argv[1] ?? ".";
-      await cmdInit(dir);
-      console.log(`iris: scaffolded ${dir}/ — agent.json, instructions.md, and a bundled tools/now tool`);
+      // YAML is the default scaffold (self-documenting); --json opts back to JSON.
+      const json = argv.includes("--json");
+      // The target dir is the first non-flag positional anywhere after the command,
+      // so `iris init --json mydir` and `iris init mydir --json` both target mydir.
+      const dir = argv.slice(1).find((a) => !a.startsWith("--")) ?? ".";
+      await cmdInit(dir, json ? { json: true } : {});
+      const agentFile = json ? "agent.json" : "agent.yaml";
+      console.log(`iris: scaffolded ${dir}/ — ${agentFile}, instructions.md, and a bundled tools/now tool`);
       console.log("next:");
       console.log(`  cd ${dir}`);
-      console.log("  iris build --file agent.json --out ./image     # compile the agent image");
+      console.log(`  iris build --out ./image     # compile the agent image (auto-detects ${agentFile})`);
       console.log("  iris chat ./image --session s1 --db s1.sqlite --fake   # talk to it (no key needed)");
       console.log("  (set ANTHROPIC_API_KEY and drop --fake for a real model that calls the now tool)");
       break;
     }
     case "build": {
-      const file = flag(argv, "--file") ?? "agent.json";
+      // Default-file auto-detect when --file is omitted: agent.json → agent.yaml →
+      // agent.yml (warns on ambiguity). Explicit --file always wins.
+      let file = flag(argv, "--file");
+      if (file === undefined) {
+        const r = resolveBuildFile(".", { exists: existsSync });
+        file = r.file;
+        if (r.warning) console.warn(r.warning);
+      }
       // Resolve the project's bundled tools so scaffolded subprocess:// refs
       // resolve (default tools dir = <agent dir>/tools; --tools overrides).
       const toolsDir = flag(argv, "--tools") ?? join(dirname(file), "tools");

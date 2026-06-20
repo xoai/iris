@@ -10,7 +10,7 @@ text.) Iris ships two behind that port: **Anthropic** and **OpenAI**.
 
 ## The model-id prefix selects the provider
 
-An agent's model is a single string in `agent.json` with a `<provider>/` prefix:
+An agent's model is a single string in the Agentfile (`agent.yaml` or `agent.json`) with a `<provider>/` prefix:
 
 ```json
 { "model": "anthropic/claude-x" }

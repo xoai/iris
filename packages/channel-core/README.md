@@ -31,7 +31,7 @@ The proof that channels are interchangeable is a single shared **conformance sui
 `channel-slack` all pass — "channels behind one port" is a literal, executed guarantee.
 
 The continuation token is an instance-local ordering credential; the **durable**
-session lives in the StateStore journal. See `docs/channel-port-spec.md`.
+session lives in the StateStore journal. See `docs/reference/channel-port-spec.md`.
 
 ---
 

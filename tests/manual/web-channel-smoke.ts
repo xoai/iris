@@ -38,7 +38,7 @@ async function main() {
     return;
   }
   const src = await mkdtemp(join(tmpdir(), "iris-web-src-"));
-  await cmdInit(src);
+  await cmdInit(src, { json: true });
   const out = await mkdtemp(join(tmpdir(), "iris-web-out-"));
   const resolver = (await loadBundledTools(join(src, "tools"))).resolver;
   await cmdBuild({ file: join(src, "agent.json"), out, resolver });

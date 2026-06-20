@@ -110,3 +110,80 @@ test("T2: absent optional fields remain valid (no over-strictness)", () => {
   assert.equal(m.sandbox.workspace, undefined);
   assert.equal(m.harness.bundle, undefined);
 });
+
+// --- T3: secrets + environment (initiative 20260620-agentfile-env-secrets) ----
+// `secrets` = NAMES of required runtime secrets (VALUES supplied at run time,
+// never in the manifest); `environment` = literal NON-secret config defaults.
+// Both OPTIONAL and OMITTED-when-absent (digest stability). environment scalar
+// values coerce to strings. Runtime-only constraints (uniqueness, overlap, bad
+// key, value-type) live HERE — NOT in the schema agreement corpus (the schema
+// cannot express them, so they'd break schema↔runtime agreement).
+
+test("T3: secrets + environment validate and survive on the model", () => {
+  const ok = {
+    ...VALID,
+    secrets: ["GITHUB_TOKEN", "OPENAI_API_KEY"],
+    environment: { LOG_LEVEL: "info", REGION: "us-east-1" },
+  };
+  const m = validateAgentfile(ok);
+  assert.deepEqual(m.secrets, ["GITHUB_TOKEN", "OPENAI_API_KEY"]);
+  assert.deepEqual(m.environment, { LOG_LEVEL: "info", REGION: "us-east-1" });
+});
+
+test("T3: absent secrets/environment are OMITTED from the model (digest stability)", () => {
+  const m = validateAgentfile(VALID);
+  assert.ok(!("secrets" in m), "secrets must be absent, not [] (canonicalize throws on undefined; omission keeps digests stable)");
+  assert.ok(!("environment" in m), "environment must be absent, not {}");
+});
+
+test("T3: a non-array secrets is rejected", () => {
+  assert.throws(() => validateAgentfile({ ...VALID, secrets: "GITHUB_TOKEN" }), /secrets/i);
+});
+
+test("T3: a non-string secret entry is rejected", () => {
+  assert.throws(() => validateAgentfile({ ...VALID, secrets: ["OK", 7] }), /secrets|env-var name/i);
+});
+
+test("T3: a malformed secret name is rejected (env-name pattern)", () => {
+  for (const bad of ["1ABC", "A-B", "A B", "A=B", ""]) {
+    assert.throws(
+      () => validateAgentfile({ ...VALID, secrets: [bad] }),
+      /env-var name/i,
+      `name ${JSON.stringify(bad)} should be rejected`,
+    );
+  }
+});
+
+test("T3: a duplicate secret name is rejected", () => {
+  assert.throws(() => validateAgentfile({ ...VALID, secrets: ["TOKEN", "TOKEN"] }), /duplicate/i);
+});
+
+test("T3: environment must be an object", () => {
+  assert.throws(() => validateAgentfile({ ...VALID, environment: ["LOG_LEVEL=info"] }), /environment/i);
+});
+
+test("T3: a malformed environment key is rejected", () => {
+  assert.throws(() => validateAgentfile({ ...VALID, environment: { "BAD-KEY": "x" } }), /environment/i);
+});
+
+test("T3: environment numeric/boolean scalar values coerce to strings", () => {
+  const m = validateAgentfile({ ...VALID, environment: { PORT: 8080, DEBUG: true } });
+  assert.deepEqual(m.environment, { PORT: "8080", DEBUG: "true" });
+});
+
+test("T3: a null/object/array environment value is rejected", () => {
+  for (const bad of [null, { nested: 1 }, [1, 2]]) {
+    assert.throws(
+      () => validateAgentfile({ ...VALID, environment: { K: bad } }),
+      /environment\.K must be a string/i,
+      `value ${JSON.stringify(bad)} should be rejected`,
+    );
+  }
+});
+
+test("T3: a name declared as BOTH a secret and an environment literal is rejected", () => {
+  assert.throws(
+    () => validateAgentfile({ ...VALID, secrets: ["SHARED"], environment: { SHARED: "x" } }),
+    /both a secret and an environment literal/i,
+  );
+});

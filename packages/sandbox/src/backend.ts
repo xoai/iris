@@ -88,7 +88,7 @@ export function makeCredentialBroker(
  * the proxy applies request-side IDNA folding (`URL.hostname`) as an additional
  * one-way hardening before this. Pure, total, never throws. (Strips ANY single
  * surrounding bracket pair; in practice only an IPv6 literal reaches here. See
- * docs/security-sandbox-threat-model.md.)
+ * docs/reference/security-sandbox-threat-model.md.)
  */
 export function normalizeHost(raw: string): string {
   let h = raw.toLowerCase();
@@ -102,7 +102,7 @@ export function normalizeHost(raw: string): string {
 }
 
 /** True iff `host` may be reached under `policy` (host-normalized; see
- * docs/security-sandbox-threat-model.md). */
+ * docs/reference/security-sandbox-threat-model.md). */
 export function networkAllows(policy: NetworkPolicy, host: string): boolean {
   if (policy === "deny-all") return false;
   if (policy === "allow-all") return true;

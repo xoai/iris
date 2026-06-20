@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildImage, makeLocalResolver, parseAgentfileJson } from "@irisrun/agent";
+import { buildImage, makeLocalResolver, parseAgentfileJson, parseAgentfileYaml } from "@irisrun/agent";
 import type { ToolContract } from "@irisrun/tools";
 
 const issueTracker: ToolContract = {
@@ -31,6 +31,34 @@ const MODEL = parseAgentfileJson(JSON.stringify({
   requires: { long_running: true, local_subprocess: true, tool_locality: "local" },
   sandbox: { backend: "docker", workspace: "./workspace", network: "deny-all" },
 }));
+
+// The YAML authoring of the SAME agent as MODEL (sans environment) — used by the
+// JSON≡YAML digest test below. Ends with a trailing newline so a top-level block
+// can be appended.
+const YAML_BASE = `apiVersion: iris/v1
+kind: Agent
+name: support-triage
+model: anthropic/claude-x
+instructions: ./instructions.md
+skills:
+  - ./skills/refunds.md
+  - ./skills/escalation.md
+tools:
+  - ref: mcp://registry/issue-tracker@^2
+  - ref: subprocess://./tools/csv-stats
+connections:
+  - ref: mcp://connect/github
+harness:
+  bundle: default
+requires:
+  long_running: true
+  local_subprocess: true
+  tool_locality: local
+sandbox:
+  backend: docker
+  workspace: ./workspace
+  network: deny-all
+`;
 
 const FILES: Record<string, string> = {
   "./instructions.md": "You are a triage agent.",
@@ -68,4 +96,29 @@ test("T4: changing embedded content changes the imageDigest", async () => {
 test("T4: content values are base64 strings (canonicalize-safe; never Buffer/Uint8Array)", async () => {
   const a = await buildImage(MODEL, { resolver, readFile });
   for (const v of Object.values(a.content)) assert.equal(typeof v, "string");
+});
+
+// initiative 20260620-agentfile-env-secrets: coercion of environment scalar values
+// lives in validateAgentfile, so the AUTHORING format (JSON vs YAML) never affects
+// the digest — a JSON `"3"` and a YAML `3` produce the same validated model.
+test("T4: JSON and YAML authoring of the same env digest identically (coercion-in-validate)", async () => {
+  const ENV_YAML =
+    YAML_BASE + "environment:\n  LOG_LEVEL: 3\n"; // YAML parses 3 as a NUMBER
+  const jsonModel = parseAgentfileJson(
+    JSON.stringify({
+      apiVersion: "iris/v1", kind: "Agent", name: "support-triage", model: "anthropic/claude-x",
+      instructions: "./instructions.md",
+      skills: ["./skills/refunds.md", "./skills/escalation.md"],
+      tools: [{ ref: "mcp://registry/issue-tracker@^2" }, { ref: "subprocess://./tools/csv-stats" }],
+      connections: [{ ref: "mcp://connect/github" }],
+      harness: { bundle: "default" },
+      requires: { long_running: true, local_subprocess: true, tool_locality: "local" },
+      sandbox: { backend: "docker", workspace: "./workspace", network: "deny-all" },
+      environment: { LOG_LEVEL: "3" }, // JSON authors a STRING
+    }),
+  );
+  const yamlModel = parseAgentfileYaml(ENV_YAML);
+  const a = await buildImage(jsonModel, { resolver, readFile });
+  const b = await buildImage(yamlModel, { resolver, readFile });
+  assert.equal(a.lock.imageDigest, b.lock.imageDigest, 'JSON "3" and YAML 3 must digest identically');
 });

@@ -3,7 +3,7 @@
 // SHA-256 content address + tamper-evident hash chain, two-tier verification,
 // and cross-host import. The ONLY new home of node:crypto — @irisrun/core and
 // @irisrun/audit stay Node-free (edge/WASM-reachable). See
-// docs/verifiable-journal-spec.md.
+// docs/reference/verifiable-journal-spec.md.
 export const PACKAGE = "@irisrun/journal-export";
 
 export type { JournalExportV1, ExportRecord, ExportSnapshot } from "./types.ts";

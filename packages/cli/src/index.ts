@@ -14,6 +14,7 @@ export {
   governancePerformers,
   loadApprovalPolicy,
   subagentPerformers,
+  resolveBuildFile,
 } from "./iris.ts";
 export type {
   CliBuildOptions,
@@ -23,6 +24,7 @@ export type {
   CliDeployOptions,
   DeployResult,
   CliSubagents,
+  ResolveBuildFileResult,
 } from "./iris.ts";
 export { loadSubagents } from "./subagents-cfg.ts";
 export type { SubagentEntry, SubagentsConfig } from "./subagents-cfg.ts";
@@ -59,6 +61,21 @@ export {
 export type { ChatDeps, StreamSink, HitlRequest } from "./chat.ts";
 export { loadBundledTools } from "./tools.ts";
 export type { BundledTools } from "./tools.ts";
+export {
+  baseEnv,
+  parseEnvFile,
+  parseInlineEnv,
+  resolveToolEnv,
+  resolveToolEnvForImage,
+  secretFileEnv,
+} from "./env.ts";
+export type {
+  EnvMap,
+  ResolveToolEnvInput,
+  ResolveToolEnvResult,
+  ResolveToolEnvForImageInput,
+  SecretFileEnvResult,
+} from "./env.ts";
 export {
   providerNameForModel,
   stripModelPrefix,

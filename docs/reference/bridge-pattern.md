@@ -3,11 +3,11 @@
 How to reach a chat platform **without** a first-party Iris package. Matching another
 framework's channel list is pure parity and turns the project into an integrations
 shop; the moat is durable, portable, verifiable sessions, not breadth. So beyond the
-one strategic channel ([Slack, for durable HITL](./04-channels.md#slack--durable-human-in-the-loop)),
+one strategic channel ([Slack, for durable HITL](../04-channels.md#slack--durable-human-in-the-loop)),
 every other platform is a **bridge**: an external process that speaks the existing
 Iris REST channel protocol. New platforms need **no core changes**.
 
-> A reference doc, not a tutorial — start at [04 — Channels](./04-channels.md).
+> A reference doc, not a tutorial — start at [04 — Channels](../04-channels.md).
 
 ## What a bridge is
 

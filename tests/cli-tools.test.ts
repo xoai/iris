@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { mkdtemp, mkdir, writeFile, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { loadBundledTools, cmdInit, cmdBuild, cmdRun } from "iris-runtime";
+import { loadBundledTools, cmdInit, cmdBuild, cmdRun, resolveToolEnvForImage, secretFileEnv } from "iris-runtime";
 import { makeSubprocessTransport, makeToolInvoker } from "@irisrun/tools";
 import { decode } from "@irisrun/core";
 import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
@@ -117,7 +117,7 @@ test("A1: loadBundledTools rejects an exec that escapes the tools dir", async ()
 
 test("A2: the scaffolded now.mjs returns a well-formed time over the real subprocess transport", async () => {
   const project = await tmp("iris-scaffold-");
-  await cmdInit(project);
+  await cmdInit(project, { json: true });
   const bundled = await loadBundledTools(join(project, "tools"));
   const transport = makeSubprocessTransport(bundled.subprocessSpecs);
   const contract = (await bundled.resolver.resolve("subprocess://now"))!;
@@ -134,7 +134,7 @@ test("A2: the scaffolded now.mjs returns a well-formed time over the real subpro
 
 test("A2: the scaffolded now.mjs fails cleanly on an invalid timezone (bad_tz)", async () => {
   const project = await tmp("iris-scaffold-tz-");
-  await cmdInit(project);
+  await cmdInit(project, { json: true });
   const bundled = await loadBundledTools(join(project, "tools"));
   const transport = makeSubprocessTransport(bundled.subprocessSpecs);
   const contract = (await bundled.resolver.resolve("subprocess://now"))!;
@@ -175,7 +175,7 @@ test("A2: a tool-less agent builds via the loadBundledTools resolver (regression
 
 test("A3: cmdRun wires the bundled tool — a model tool_call runs via subprocess, journaled + replay-stable", async () => {
   const project = await tmp("iris-a3-");
-  await cmdInit(project);
+  await cmdInit(project, { json: true });
   const out = await tmp("iris-a3-out-");
   const bundled = await loadBundledTools(join(project, "tools"));
   await cmdBuild({ file: join(project, "agent.json"), out, resolver: bundled.resolver });
@@ -206,4 +206,180 @@ test("A3: cmdRun wires the bundled tool — a model tool_call runs via subproces
   const rows = await store.readJournal("s", 0);
   const journalText = rows.map((r) => JSON.stringify(decode(r.bytes))).join("\n");
   assert.match(journalText, /"unixMs"/, "the bundled tool's result is journaled");
+});
+
+// --- A4: scoped tool env (initiative 20260620-agentfile-env-secrets) -----------
+
+const ENVCHECK_DESCRIPTOR = {
+  ref: "subprocess://envcheck",
+  name: "envcheck",
+  description: "Return this tool's own environment variable NAMES (never values).",
+  inputSchema: { type: "object", properties: {} },
+  retrySafe: true,
+  exec: "envcheck.mjs",
+};
+// Echoes its env KEYS only (never values) so the journal stays secret-free.
+const ENVCHECK_JS = `
+let buf = "";
+process.stdin.on("data", (d) => {
+  buf += d;
+  const nl = buf.indexOf("\\n");
+  if (nl < 0) return;
+  const req = JSON.parse(buf.slice(0, nl));
+  process.stdout.write(JSON.stringify({ id: req.id, ok: true, value: { keys: Object.keys(process.env).sort() } }) + "\\n");
+  process.exit(0);
+});
+`;
+
+test("A4: a scoped tool sees ONLY declared env (least-privilege); no host leak; no secret value journaled", async () => {
+  const root = await tmp("iris-a4-");
+  const src = join(root, "proj");
+  const toolsDir = join(src, "tools");
+  await mkdir(toolsDir, { recursive: true });
+  const agent = {
+    apiVersion: "iris/v1", kind: "Agent", name: "envy", model: "anthropic/claude-x",
+    instructions: "./instructions.md", skills: [],
+    tools: [{ ref: "subprocess://envcheck" }], connections: [],
+    harness: { bundle: "default" },
+    requires: { local_subprocess: true, tool_locality: "local" },
+    sandbox: { backend: "inmemory", network: "deny-all" },
+    secrets: ["GITHUB_TOKEN"], environment: { LOG_LEVEL: "info" },
+  };
+  await writeFile(join(src, "agent.json"), JSON.stringify(agent, null, 2));
+  await writeFile(join(src, "instructions.md"), "# Instructions\n");
+  await writeFile(join(toolsDir, "envcheck.tool.json"), JSON.stringify(ENVCHECK_DESCRIPTOR));
+  await writeFile(join(toolsDir, "envcheck.mjs"), ENVCHECK_JS);
+
+  const bundled = await loadBundledTools(toolsDir);
+  const out = join(root, "out");
+  const image = await cmdBuild({ file: join(src, "agent.json"), out, resolver: bundled.resolver });
+  assert.deepEqual(image.agentfile.secrets, ["GITHUB_TOKEN"]);
+
+  // Resolve the scoped env via the SAME tested seam the CLI uses.
+  const SECRET_VALUE = "ghp_do_not_journal";
+  const env = resolveToolEnvForImage({
+    secrets: image.agentfile.secrets,
+    environment: image.agentfile.environment,
+    platform: process.platform,
+    hostEnv: { ...process.env, GITHUB_TOKEN: SECRET_VALUE, IRIS_A4_LEAK: "leak" } as Record<string, string>,
+    envFiles: [],
+    envInline: [],
+    command: "iris run",
+  });
+  assert.ok(env, "scoped env resolved");
+  assert.equal(env.GITHUB_TOKEN, SECRET_VALUE);
+  assert.equal(env.LOG_LEVEL, "info");
+  assert.ok(!("IRIS_A4_LEAK" in env), "an undeclared host var is not in the scoped env");
+
+  const store = new MemoryStateStore();
+  const model = makeScriptedModel([
+    { role: "assistant", content: "checking env", toolCalls: [{ callId: "c1", name: "envcheck", args: {} }], stopReason: "tool_use" },
+    { role: "assistant", content: "done", stopReason: "end_turn" },
+  ]);
+  const t = await cmdRun(out, {
+    sessionId: "s", store, scheduler: new MemoryScheduler(), clock: new TestClock(1),
+    modelPerformer: model,
+    toolInvoker: makeToolInvoker({ subprocess: makeSubprocessTransport(bundled.subprocessSpecs, { env }) }),
+    safeTools: bundled.safeToolNames,
+  });
+  assert.equal(t.status, "finished");
+
+  const rows = await store.readJournal("s", 0);
+  const journalText = rows.map((r) => JSON.stringify(decode(r.bytes))).join("\n");
+  assert.match(journalText, /"GITHUB_TOKEN"/, "the declared secret NAME reached the tool's env");
+  assert.match(journalText, /"LOG_LEVEL"/, "the environment literal reached the tool");
+  assert.ok(!journalText.includes("IRIS_A4_LEAK"), "an undeclared host var did NOT reach the tool");
+  assert.ok(!journalText.includes(SECRET_VALUE), "the secret VALUE is never journaled (only names are echoed)");
+});
+
+// --- A5: file-mount secrets (Docker "Very Low" tier) ---------------------------
+
+const SECRETCHECK_DESCRIPTOR = {
+  ref: "subprocess://secretcheck",
+  name: "secretcheck",
+  description: "Report whether the secret arrived as a FILE ref (never echoes the value).",
+  inputSchema: { type: "object", properties: {} },
+  retrySafe: true,
+  exec: "secretcheck.mjs",
+};
+// Reports the file-ref presence + that the secret is ABSENT from env. Never echoes
+// the value (it doesn't even read the file) → the journal stays secret-free.
+const SECRETCHECK_JS = `
+import { existsSync } from "node:fs";
+let buf = "";
+process.stdin.on("data", (d) => {
+  buf += d;
+  const nl = buf.indexOf("\\n");
+  if (nl < 0) return;
+  const req = JSON.parse(buf.slice(0, nl));
+  const ref = process.env.GITHUB_TOKEN_FILE;
+  const value = {
+    fileRefPresent: typeof ref === "string" && ref.length > 0,
+    fileExists: typeof ref === "string" ? existsSync(ref) : false,
+    tokenInEnv: process.env.GITHUB_TOKEN === undefined ? "absent" : "present",
+  };
+  process.stdout.write(JSON.stringify({ id: req.id, ok: true, value }) + "\\n");
+  process.exit(0);
+});
+`;
+
+test("A5: --secret-files delivers the secret as a 0600 FILE (value NOT in env, not journaled)", async () => {
+  const root = await tmp("iris-a5-");
+  const src = join(root, "proj");
+  const toolsDir = join(src, "tools");
+  await mkdir(toolsDir, { recursive: true });
+  const agent = {
+    apiVersion: "iris/v1", kind: "Agent", name: "filey", model: "anthropic/claude-x",
+    instructions: "./instructions.md", skills: [],
+    tools: [{ ref: "subprocess://secretcheck" }], connections: [],
+    harness: { bundle: "default" },
+    requires: { local_subprocess: true, tool_locality: "local" },
+    sandbox: { backend: "inmemory", network: "deny-all" },
+    secrets: ["GITHUB_TOKEN"],
+  };
+  await writeFile(join(src, "agent.json"), JSON.stringify(agent, null, 2));
+  await writeFile(join(src, "instructions.md"), "# Instructions\n");
+  await writeFile(join(toolsDir, "secretcheck.tool.json"), JSON.stringify(SECRETCHECK_DESCRIPTOR));
+  await writeFile(join(toolsDir, "secretcheck.mjs"), SECRETCHECK_JS);
+
+  const bundled = await loadBundledTools(toolsDir);
+  const out = join(root, "out");
+  const image = await cmdBuild({ file: join(src, "agent.json"), out, resolver: bundled.resolver });
+
+  // Resolve the scoped env, then convert secrets to FILE mode (the same seams the CLI uses).
+  const SECRET_VALUE = "ghp_file_only_secret";
+  const scoped = resolveToolEnvForImage({
+    secrets: image.agentfile.secrets,
+    platform: process.platform,
+    hostEnv: { ...process.env, GITHUB_TOKEN: SECRET_VALUE } as Record<string, string>,
+    envFiles: [],
+    envInline: [],
+    command: "iris run",
+  });
+  assert.ok(scoped, "scoped env resolved");
+  const secretsDir = await mkdtemp(join(tmpdir(), "iris-a5-secrets-"));
+  const { env, files } = secretFileEnv(scoped, ["GITHUB_TOKEN"], secretsDir);
+  for (const f of files) await writeFile(f.path, f.value, { mode: 0o600 });
+  assert.ok(!("GITHUB_TOKEN" in env), "the secret VALUE is NOT in the env");
+  assert.equal(env.GITHUB_TOKEN_FILE, join(secretsDir, "GITHUB_TOKEN"));
+
+  const store = new MemoryStateStore();
+  const model = makeScriptedModel([
+    { role: "assistant", content: "checking", toolCalls: [{ callId: "c1", name: "secretcheck", args: {} }], stopReason: "tool_use" },
+    { role: "assistant", content: "done", stopReason: "end_turn" },
+  ]);
+  const t = await cmdRun(out, {
+    sessionId: "s", store, scheduler: new MemoryScheduler(), clock: new TestClock(1),
+    modelPerformer: model,
+    toolInvoker: makeToolInvoker({ subprocess: makeSubprocessTransport(bundled.subprocessSpecs, { env }) }),
+    safeTools: bundled.safeToolNames,
+  });
+  assert.equal(t.status, "finished");
+
+  const rows = await store.readJournal("s", 0);
+  const journalText = rows.map((r) => JSON.stringify(decode(r.bytes))).join("\n");
+  assert.match(journalText, /"fileRefPresent":true/, "the tool received GITHUB_TOKEN_FILE");
+  assert.match(journalText, /"fileExists":true/, "the 0600 secret file exists for the tool to read");
+  assert.match(journalText, /"tokenInEnv":"absent"/, "the secret VALUE is absent from the tool's env");
+  assert.ok(!journalText.includes(SECRET_VALUE), "the secret VALUE is never journaled");
 });

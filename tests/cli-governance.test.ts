@@ -41,7 +41,7 @@ test("governancePerformers({policy,inbox}) registers exactly a signal_recv perfo
 
 test("cmdRun with governance: an unauthorized approval is blocked by policy; tool skipped; journaled", async () => {
   const src = await tmp("iris-gov-src-");
-  await cmdInit(src);
+  await cmdInit(src, { json: true });
   const out = await tmp("iris-gov-out-");
   await cmdBuild({ file: join(src, "agent.json"), out, resolver: await scaffoldResolver(src) });
 
@@ -105,7 +105,7 @@ test("loadApprovalPolicy: malformed input fails LOUDLY (no silent ungoverned fal
 // shared inbox before the turn — so governance works with ZERO channel surgery.
 async function serveGoverned(policy: ApprovalPolicy): Promise<{ serve: ServeHandle; store: MemoryStateStore; inbox: ApprovalInbox }> {
   const src = await tmp("iris-gserve-src-");
-  await cmdInit(src);
+  await cmdInit(src, { json: true });
   const out = await tmp("iris-gserve-out-");
   await cmdBuild({ file: join(src, "agent.json"), out, resolver: await scaffoldResolver(src) });
 
@@ -184,7 +184,7 @@ test("iris serve WITHOUT governance: a stray `approve` body is ignored (byte-ide
   // Regression witness: cmdServe with no governance must behave exactly as today —
   // no signal_recv performer, no approval trail, a stray approve field is inert.
   const src = await tmp("iris-nogov-src-");
-  await cmdInit(src);
+  await cmdInit(src, { json: true });
   const out = await tmp("iris-nogov-out-");
   await cmdBuild({ file: join(src, "agent.json"), out, resolver: await scaffoldResolver(src) });
   const store = new MemoryStateStore();

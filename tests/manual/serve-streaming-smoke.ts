@@ -38,7 +38,7 @@ async function main() {
   }
   const root = mkdtempSync(join(tmpdir(), "iris-serve-smoke-"));
   const layout = join(root, "image");
-  await cmdInit(root);
+  await cmdInit(root, { json: true });
   const resolver = (await loadBundledTools(join(root, "tools"))).resolver;
   await cmdBuild({ file: join(root, "agent.json"), out: layout, resolver });
 

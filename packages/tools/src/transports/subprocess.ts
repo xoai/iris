@@ -13,10 +13,18 @@ import { locationHandle, messageOf, toolFailure } from "../invoker.ts";
 export interface SubprocessSpec {
   command: string;
   args?: string[];
+  // When set, the child is spawned with EXACTLY this environment (least-privilege —
+  // initiative 20260620-agentfile-env-secrets); absent → the child inherits the
+  // host's process.env (the historical behavior, byte-identical).
+  env?: Record<string, string>;
 }
 
 export interface SubprocessOptions {
   timeoutMs?: number;
+  // A transport-level env applied to every spec that does not carry its own. The CLI
+  // passes the SCOPED env here (the same declared env for all of a project's tools);
+  // absent → inherit process.env.
+  env?: Record<string, string>;
 }
 
 const DEFAULT_TIMEOUT_MS = 5000;
@@ -31,6 +39,7 @@ export function makeSubprocessTransport(
   options: SubprocessOptions = {},
 ): Transport {
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+  const transportEnv = options.env;
   return {
     invoke(contract, input) {
       const id = locationHandle(contract.location, "subprocess");
@@ -40,8 +49,10 @@ export function makeSubprocessTransport(
           toolFailure(`subprocess tool not registered: "${id}"`, "unknown_tool"),
         );
       }
+      // A per-spec env wins; otherwise the transport-level (scoped) env, if any.
+      const effective = spec.env !== undefined ? spec : transportEnv !== undefined ? { ...spec, env: transportEnv } : spec;
       return exchange(
-        spec,
+        effective,
         { id: `req-${requestSeq++}`, name: contract.name, input },
         timeoutMs,
       );
@@ -63,6 +74,9 @@ function exchange(
   return new Promise<ToolResult>((resolve) => {
     const child = spawn(spec.command, spec.args ?? [], {
       stdio: ["pipe", "pipe", "pipe"],
+      // Absent env → inherit process.env (byte-identical to the historical behavior);
+      // present → the child sees EXACTLY this env (least-privilege scoping).
+      ...(spec.env !== undefined ? { env: spec.env } : {}),
     });
     let stdout = "";
     let stderr = "";

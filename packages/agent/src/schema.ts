@@ -69,6 +69,26 @@ export const AGENTFILE_SCHEMA: { [k: string]: unknown } = {
     harness: { $ref: "#/$defs/harness" },
     requires: { $ref: "#/$defs/capabilityProfile" },
     sandbox: { $ref: "#/$defs/sandbox" },
+    // Env/secrets (initiative 20260620-agentfile-env-secrets). `secrets` = NAMES
+    // of required runtime secrets (VALUES are supplied at run time, never in the
+    // manifest). `environment` = literal NON-secret config defaults.
+    // AGREEMENT-CORPUS FOOTGUN: the zero-dep checker can express only what is
+    // below — secrets is an array of pattern-valid strings, and environment is an
+    // object. It CANNOT express secrets uniqueness, secrets/environment overlap,
+    // environment KEY patterns, or environment VALUE typing. Those are runtime-only
+    // (validateAgentfile) and must NOT be added to the T3 agreement corpus — the
+    // schema accepts them, so a corpus entry would make the two surfaces disagree.
+    secrets: {
+      type: "array",
+      items: { type: "string", minLength: 1, pattern: "^[A-Za-z_][A-Za-z0-9_]*$" },
+      description:
+        "Names of required runtime secrets — values are supplied at run time, never stored in the manifest/image.",
+    },
+    environment: {
+      type: "object",
+      description:
+        "Literal NON-secret config defaults (string values). Object-ness is the shared constraint with the runtime; value coercion/typing is runtime-only.",
+    },
   },
   additionalProperties: true,
   $defs: {

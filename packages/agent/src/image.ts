@@ -136,6 +136,11 @@ export interface ImageInspection {
   content: Record<string, string>; // path → sha256
   tactics: Record<string, { id: string; digest: string }>;
   capabilities: CapabilityProfile;
+  // Declared env/secrets (initiative 20260620-agentfile-env-secrets) — surfaced so
+  // `iris inspect` answers "what secrets does this image require?". NAMES only;
+  // secret VALUES are never stored. Omitted when the image declares neither.
+  secrets?: string[];
+  environment?: Record<string, string>;
 }
 
 /** Human-readable resolved intent of an image (what `iris inspect` prints). */
@@ -148,6 +153,8 @@ export function inspectImage(image: AgentImage): ImageInspection {
     content: image.lock.content,
     tactics: image.lock.tactics,
     capabilities: image.lock.capabilities,
+    ...(image.agentfile.secrets !== undefined ? { secrets: image.agentfile.secrets } : {}),
+    ...(image.agentfile.environment !== undefined ? { environment: image.agentfile.environment } : {}),
   };
 }
 
