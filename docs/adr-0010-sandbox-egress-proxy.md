@@ -78,7 +78,8 @@ un-gate** the docker backend.
   egress, making the secure-by-default claim true for the backend that isolates.
 - Additive and opt-in (zero-value-off): a session with no proxy and a
   deny-all/allow-all policy behaves byte-identically to before — no existing test
-  re-baselined. The unit suite grew 535 → 546 (9 proxy + 2 docker with-proxy).
+  re-baselined. This initiative added 11 unit tests (9 proxy + 2 docker
+  with-proxy); after integrating concurrent `main`, the full suite stands at 559.
 - No runtime dependency added (`node:http`/`node:net` only; `@iris/core` and the
   kernel untouched).
 - **Out of scope (pre-existing gap):** wiring the docker sandbox / sandboxed tool
