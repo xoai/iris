@@ -1,8 +1,14 @@
-# Iris
+<div align="center">
+  <a href="https://github.com/xoai/iris">
+    <picture>
+      <img alt="iris logo" src="./assets/iris-logo-darkmode-bg.png" height="128">
+    </picture>
+  </a>
+  <h1>IRIS</h1>
+  <h3>A portable runtime for durable AI agents</h3>
+</div>
 
 ![Node](https://img.shields.io/badge/node-%E2%89%A5%2024-339933?logo=nodedotjs&logoColor=white) ![runtime deps](https://img.shields.io/badge/runtime%20deps-0-success) ![tests](https://img.shields.io/badge/tests-535%2F535-success) ![license](https://img.shields.io/badge/license-MIT-blue)
-
-**Build agents in a folder. Run them anywhere. Never lose a session.**
 
 Iris is a portable runtime for durable AI agents — built so an agent is never locked to a single host, model, or vendor. You declare an agent as a config file plus a folder (instructions, tools, skills, channels), and `iris build` compiles it into an open, content-addressed image: the unit you version, push to any OCI registry, and run anywhere.
 
