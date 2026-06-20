@@ -1,6 +1,6 @@
 // makeChannelSession unit pins. runTurn is injected
 // directly here, so the token-rotation rule and the refusal taxonomy are tested in
-// isolation — including the §10 correction: a non-committed outcome (contended/aborted)
+// isolation — including the correction: a non-committed outcome (contended/aborted)
 // KEEPS the prior token, a committed outcome (finished/parked) rotates it.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -61,7 +61,7 @@ test("channel-core: a COMMITTED continue (parked) also rotates", async () => {
   if (r.ok) assert.notEqual(r.token, token, "parked is committed → rotate");
 });
 
-test("channel-core: a CONTENDED continue KEEPS the prior token (the §10 correction)", async () => {
+test("channel-core: a CONTENDED continue KEEPS the prior token (the correction)", async () => {
   const statuses: Status[] = ["finished", "contended"];
   let i = 0;
   const session = makeSession(() => statuses[i++] ?? "finished");
@@ -74,7 +74,7 @@ test("channel-core: a CONTENDED continue KEEPS the prior token (the §10 correct
   }
 });
 
-test("channel-core: an ABORTED continue KEEPS the prior token (the §10 correction)", async () => {
+test("channel-core: an ABORTED continue KEEPS the prior token (the correction)", async () => {
   const statuses: Status[] = ["finished", "aborted"];
   let i = 0;
   const session = makeSession(() => statuses[i++] ?? "finished");

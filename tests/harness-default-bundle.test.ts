@@ -1,4 +1,4 @@
-// Task 10 (M2): defaultBundle() wires react + window-compaction + tool-repair +
+// Task 10: defaultBundle() wires react + window-compaction + tool-repair +
 // approve-irreversible into ONE pure tactic performer (seam → composed chain) plus
 // the kernel invariant caps. The runner injects that performer as `tactic`. A
 // safe-tool loop runs to finish; an irreversible (unknown) tool defaults to ask

@@ -1,4 +1,4 @@
-// Single-writer lease over StateStore.cas (spec §3.6). The returned monotonic
+// Single-writer lease over StateStore.cas. The returned monotonic
 // Version is the FENCE. Mutual exclusion is enforced not at acquire time but by
 // FENCING: a taken-over old holder is rejected by the store's fenced append
 // (stale_fence). This is the robust fencing-token model — acquire-time locking

@@ -1,4 +1,4 @@
-// The docker sandbox backend (spec §3.6) — REAL isolation via the
+// The docker sandbox backend — REAL isolation via the
 // `docker` CLI: `docker run --network none` by default with a /workspace volume.
 // Host-side (node:child_process + node:fs). Docker is unavailable in the install-
 // free unit env, so this backend is exercised by `tests/smoke/docker-smoke.ts` only;

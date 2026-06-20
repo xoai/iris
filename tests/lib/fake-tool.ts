@@ -1,5 +1,5 @@
-// Simulated in-process `tool_call` performer for M2 (real protocol-boundary
-// tools + sandbox are M3). The kernel's `tool_exec` phase emits a `tool_call`
+// Simulated in-process `tool_call` performer (real protocol-boundary tools +
+// sandbox come later). The kernel's `tool_exec` phase emits a `tool_call`
 // effect whose request is a tool call `{ name, args }`; this fixture runs the
 // scripted outcome so harness tests can drive success / error / repair paths
 // deterministically. `callIndex` (0-based, per performer instance) lets a test

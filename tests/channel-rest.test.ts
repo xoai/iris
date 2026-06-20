@@ -1,4 +1,4 @@
-// T4 (M-Proof) — the REST channel's TWO-IDENTIFIER protocol. The channel
+// T4 — the REST channel's TWO-IDENTIFIER protocol. The channel
 // MINTS the sessionId and ISSUES the continuationToken; a follow-up message must
 // present the issued token (round-trip: issue → present-on-next) and gets a NEW
 // token back. A missing / stale / malformed token — or a message to an unknown

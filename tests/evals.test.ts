@@ -1,4 +1,4 @@
-// T3 (M5) — the reproducible-eval arbiter (spec 03 §7: reproducibility, not taste).
+// T3 — the reproducible-eval arbiter (reproducibility, not taste).
 // runEval calls case.build() on EVERY invocation → a fresh store AND fresh
 // performers (the scripted-model/-tool closure index resets to 0); within one run
 // deps.performers persist across the `turns`. It runs EXACTLY `turns` runTurn calls

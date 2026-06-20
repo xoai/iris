@@ -1,4 +1,4 @@
-// Task 11 (M2) — C4 HEADLINE: every seam decision is journaled, and replay NEVER
+// Task 11 — C4 HEADLINE: every seam decision is journaled, and replay NEVER
 // re-invokes a tactic. Proof: run a default-bundle turn live (recording the seam
 // decisions), then (1) pure replay() with ZERO performers reconstructs the
 // multi-decision turn byte-identically, and (2) resuming with a DIFFERENT tactic

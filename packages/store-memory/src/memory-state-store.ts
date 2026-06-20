@@ -1,7 +1,7 @@
 // A real in-memory StateStore enforcing the SAME invariants as the SQLite store:
 // CAS on the kv/lease key, atomic fenced append, dense seq, and a high-water mark
 // that survives truncation. NO test backdoors — this is a production port impl
-// (the M0 brief sanctions an in-memory store "as a port impl that still enforces
+// (the brief sanctions an in-memory store "as a port impl that still enforces
 // CAS"), used as store B for cross-store resume and as a fast unit store.
 import type {
   StateStore,
@@ -79,7 +79,7 @@ export class MemoryStateStore implements StateStore {
     bytes: Uint8Array,
   ): Promise<void> {
     this.snapshots.set(sessionId, { upToSeq, bytes });
-    // Seed the high-water mark (spec §3.4). Normal callers pass upToSeq === hwm
+    // Seed the high-water mark. Normal callers pass upToSeq === hwm
     // (no-op); the only caller with upToSeq > hwm is migration seeding an empty
     // destination, which needs hwm advanced so the migrated tail (starting at
     // upToSeq+1) satisfies the density check.

@@ -1,4 +1,4 @@
-// Registry resolver seam (spec §3.3). The builder resolves each Agentfile tool/
+// Registry resolver seam. The builder resolves each Agentfile tool/
 // connection ref (which may carry a version range `@^2`) to a concrete
 // ToolContract. Install-free: makeLocalResolver over an in-memory map; the real
 // external registry is a manual smoke. Host-side.

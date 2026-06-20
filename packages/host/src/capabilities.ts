@@ -1,7 +1,7 @@
 // The capability-diff DEPLOY gate. Where
 // `checkHostCapabilities` (adapter.ts) is the build/tool-level boolean refusal,
 // `assertDeployable` is the DEPLOY-time check of an image's CapabilityProfile
-// against a HostAdapter — a different axis (spec §2.4). It diffs TWO dimensions:
+// against a HostAdapter — a different axis. It diffs TWO dimensions:
 //
 //   • the boolean caps (long_running/local_subprocess/filesystem/websockets) —
 //     the SAME rule checkHostCapabilities uses: requires[k]===true but the host

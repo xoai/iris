@@ -1,10 +1,10 @@
-// HostAdapter (Spec 04 §3): a host is just {name, capabilities, store, scheduler}.
+// HostAdapter: a host is just {name, capabilities, store, scheduler}.
 // `runTurnOn` runs a turn ON a host's store+scheduler — the host convenience that
 // makes "the SAME image, a DIFFERENT host" explicit. It REPLACES the framework's
 // enterTurn(sessionId,event) member (there is nothing to replace — no core type);
 // it is a thin call into the engine's runTurn with the adapter's ports injected.
 // `checkHostCapabilities` is the tool/host-level capability refusal (the FULL host
-// capability-diff gate stays deferred to M6). Host-side; core stays pure.
+// capability-diff gate stays deferred). Host-side; core stays pure.
 import { runTurn } from "@irisrun/core";
 import type {
   StateStore,
@@ -70,7 +70,7 @@ export async function runTurnOn<S extends Json>(
 }
 
 // The boolean capability keys (tool_locality is a profile STRING, not a gateable
-// boolean, so it is not part of this refusal — the full degrade/refuse matrix is M6).
+// boolean, so it is not part of this refusal — the full degrade/refuse matrix is deferred).
 const BOOLEAN_CAPS = [
   "long_running",
   "local_subprocess",
@@ -83,7 +83,7 @@ const BOOLEAN_CAPS = [
  * REQUIRES (`requires[k] === true`), the host must PROVIDE it (`capabilities[k]
  * === true`). `undefined`/`false` on the host means NOT satisfied — never silently
  * widened (cf. the secure-floor posture). Refuses LOUDLY, naming the gaps; the
- * full host capability-diff gate is deferred to M6.
+ * full host capability-diff gate is deferred.
  */
 export function checkHostCapabilities(
   requires: CapabilityProfile,

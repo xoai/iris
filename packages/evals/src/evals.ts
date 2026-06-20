@@ -1,4 +1,4 @@
-// The reproducible-eval arbiter (spec 03 §7): "reproducible evals are the arbiter,
+// The reproducible-eval arbiter: "reproducible evals are the arbiter,
 // not editorial taste." An EvalCase is a DETERMINISTIC scenario; a Scorer reads the
 // recorded session (via @irisrun/inspect) and the last turn outcome. runEval calls
 // case.build() on EVERY invocation, so it gets a FRESH store AND fresh performers

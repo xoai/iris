@@ -1,8 +1,8 @@
-// T3 (M-Proof) — THE DoD: cross-host resume. The SAME M4 agent image starts a
+// T3 — THE DoD: cross-host resume. The SAME agent image starts a
 // session on host A (sqlite, long-running), parks at a turn boundary via HITL, and
 // RESUMES on host B (serverless-fs) from the SAME journal — a deterministic replay
 // with identical output. This is ASSEMBLY of shipped parts: migrateSession (A→B,
-// store-only), acquireLease, the always-on replay assertion, and the M4 image.
+// store-only), acquireLease, the always-on replay assertion, and the image.
 // ZERO engine change.
 //
 // Extends tests/cross-store.test.ts (the control + canonicalize-equality pattern)
@@ -34,7 +34,7 @@ import { makeFakeTool, type ToolCallLog } from "./lib/fake-tool.ts";
 import { makeFakeSignal } from "./lib/fake-signal.ts";
 
 const INPUT = { messages: [{ role: "user", content: "go" }] };
-// The default M4 bundle gates the irreversible "rm" tool to ASK → the kernel parks
+// The default bundle gates the irreversible "rm" tool to ASK → the kernel parks
 // on the hitl:<callId> signal; the resume approves it and the loop finishes.
 const ONE_TOOL_THEN_DONE: Json[] = [
   { role: "assistant", content: "tool", toolCalls: [{ callId: "a", name: "rm", args: {} }], stopReason: "tool_use" },
@@ -44,7 +44,7 @@ const ONE_TOOL_THEN_DONE: Json[] = [
 const bundle = defaultBundle({ safeTools: [] }); // nothing is safe → "rm" → ask → park
 const program = harnessProgram(INPUT, { invariants: bundle.invariants });
 
-// Build a REAL M4 image and use its imageDigest as the governing defDigest on BOTH
+// Build a REAL image and use its imageDigest as the governing defDigest on BOTH
 // hosts and the control — that is what makes it "the same image" (no checked-in
 // digest constant). The image's tool list is irrelevant to the runtime gate above;
 // it is used here only for its content-addressed digest pin.
@@ -84,7 +84,7 @@ function controlDeps(
   };
 }
 
-test("T3 DoD: same M4 image — start+park on host A (sqlite), migrate A→B, resume on host B (fs); replay + output identical to a single-host control; pin held", async () => {
+test("T3 DoD: same image — start+park on host A (sqlite), migrate A→B, resume on host B (fs); replay + output identical to a single-host control; pin held", async () => {
   const digest = await buildDemoImageDigest();
   assert.match(digest, /^[0-9a-f]{64}$/, "a real, content-addressed image digest");
 

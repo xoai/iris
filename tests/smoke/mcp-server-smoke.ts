@@ -5,7 +5,7 @@
 // Exercises the @irisrun/channel-mcp `serve()` stdio FRAMING path (newline-delimited
 // JSON-RPC over a stream) — the part the in-memory `handle()` unit test cannot
 // stand in for. It is the agent-AS-MCP-server channel; distinct from the existing
-// M3 `tests/smoke/mcp-smoke.ts` (agent-AS-CONSUMER-of-MCP-tools). Install-free: it pipes
+// `tests/smoke/mcp-smoke.ts` (agent-AS-CONSUMER-of-MCP-tools). Install-free: it pipes
 // JSON-RPC lines through a PassThrough pair (a real client over real stdio is a
 // further future smoke).
 import assert from "node:assert/strict";

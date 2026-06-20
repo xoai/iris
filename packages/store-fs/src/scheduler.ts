@@ -1,4 +1,4 @@
-// FsScheduler — a Scheduler (spec §3.3) over DURABLE files: no held process. A
+// FsScheduler — a Scheduler over DURABLE files: no held process. A
 // timer/signal is a file under <root>/_wake/; a host re-enters "acquire lease →
 // replay → continue" when one fires (the serverless "enqueue a delayed
 // invocation" model). Mirrors the reference schedulers' conformance: dueWakeups

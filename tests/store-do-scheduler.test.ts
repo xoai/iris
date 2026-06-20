@@ -1,4 +1,4 @@
-// M6 T3 — @irisrun/store-do DoScheduler + edgeHost (spec §2.3, §2.4). Mirrors the
+// T3 — @irisrun/store-do DoScheduler + edgeHost. Mirrors the
 // FsScheduler conformance (dueWakeups PEEKS at-least-once; confirmWoken consumes
 // AFTER the resumed turn commits; durable across a cold isolate) AND adds the DO
 // alarm wiring: sleepUntil sets the DO alarm to the EARLIEST due time across all

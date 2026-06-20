@@ -1,12 +1,12 @@
-// edgeHost — the Cloudflare/edge HostAdapter factory (spec §2.4). Returns the
+// edgeHost — the Cloudflare/edge HostAdapter factory. Returns the
 // {name, capabilities, store, scheduler} shape `runTurnOn` consumes, wiring a
 // DoStateStore + DoScheduler over the given DoStorage. The capability profile is
 // REMOTE-ONLY: long_running:false (an isolate does not hold a turn across
 // invocations — it parks on the DO alarm), local_subprocess:false +
 // tool_locality:"remote" (edge tools are remote MCP only). This is the profile
-// the §3 capability gate refuses an over-capable image against. The default
+// the capability gate refuses an over-capable image against. The default
 // name "Cloudflare" is BOTH the stable per-host writer identity AND the target
-// label the §3 refusal message interpolates — so the rendered refusal is
+// label the refusal message interpolates — so the rendered refusal is
 // byte-identical to the example.
 //
 // The package deps only @irisrun/core, so the HostAdapter SHAPE is declared

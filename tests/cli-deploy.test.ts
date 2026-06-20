@@ -1,5 +1,5 @@
 // `iris deploy` (Cloudflare Durable Objects, supported path).
-// cmdDeploy reads an image, runs the M6 capability-diff gate (assertDeployable), and
+// cmdDeploy reads an image, runs the capability-diff gate (assertDeployable), and
 // scaffolds a Worker project (wrangler.toml + worker.mjs). A remote-only image
 // scaffolds; an image demanding local_subprocess tools is REFUSED with the
 // byte-identical message and writes ZERO files (the gate runs before any

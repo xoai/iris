@@ -1,4 +1,4 @@
-// The tool-repair default tactic (spec §3.7): bounded retry + schema-repair on the
+// The tool-repair default tactic: bounded retry + schema-repair on the
 // onToolError seam. If the tool suggested a structured `fix`, apply it once as a
 // patch (repair); otherwise retry transient failures up to `maxAttempts`, then give
 // up. `attempt` is the failure count so far for the current call (the kernel

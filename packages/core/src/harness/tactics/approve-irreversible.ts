@@ -1,4 +1,4 @@
-// approve-irreversible (spec §3.7): the gateAction tactic that realizes the
+// approve-irreversible: the gateAction tactic that realizes the
 // gate-irreversible-by-default floor. Known safe (read-only / reversible) tools
 // are allowed; everything else — irreversible or unknown — defaults to "ask".
 //

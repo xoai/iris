@@ -1,10 +1,10 @@
-// Sandbox boundary types (spec §3.6, Spec 04 §5). Untrusted tool code
+// Sandbox boundary types. Untrusted tool code
 // runs inside a SandboxSession rooted at /workspace, with a deny-all network
 // floor and credential brokering — secrets are injected ONLY at the egress
 // firewall, never materialized inside the sandbox. Host-side.
 
 // "deny-all" is the secure default; "allow-all" is open; {allow} is a host
-// allowlist. (spawn() for long-running tools — Spec 04 §5 — is deferred: M3 tools
+// allowlist. (spawn() for long-running tools is deferred: current tools
 // are request/response, so only the blocking `run` is needed.)
 export type NetworkPolicy = "deny-all" | "allow-all" | { allow: string[] };
 

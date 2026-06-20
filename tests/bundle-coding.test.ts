@@ -1,4 +1,4 @@
-// M6 T6 — @irisrun/bundle-coding, the first domain bundle. A HOST-SIDE package that
+// T6 — @irisrun/bundle-coding, the first domain bundle. A HOST-SIDE package that
 // composes coding-specialized tactics on the 5 seams from core's EXPORTED
 // primitives (core stays byte-untouched). It produces the SAME journaled
 // `{seam, tacticId, choice}` shape as defaultBundle, so the replay quarantine

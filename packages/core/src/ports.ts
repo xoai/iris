@@ -1,4 +1,4 @@
-// The two host ports (spec §4.2, §4.3; framework Spec 00 §ports). The core
+// The two host ports. The core
 // depends only on these; host adapters implement them. Types only.
 
 export type Version = number; // monotonic per key — the fencing token
@@ -27,7 +27,7 @@ export interface StateStore {
   ): Promise<CasResult>;
 
   // Journal: atomic, dense, fenced append. The fence check, the expectedSeq
-  // check, and the insert MUST be one atomic operation (spec §3.6).
+  // check, and the insert MUST be one atomic operation.
   append(
     sessionId: string,
     expectedSeq: number,
@@ -36,7 +36,7 @@ export interface StateStore {
   ): Promise<AppendResult>;
   readJournal(sessionId: string, fromSeq: number): Promise<JournalRow[]>;
 
-  // Snapshots: bound replay cost (spec §3.7).
+  // Snapshots: bound replay cost.
   writeSnapshot(
     sessionId: string,
     upToSeq: number,

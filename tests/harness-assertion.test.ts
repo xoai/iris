@@ -1,4 +1,4 @@
-// Task 11 (M2) — C6: the always-on replay-consistency assertion stays green across
+// Task 11 — C6: the always-on replay-consistency assertion stays green across
 // default-bundle turns. With assertReplay ON the engine re-runs replay and asserts
 // byte-equality after EVERY committed step, throwing ReplayDivergenceError on any
 // divergence — so a turn that finishes/parks is itself the proof the harness never

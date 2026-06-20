@@ -1,4 +1,4 @@
-// The real `tool_call` performer (spec §3.5). Replaces M2's simulated in-process
+// The real `tool_call` performer. Replaces the earlier simulated in-process
 // performer: given the kernel's `tool_call` effect request (a ToolCall
 // {callId,name,args}), resolve the ToolContract by name and invoke it across the
 // real protocol boundary via the ToolInvoker. The engine's effect/recovery/replay

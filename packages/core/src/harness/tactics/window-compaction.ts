@@ -1,4 +1,4 @@
-// window-compaction (spec §3.7): when a token budget is exceeded, compact the
+// window-compaction: when a token budget is exceeded, compact the
 // context by keeping a trailing window of the most recent messages. The decision
 // IS the compacted context (the shouldCompact tactic effect's result value), so
 // the kernel folds it into HarnessState.ctx and replay reproduces it exactly

@@ -1,6 +1,6 @@
 // DoStateStore — a StateStore over a Cloudflare Durable Object's storage (the
-// narrow DoStorage abstraction), under the edge cold-per-isolate model (spec
-// §2.2): the store holds NO mutable session state, so a FRESH instance over the
+// narrow DoStorage abstraction), under the edge cold-per-isolate model: the
+// store holds NO mutable session state, so a FRESH instance over the
 // same DoStorage behaves identically to a reused one (the edge analogue of the
 // serverless cold-per-turn invariant). It enforces the SAME invariants as the
 // sqlite/fs stores — true CAS, fenced+dense append (stale_fence precedence over
@@ -67,7 +67,7 @@ function decodeKv(bytes: Uint8Array): KvRecord {
 }
 // Web-standard base64 (btoa/atob are globals on BOTH Node 24 and the edge V8
 // isolate) — NO Node `Buffer`, so @irisrun/store-do needs no `nodejs_compat` flag on
-// Cloudflare Workers. This keeps the edge adapter genuinely edge-native (the M6
+// Cloudflare Workers. This keeps the edge adapter genuinely edge-native (the
 // portability claim). Journal/snapshot records are small, so the per-byte loop is fine.
 function toB64(bytes: Uint8Array): string {
   let s = "";

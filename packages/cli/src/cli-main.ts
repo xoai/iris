@@ -226,7 +226,7 @@ async function runCommand(argv: string[]): Promise<void> {
   if (!layout) throw new Error("usage: iris run <layoutdir> --session <id> [--db <path>] [--tools <dir>] [--subagents <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]");
   const session = flag(argv, "--session") ?? "default";
   const db = flag(argv, "--db") ?? ":memory:";
-  // §9: a deploy-time endpoint override. The model-id prefix still selects the
+  // A deploy-time endpoint override. The model-id prefix still selects the
   // protocol; --base-url (or IRIS_MODEL_BASE_URL) only redirects WHERE that protocol's
   // request is sent — point a portable image at any compatible endpoint. Undefined →
   // the provider's default URL.
@@ -271,7 +271,7 @@ async function serveCommand(argv: string[]): Promise<void> {
   const db = flag(argv, "--db") ?? "./iris-serve.sqlite"; // a server wants durability (cf. run's :memory:)
   const modelOpt = flag(argv, "--model") ?? "auto";
   const web = argv.includes("--web"); // serve the web chat UI at GET /
-  // §9: deploy-time endpoint override (see runCommand). The echo branch ignores it.
+  // Deploy-time endpoint override (see runCommand). The echo branch ignores it.
   const baseUrl = flag(argv, "--base-url") ?? process.env.IRIS_MODEL_BASE_URL;
 
   // Opt-in governance: --policy loads a who-may-approve policy + an
@@ -424,7 +424,7 @@ async function chatCommand(argv: string[]): Promise<void> {
   // Select the provider from the image's model-id prefix; use that provider's key.
   const providerName = providerNameForModel(image.lock.model.id);
   const providerEnvKey = providerDescriptor(providerName).envKey;
-  // §9: deploy-time endpoint override (see runCommand). Ignored on the fake path.
+  // Deploy-time endpoint override (see runCommand). Ignored on the fake path.
   const baseUrl = flag(argv, "--base-url") ?? process.env.IRIS_MODEL_BASE_URL;
   const hasKey =
     typeof process.env[providerEnvKey] === "string" && process.env[providerEnvKey] !== "";
@@ -518,7 +518,7 @@ async function deployCommand(argv: string[]): Promise<void> {
     }
     const { spawn } = await import("node:child_process");
     // Pre-flight: refuse BEFORE cmdDeploy writes the scaffold if wrangler is absent
-    // (strict gate-before-write, spec §3.2). The runner's onerror stays as a backstop.
+    // (strict gate-before-write). The runner's onerror stays as a backstop.
     const wranglerAvailable = await new Promise<boolean>((resolve) => {
       const probe = spawn("wrangler", ["--version"], { stdio: "ignore" });
       probe.on("error", () => resolve(false));
@@ -727,7 +727,7 @@ async function journalCommand(argv: string[]): Promise<void> {
 
 // `iris providers [--matrix]` — read-only. Lists the two protocols + how to point a
 // portable image at any compatible endpoint; `--matrix` prints the conformance-verified
-// compatibility matrix (§9). Pure print over @irisrun/provider-compat — no I/O, no key.
+// compatibility matrix. Pure print over @irisrun/provider-compat — no I/O, no key.
 function providersCommand(argv: string[]): void {
   if (argv.includes("--matrix")) {
     console.log(renderCompatMatrix());
@@ -798,7 +798,7 @@ async function main(argv: string[]): Promise<void> {
       console.log(agentfileSchemaJson());
       break;
     case "providers":
-      // List model protocols + config; `--matrix` prints the compatibility matrix (§9).
+      // List model protocols + config; `--matrix` prints the compatibility matrix.
       providersCommand(argv);
       break;
     case "verify": {

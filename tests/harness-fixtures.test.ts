@@ -1,6 +1,6 @@
-// Task 2 (M2): the host-side performer fixtures the kernel will drive — a
-// simulated in-process `tool_call` performer (real protocol-boundary tools are
-// M3) and a `signal_recv` performer that returns a pre-arranged HITL approval.
+// Task 2: the host-side performer fixtures the kernel will drive — a
+// simulated in-process `tool_call` performer (real protocol-boundary tools come
+// later) and a `signal_recv` performer that returns a pre-arranged HITL approval.
 // These assert the fixture CONTRACT (Json-shaped Outcome) the later harness
 // tests rely on.
 import { test } from "node:test";

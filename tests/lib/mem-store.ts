@@ -1,6 +1,6 @@
 // In-memory port implementations for fast unit tests. These STILL enforce CAS
 // and fencing exactly like the SQLite store — they never bypass determinism/CAS
-// checks (spec §2). Used by Tasks 7–12.
+// checks. Used by Tasks 7–12.
 import type {
   StateStore,
   Scheduler,

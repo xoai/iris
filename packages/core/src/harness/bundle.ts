@@ -1,4 +1,4 @@
-// The default tactic bundle (spec §3.7): react (assembleContext + decideNext),
+// The default tactic bundle: react (assembleContext + decideNext),
 // window-compaction (shouldCompact), tool-repair (onToolError), and
 // approve-irreversible (gateAction). `defaultBundle()` returns a PURE tactic
 // performer — a single function that, given a `{seam, payload}` request, runs that

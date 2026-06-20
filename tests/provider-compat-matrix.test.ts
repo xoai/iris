@@ -1,4 +1,4 @@
-// Per-endpoint conformance — the §9 done-when realized (plan T9.3): "a documented
+// Per-endpoint conformance: "a documented
 // matrix where each listed endpoint passes (or is flagged against) the record-replay
 // conformance suite." For EVERY entry, the matching adapter is built with the entry's
 // baseUrl and an injected fetch returning that protocol's representative response; the
@@ -75,7 +75,7 @@ for (const e of COMPAT_MATRIX) {
 }
 
 test("compat-conformance: replay-safe ⇒ no note; known-divergent ⇒ note flags the divergence", () => {
-  // The done-when's "(or is flagged against)" half: known-divergent endpoints are
+  // The "(or is flagged against)" half: known-divergent endpoints are
   // explicitly flagged so a user knows they need auth/URL/transport adaptation.
   for (const e of COMPAT_MATRIX) {
     if (e.replaySafety === "replay-safe") {

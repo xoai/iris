@@ -73,7 +73,7 @@ export interface Tactic<S extends SeamName> {
 
 export type TacticChain<S extends SeamName> = ReadonlyArray<Tactic<S>>;
 
-// ── Composition / precedence (spec §3.5) ────────────────────────────────────
+// ── Composition / precedence ────────────────────────────────────────────────
 
 const GATE_RANK: Record<GateChoice, number> = { allow: 0, ask: 1, deny: 2 };
 

@@ -1,4 +1,4 @@
-// Snapshot trigger policy (spec §3.7). Snapshots bound replay cost; the engine
+// Snapshot trigger policy. Snapshots bound replay cost; the engine
 // calls this only AFTER a complete effect or a marker, so a snapshot boundary
 // never bisects an effect_intent/effect_result pair.
 export function shouldSnapshot(

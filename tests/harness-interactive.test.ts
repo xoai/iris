@@ -230,7 +230,7 @@ test("interactive: a user_recv value without string content throws loudly", asyn
   );
 });
 
-// ── 7. Interactive × tool loop (spec §5.6) ──────────────────────────────────
+// ── 7. Interactive × tool loop ──────────────────────────────────────────────
 
 const ONE_TOOL_THEN_DONE: Json[] = [
   { role: "assistant", content: "tool", toolCalls: [{ callId: "a", name: "rm", args: {} }], stopReason: "tool_use" },

@@ -1,4 +1,4 @@
-// T1 (M5) — the agent exposed AS an MCP server (MCP is dual-use). A
+// T1 — the agent exposed AS an MCP server (MCP is dual-use). A
 // minimal-but-faithful MCP server over JSON-RPC 2.0: initialize / tools/list /
 // tools/call {start,message}. It speaks the SAME two-identifier protocol as the
 // REST channel (channel MINTS sessionId, ISSUES + ROTATES the continuationToken,

@@ -1,4 +1,4 @@
-// M6 T4 — the edge done-when #1: "an edge-compatible agent (remote tools, no
+// T4 — the edge proof: "an edge-compatible agent (remote tools, no
 // local subprocess) runs on the edge adapter." Three proofs, all install-free
 // against FakeDoStorage + a sqlite/fs control:
 //
@@ -263,7 +263,7 @@ test("T4(c) cross-host migrate-to-edge: park on fs (real snapshot boundary), mig
   assert.equal(parked.status, "parked");
   assert.deepEqual(parked.status === "parked" ? parked.wait : null, { kind: "signal", name: "hitl:a" });
 
-  // NON-VACUOUS: the source snapshotted+truncated before parking (the M-Proof rule)
+  // NON-VACUOUS: the source snapshotted+truncated before parking (the rule)
   const snap = await source.store.readLatestSnapshot(sid);
   assert.ok(snap, "the source must have crossed a snapshot boundary before the park");
 
@@ -276,7 +276,7 @@ test("T4(c) cross-host migrate-to-edge: park on fs (real snapshot boundary), mig
   assert.ok(await edge.store.readLatestSnapshot(sid), "the edge store has the migrated snapshot");
 
   // resume on the EDGE host from the SAME journal (a fresh DoScheduler — resume is
-  // signal-driven from the journal, as in M-Proof). assertReplay stays green.
+  // signal-driven from the journal). assertReplay stays green.
   const resumed = await runTurnOn(edge, {
     sessionId: sid, defDigest: digest, program: hitlProgram, performers: abPerformers,
     clock: new TestClock(1), assertReplay: true,

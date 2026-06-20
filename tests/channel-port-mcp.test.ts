@@ -1,6 +1,6 @@
 // channel-mcp runs the shared channel-port conformance suite — "two channels pass the same port conformance suite", MCP half. Drives the
 // REAL handle() JSON-RPC surface; a makeFlippableStore lets the suite force
-// contended/aborted. Until §10's refactor, MCP rotates on contended/aborted — those
+// contended/aborted. Until the refactor, MCP rotates on contended/aborted — those
 // two assertions are the load-bearing red→green proof of the unified rule.
 import type { Program, Json, JournalRecord } from "@irisrun/core";
 import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";

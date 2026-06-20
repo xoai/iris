@@ -1,4 +1,4 @@
-// Journal record model (spec §4.1, framework Spec 01 §1). Types only — the
+// Journal record model. Types only — the
 // journal is the single source of truth; state is reconstructed by replaying it.
 
 import type { Json } from "./json.ts";
@@ -11,7 +11,7 @@ export type RecordKind =
   | "decision"
   | "marker";
 
-// `clock`, `echo`, and `model_call` have wired performers; `tactic` is the M2
+// `clock`, `echo`, and `model_call` have wired performers; `tactic` is the
 // harness seam consultation — performed host-side via the existing
 // PerformerRegistry exactly like model_call, so replay never re-invokes it. The
 // rest are reserved entry types (each wired by the package that owns its effect,
@@ -48,7 +48,7 @@ export interface EffectResult {
 }
 
 // Control-flow choice from a harness tactic. Record type ships for
-// forward-compat; the engine does not emit decisions in this slice (spec §3.2).
+// forward-compat; the engine does not emit decisions in this slice.
 export interface Decision {
   seam: string;
   tacticId: string;
@@ -67,7 +67,7 @@ export type Marker =
   // record-only in this slice: snapshots are written to the store's snapshot
   // table, not appended to the journal. Type ships for forward-compat.
   | { marker: "snapshot"; upToSeq: number }
-  // version stamp; record-only here (migration lands in M4).
+  // version stamp; record-only here.
   | { marker: "upgraded"; from: string; to: string; atTurn: number };
 
 export type RecordPayload = EffectIntent | EffectResult | Decision | Marker;
@@ -78,7 +78,7 @@ export interface JournalRecord {
   defDigest: string; // governing image digest for this segment
   kind: RecordKind;
   payload: RecordPayload;
-  // DETERMINISM CONTRACT (spec §3.8): `reducer` and `step` MUST NOT read `ts`.
+  // DETERMINISM CONTRACT: `reducer` and `step` MUST NOT read `ts`.
   // It is audit/observability metadata only. Application time must flow through
   // a `clock` effect (its value lands in state via a result), never via
   // record.ts. A reducer that branches on `ts` is a determinism leak the replay

@@ -1,4 +1,4 @@
-// Two-tier verification of a portable export (spec §4). NEVER throws — any bad
+// Two-tier verification of a portable export. NEVER throws — any bad
 // input (non-JSON envelope, non-canonical/Infinity record payload, base64
 // failure) becomes ok:false with a named issue. Tier 1 (content-address +
 // structure + canonical-bytes) needs ONLY the file. Tier 2 (replay-determinism)

@@ -1,4 +1,4 @@
-// Task 6 (M2) — C1 repair path: a tool failure routes to the onToolError seam.
+// Task 6 — C1 repair path: a tool failure routes to the onToolError seam.
 // tool-repair does bounded retry, applies a tool-suggested fix (repair), or gives
 // up. The kernel re-runs the call on retry/repair and advances on giveUp; the loop
 // still finishes. All journaled; replay byte-identical.

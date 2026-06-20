@@ -1,4 +1,4 @@
-// iris CLI command functions (spec §3.8). Each is a thin shell over @irisrun/agent +
+// iris CLI command functions. Each is a thin shell over @irisrun/agent +
 // @irisrun/core, with deps INJECTED so they are unit-testable without a registry, a
 // real model, or Docker. The argv dispatcher (cli-main.ts) wires real fs/host
 // defaults. Host-side; zero external deps (only node: builtins + workspace pkgs).
@@ -547,7 +547,7 @@ export async function cmdServe(layoutdir: string, opts: CliServeOptions): Promis
 //
 // Promotes the edge target from a hand-edited manual smoke
 // (tests/smoke/cloudflare-workers-smoke.ts) to a turnkey, TESTED command: read the image,
-// run the M6 capability-diff gate (assertDeployable) and refuse an over-capable image
+// run the capability-diff gate (assertDeployable) and refuse an over-capable image
 // LOUDLY BEFORE writing anything, then scaffold a self-contained Worker
 // project (wrangler.toml + worker.mjs generalizing the smoke's inline DO class).
 // The terminal `wrangler deploy` network egress stays ENV-GATED (operator-installed

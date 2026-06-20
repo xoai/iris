@@ -1,4 +1,4 @@
-// In-process transport (spec §3.3): calls a registered JS function directly —
+// In-process transport: calls a registered JS function directly —
 // trusted, same-language, fastest; the `tool_locality:"in-process"` case. The
 // contract's location ("inproc://<id>") selects the registered fn. Host-side.
 import type { Json } from "@irisrun/core";

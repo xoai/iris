@@ -1,4 +1,4 @@
-// The inmemory sandbox backend (spec §3.6) — carries the unit suite. /workspace
+// The inmemory sandbox backend — carries the unit suite. /workspace
 // is an in-memory map; network defaults to deny-all; `run` executes a small
 // deterministic command allowlist. Network egress goes through a firewall that
 // consults the policy and the credential broker, so a secret is brokered at the

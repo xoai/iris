@@ -1,4 +1,4 @@
-// T5 (M-Proof) — HostAdapter parity + the tool/host-level capability check.
+// T5 — HostAdapter parity + the tool/host-level capability check.
 // runTurnOn runs the SAME image+program on host A (sqlite, long-running) and host
 // B (serverless-fs) with EQUIVALENT results — the engine's deterministic replay
 // makes "same image, different host" hold. checkHostCapabilities REFUSES LOUDLY

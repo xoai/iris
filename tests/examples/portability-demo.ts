@@ -6,11 +6,11 @@
 // tsconfig include and the tests/**/*.test.ts runner glob); the same proof is
 // regression-locked by tests/cross-host-resume.test.ts.
 //
-// What it shows: the SAME M4 agent image starts a session on host A (sqlite,
+// What it shows: the SAME agent image starts a session on host A (sqlite,
 // long-running), parks at a turn boundary via HITL, and RESUMES on host B
 // (serverless-fs) from the SAME journal — a deterministic replay with output
 // identical to a single-host control. ZERO engine change; the move is just
-// migrateSession + the always-on replay assertion + the M4 image pin.
+// migrateSession + the always-on replay assertion + the image pin.
 import assert from "node:assert/strict";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";

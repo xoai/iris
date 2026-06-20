@@ -1,4 +1,4 @@
-// Demo runner / CLI (spec §8 A3). Drives the counter program against the real
+// Demo runner / CLI. Drives the counter program against the real
 // SQLite store + scheduler. Designed so a turn runs in its OWN process and
 // exits, so park/resume can be exercised across a true process restart.
 //

@@ -2,7 +2,7 @@
 // Signature verification (constant-time, replay-windowed), the url_verification
 // handshake, unverified-body refusal, slash→approval-buttons, and Approve→resume —
 // all with an injected fetch/clock (no real Slack). The Slack channel's session is the
-// shared channel-core session, so it also runs the §10 channel-port conformance suite.
+// shared channel-core session, so it also runs the channel-port conformance suite.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
@@ -176,7 +176,7 @@ test("handleEvent: a Deny action submits intent=deny", async () => {
 // avoid an unused-import warning for the governed performer (used in the durable test)
 void makeGovernedApprovalPerformer;
 
-// ── the Slack channel's session passes the §10 channel-port conformance suite ──
+// ── the Slack channel's session passes the channel-port conformance suite ──
 
 runChannelPortConformance({
   name: "channel-slack-session",

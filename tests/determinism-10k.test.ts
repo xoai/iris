@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { replay, canonicalize } from "@irisrun/core";
 import type { JournalRecord, Json } from "@irisrun/core";
 
-// B3 — replay determinism over 10k randomized sessions (framework Spec 01 §8).
+// B3 — replay determinism over 10k randomized sessions.
 // Stresses canonicalization (random key order) + replay first-wins dedupe.
 // LIMITATION: this cannot catch a reducer that branches on `record.ts` (live and
 // replay see the same recorded ts, so divergence is invisible) — that is guarded

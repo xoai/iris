@@ -1,4 +1,4 @@
-// The no-model demo: a 2-step counter machine (spec §5, brief item 10). It reads
+// The no-model demo: a 2-step counter machine. It reads
 // a logical clock (effect), parks on a timer, then echoes and finishes — all
 // deterministic. No model call anywhere.
 import type {

@@ -1,5 +1,5 @@
-// M6 T8 — replay-incorruptibility of an INSTALLED external bundle (C4 extended,
-// spec §4.3 / §6 done-when #3b). Mirrors tests/tactic-swap.test.ts exactly, but
+// T8 — replay-incorruptibility of an INSTALLED external bundle (C4 extended).
+// Mirrors tests/tactic-swap.test.ts exactly, but
 // with @irisrun/bundle-coding's tacticPerformer as the session's installed tactic.
 // Proof that an installed third-party (or malicious) bundle CANNOT corrupt a
 // replayed session: (1) pure replay() with ZERO performers reconstructs the turn

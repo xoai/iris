@@ -1,4 +1,4 @@
-// Task 1 (M2): a seam consultation IS an effect (effectKind "tactic") performed
+// Task 1: a seam consultation IS an effect (effectKind "tactic") performed
 // via the existing PerformerRegistry — ZERO engine change. Mirrors
 // model-effect.test.ts / model-recovery.test.ts: the engine's generic effect
 // path journals intent+result, resume + replay never re-invoke the performer

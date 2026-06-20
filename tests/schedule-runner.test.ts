@@ -1,7 +1,7 @@
 // The schedule PUMP drives a recurring job end-to-end over durable
 // timers. A-3: N cycles fire, the session parks between cycles, the whole session replays
 // identically. A-4: an aborted resume does NOT consume its wakeup (at-least-once) — it
-// re-fires on the next tick. Plus the T3.2 compile-time guard that concrete schedulers
+// re-fires on the next tick. Plus the compile-time guard that concrete schedulers
 // satisfy WakeupSource.
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -15,7 +15,7 @@ import { makeScheduleRunner, scheduleProgram, type WakeupSource, type ResumeInpu
 import type { ScheduleState } from "@irisrun/schedule";
 import { makeAbortOnAppendStore, makeContendedStore } from "./lib/flaky-store.ts";
 
-// ── T3.2 compile-time guard: concrete schedulers satisfy the host WakeupSource ──────────
+// ── compile-time guard: concrete schedulers satisfy the host WakeupSource ───────────────
 type AssertAssignable<T extends WakeupSource> = T;
 type _MemIsSource = AssertAssignable<MemoryScheduler>;
 type _SqliteIsSource = AssertAssignable<SqliteScheduler>;
@@ -30,7 +30,7 @@ function inputsAt(now: number, maxRuns: number): {
   clock: LogicalClock;
 } {
   // The per-tick clock backs BOTH the engine and the `clock` performer, so the cycle reads
-  // exactly `now` (spec §5.3).
+  // exactly `now`.
   const clock: LogicalClock = { now: () => now };
   return {
     defDigest: "sched-def",

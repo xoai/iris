@@ -1,4 +1,4 @@
-// The replay-consistency assertion (spec §6, §3.9; framework Spec 01 §6) — the
+// The replay-consistency assertion — the
 // primary defense against determinism bugs. After every committed step, the
 // engine re-runs replay and asserts byte-equality with live state.
 //

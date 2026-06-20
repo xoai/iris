@@ -1,4 +1,4 @@
-// Task 8 (M2) — C3: HITL. gateAction "ask" parks the turn on a hitl:<callId>
+// Task 8 — C3: HITL. gateAction "ask" parks the turn on a hitl:<callId>
 // signal; on resume the kernel reads the approval as a signal_recv EFFECT (folded
 // into state), then runs or skips the tool. The approval is journaled, so replay
 // is deterministic and never re-reads a live signal; recovery re-performs the

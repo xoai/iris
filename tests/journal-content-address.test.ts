@@ -1,4 +1,4 @@
-// T2: content-addressing (spec §3.1). Authoritative recompute from raw bytes;
+// T2: content-addressing. Authoritative recompute from raw bytes;
 // tamper-evidence; frozen cross-language reproducibility vectors; encode/decode
 // identity. The digests are recomputed from bytesB64 and never trusted from the
 // stored per-record/snapshot `hash` fields (those are diagnostic only).

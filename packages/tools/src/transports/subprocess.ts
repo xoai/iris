@@ -1,8 +1,8 @@
-// Subprocess transport (spec §3.3): spawn a REAL child process; exchange ONE
+// Subprocess transport: spawn a REAL child process; exchange ONE
 // line-delimited JSON request `{id,name,input}` (stdin) for ONE response line
 // `{id,ok,value|error}` (stdout). Every failure mode — non-zero exit, malformed
 // line, spawn failure, AND a hung child (bounded by a timeout) — maps to a clean
-// `{ok:false}` (spec §7: no hang, no silent success). Host-side (node:child_process).
+// `{ok:false}` (no hang, no silent success). Host-side (node:child_process).
 import { spawn } from "node:child_process";
 import type { Json } from "@irisrun/core";
 import type { Transport, ToolResult } from "../invoker.ts";
@@ -31,7 +31,7 @@ const DEFAULT_TIMEOUT_MS = 5000;
 
 // Monotonic wire-id for the line protocol's request `id`. Host-side ephemeral
 // (NOT journaled — the journaled identity is the ToolCall), so a module counter
-// is fine; it disambiguates requests if the protocol is ever multiplexed (M5).
+// is fine; it disambiguates requests if the protocol is ever multiplexed.
 let requestSeq = 0;
 
 export function makeSubprocessTransport(

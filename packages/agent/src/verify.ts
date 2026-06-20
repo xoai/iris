@@ -11,9 +11,9 @@ import { bundleDigest, type BundleResolver } from "./bundle.ts";
 
 export interface VerifyOptions {
   resolver: RegistryResolver;
-  // OPTIONAL (M6): when set, verify re-resolves Lock.tactics.bundle by its STABLE
+  // OPTIONAL: when set, verify re-resolves Lock.tactics.bundle by its STABLE
   // id/ref, recomputes bundleDigest, and throws on mismatch. When absent, verify
-  // behaves EXACTLY as M4 (it never touches the bundle) — back-compat.
+  // never touches the bundle — back-compat.
   resolveBundle?: BundleResolver;
 }
 
@@ -56,11 +56,11 @@ export async function verifyImage(
       `verify: imageDigest mismatch — stored ${image.lock.imageDigest}, recomputed ${recomputed}`,
     );
   }
-  // 4. (M6, NET-NEW) re-resolve the pinned tactic bundle by its STABLE id/ref (NOT
+  // 4. (NET-NEW) re-resolve the pinned tactic bundle by its STABLE id/ref (NOT
   //    a floating location), recompute bundleDigest, and assert it equals
   //    the pinned digest. This catches a CONTENT-tampered bundle whose pinned lock
   //    digest is left unchanged — invisible to the imageDigest check above. Skipped
-  //    entirely when no resolveBundle is injected (M4 back-compat).
+  //    entirely when no resolveBundle is injected (back-compat).
   if (opts.resolveBundle !== undefined) {
     const pinned = image.lock.tactics.bundle;
     if (pinned !== undefined) {

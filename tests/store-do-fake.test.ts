@@ -1,4 +1,4 @@
-// M6 T1 — FakeDoStorage fixture conformance (spec §2.1). The in-suite stand-in
+// T1 — FakeDoStorage fixture conformance. The in-suite stand-in
 // for Cloudflare's DurableObjectState.storage: an in-memory Map with a REAL
 // serialized transaction() (a promise-chain mutex — the DO single-instance
 // guarantee) and a settable alarm clock. EVERYTHING in workstream A tests

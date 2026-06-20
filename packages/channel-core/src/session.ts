@@ -5,7 +5,7 @@
 // drive it; a shared conformance suite (tests/lib/channel-port-conformance.ts) pins
 // the contract so a new channel is replay-safe by construction.
 //
-// TOKEN ROTATION (the §10 unification — see the spec's behavior-change disclosure):
+// TOKEN ROTATION:
 // rotate the token ONLY on a COMMITTED outcome (`finished`/`parked`); a NON-committed
 // outcome (`contended` = lease held elsewhere; `aborted` = lease lost mid-flight)
 // journaled nothing, so it KEEPS the prior token (the single-use credential was not

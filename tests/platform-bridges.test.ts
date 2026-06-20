@@ -176,7 +176,7 @@ test("teams bridge: a real end-to-end turn against the in-process channel", asyn
   }
 });
 
-// ── the §12 invariant: bridges import NOTHING from @irisrun/* ─────────────────
+// ── the invariant: bridges import NOTHING from @irisrun/* ─────────────────────
 
 test("platform bridges + harness import nothing from @irisrun/* (any-language, zero core changes)", () => {
   const here = dirname(fileURLToPath(import.meta.url));

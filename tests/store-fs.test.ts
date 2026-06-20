@@ -1,4 +1,4 @@
-// T1 (M-Proof) — @irisrun/store-fs FsStateStore conformance. The fs store is host B
+// T1 — @irisrun/store-fs FsStateStore conformance. The fs store is host B
 // (serverless cold-per-turn over node:fs); it MUST enforce the SAME invariants the
 // sqlite/memory stores enforce: true CAS (O_EXCL), fenced+dense append, an hwm that
 // survives truncation, writeSnapshot-seeds-hwm (the migrate-into-fs contract), and

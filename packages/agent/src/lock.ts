@@ -1,6 +1,6 @@
-// The lockfile (spec §3.4) — pins model + tools/connections (by contractDigest) +
+// The lockfile — pins model + tools/connections (by contractDigest) +
 // tactics + capabilities + the embedded content hashes. `imageDigest` is filled by
-// the image build (§3.5). This module owns the tool-resolution + pinning + the
+// the image build. This module owns the tool-resolution + pinning + the
 // capability validation; Task 4 completes content/model/tactics. Host-side.
 import { contractDigest, type ToolContract } from "@irisrun/tools";
 import type { CapabilityProfile, ToolRef } from "./agentfile.ts";
@@ -8,7 +8,7 @@ import type { RegistryResolver } from "./resolver.ts";
 
 // A lock tool carries the model-perceived contractDigest (what a session pins) +
 // the floating realization (transport/location/retrySafe). `in-process` is NOT a
-// lock transport — an Agentfile cannot author it (§3.3). `ref` is the STABLE
+// lock transport — an Agentfile cannot author it. `ref` is the STABLE
 // Agentfile registry handle (e.g. `mcp://registry/x@^2`) — the key to re-resolve
 // the contract at verify time; `location` is the CURRENT deploy and FLOATS
 // independently, so verify must re-resolve by `ref`, never `location`.
@@ -64,7 +64,7 @@ export async function resolveLockTools(
 }
 
 /**
- * Validate the capability profile against the resolved tools (spec §3.3 step 4),
+ * Validate the capability profile against the resolved tools,
  * loudly (no silent inconsistency): a `remote` locality forbids subprocess tools,
  * and any subprocess tool requires `local_subprocess: true`.
  */

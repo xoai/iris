@@ -1,4 +1,4 @@
-// Task 7 (M2) — C2: when the context exceeds budget, shouldCompact (the
+// Task 7 — C2: when the context exceeds budget, shouldCompact (the
 // window-compaction tactic) returns the COMPACTED context as its decision. That
 // decision is the tactic effect's journaled result value, folded into
 // HarnessState.ctx — so replay reproduces the compacted context exactly, without

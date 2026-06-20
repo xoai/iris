@@ -1,9 +1,9 @@
-// Bundle resolution + digest — the M6 strengthening of the
-// M4 tactic pin. A tactic BUNDLE (e.g. `@irisrun/bundle-coding`) is distributed like
+// Bundle resolution + digest — the strengthening of the
+// tactic pin. A tactic BUNDLE (e.g. `@irisrun/bundle-coding`) is distributed like
 // a tool contract: an Agentfile `harness.bundle` ref (e.g. "iris/coding@^1")
-// resolves — via an injected BundleResolver, mirroring the M4 RegistryResolver —
+// resolves — via an injected BundleResolver, mirroring the RegistryResolver —
 // to a concrete BundleDefinition, and the image pins `bundleDigest(def)` (a real
-// content digest over the BEHAVIOR SURFACE) instead of the M4 sha256Hex(id)
+// content digest over the BEHAVIOR SURFACE) instead of the sha256Hex(id)
 // placeholder. The digest is STABLE across a floating `location` (re-resolve by
 // stable ref, not by location — [[lrn-resolve-by-stable-ref-not-floating-location]])
 // yet detects any change to the behavior surface (id/version/seams/...).

@@ -2,7 +2,7 @@
 // a thin ADAPTER (verify auth + parse the platform's inbound + format the platform's
 // outbound) over the generic, fetch-only `makeWebhookBridge` (which speaks the Iris REST
 // channel protocol and imports nothing from @irisrun). This file — and every adapter —
-// also imports nothing from @irisrun: the whole §12 point is that a new platform needs
+// also imports nothing from @irisrun: the whole point is that a new platform needs
 // only the wire protocol, NO Iris core changes. (tests/platform-bridges.test.ts asserts
 // the zero-@irisrun-import property over all four files.)
 import { makeWebhookBridge, type BridgeReply } from "./webhook-bridge.ts";

@@ -4,9 +4,9 @@
 // A gRPC server-streaming channel (the natural fit for token/event
 // streaming) is a REAL external target needing @grpc/grpc-js — kept OUT of the
 // install-free suite (per the zero-runtime-dependency invariant). The in-suite
-// reachability proofs are REST (M-Proof) + the MCP-server channel. When enabled,
+// reachability proofs are REST + the MCP-server channel. When enabled,
 // this attempts to load @grpc/grpc-js and refuses LOUDLY with install guidance if
-// absent (it is a future target, like the M-Proof CF/Lambda smokes).
+// absent (it is a future target, like the CF/Lambda smokes).
 async function main() {
   if (process.env.IRIS_GRPC_SMOKE !== "1") {
     console.log("skip: set IRIS_GRPC_SMOKE=1 to run the gRPC channel smoke (future — needs @grpc/grpc-js)");

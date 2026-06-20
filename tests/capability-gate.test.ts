@@ -1,4 +1,4 @@
-// M6 T5 — the capability-diff DEPLOY gate (spec §3, done-when #2). `assertDeployable`
+// T5 — the capability-diff DEPLOY gate. `assertDeployable`
 // is the deploy-time check of an image's CapabilityProfile against a host adapter:
 // it refuses LOUDLY (never silently degrades) when the host cannot satisfy a required
 // capability. The load-bearing case is the LITERAL refusal for local tools on
