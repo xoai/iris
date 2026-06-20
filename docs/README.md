@@ -39,6 +39,9 @@ Follow these in order — each ends with a **Next →** to the next stop.
 
 How the runtime works, page by page.
 
+- [The harness](./harness.md) — the model↔tool loop as swappable **tactics** at five
+  **seams**; every decision is journaled, so you re-shape how the agent thinks without
+  losing deterministic replay.
 - [Models & providers](./providers.md) — **vendor-neutral, replay-safe** model adapters:
   Anthropic and OpenAI behind one tested port; swap without touching the agent.
 - [Governance & audit](./governance.md) — the approval gate, the `@irisrun/auth`
@@ -63,7 +66,7 @@ Normative specs and lookups, in [`reference/`](./reference/):
 - [Sandbox-egress threat model](./reference/security-sandbox-threat-model.md) — the
   egress firewall + credential broker: the deny-all floor, the host allowlist, the limits.
 
-<!-- Growing next: Concepts → the harness (tactics & seams); Guides → observability,
+<!-- Growing next: Guides → observability,
 subagents, schedules, frontend & the client SDK, inspecting a session, secrets & env;
 Reference → CLI, Agentfile schema, architecture, harness seams; Contributing → setup,
 conventions, and adding a provider / channel / store / tactic. -->

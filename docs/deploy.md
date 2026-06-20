@@ -63,4 +63,4 @@ node --conditions=iris-src tests/examples/portability-demo.ts   # prints the pro
 This is the north star: an agent a person talks to, that survives a host migration
 mid-conversation.
 
-**Next → [Models & providers](./providers.md)**
+**Next → [The harness](./harness.md)**

@@ -14,6 +14,7 @@
 - [Deploy](docs/deploy.md): resume the same session on a different host — one command to a Cloudflare Durable Object.
 
 ## Concepts
+- [The harness](docs/harness.md): the model↔tool loop as swappable tactics at five seams (assembleContext, shouldCompact, decideNext, gateAction, onToolError); every decision is journaled, so tactics can be third-party/nondeterministic and replay still can't diverge. Default bundle + the coding bundle; configure via harness.bundle / harness.tactics.
 - [Models & providers](docs/providers.md): vendor-neutral, replay-safe model adapters; how to add one.
 - [Governance & approvals](docs/governance.md): the approval gate, the policy layer, the journaled approval trail.
 - [Audit & reproducible evals](docs/audit-and-evals.md): iris audit; reproducible evals; subagents & schedules.
