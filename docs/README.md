@@ -11,16 +11,20 @@ Follow these in order. Each page ends with a **Next →** link to the next stop.
 
 1. [01 — Introduction](./01-introduction.md) — what Iris is, and the one idea
    (a session is a journal) everything else follows from.
-2. [02 — Your first agent](./02-first-agent.md) — `init → build → chat`. Talk to
-   an agent with no API key, then with a real model. Resume it across a restart.
-3. [03 — Tools](./03-tools.md) — the bundled `now` tool, how the agent calls it,
-   and the tool boundary (in-process → subprocess → MCP → gRPC).
-4. [04 — Channels](./04-channels.md) — serve over HTTP (SSE / WebSocket), the web
-   chat UI, and the client SDK. Survive a tab close.
-5. [05 — Deploy](./05-deploy.md) — one command to a Cloudflare Durable Object, and
-   the headline: resume the same session on a *different* host.
-6. [06 — Models & providers](./06-providers.md) — bring your own model. Anthropic
-   and OpenAI behind one tested port; how to add a third.
+2. [02 — Your first agent](./02-first-agent.md) — build a **durable session you
+   own**: `init → build → chat` with no API key, then a real model, and resume it
+   across a restart.
+3. [03 — Tools](./03-tools.md) — tools as **versioned contracts you own**, every
+   call journaled for replay: the bundled `now` tool and the tool boundary
+   (in-process → subprocess → MCP → gRPC).
+4. [04 — Channels](./04-channels.md) — **durable, resumable sessions** in the
+   browser: serve over HTTP (SSE / WebSocket), the web chat UI, and the client
+   SDK; survive a tab close.
+5. [05 — Deploy](./05-deploy.md) — the headline: **resume the same session on a
+   *different* host** — one command to a Cloudflare Durable Object.
+6. [06 — Models & providers](./06-providers.md) — **vendor-neutral, replay-safe
+   model adapters**: Anthropic and OpenAI behind one tested port (swap without
+   touching the agent); how to add a third.
 7. [07 — Governance & audit](./07-governance.md) — the approval gate, the
    `@irisrun/auth` governance layer, and the journaled approval trail — turned on
    from the CLI with `iris serve --policy`.

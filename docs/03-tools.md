@@ -1,8 +1,12 @@
 # 03 — Tools
 
-An agent that can only talk is half an agent. Iris ships your first project with a
-working tool so a fresh agent isn't an empty folder pointing at servers you'd have
-to build yourself.
+A tool in Iris is a **versioned contract you own** — pinned into the image by
+digest and invoked across a transport boundary, never inline code — and every
+call the agent makes is a journaled effect, so a tool invocation **replays from
+the log** instead of re-running. That's what keeps a tool-using agent portable
+(the host decides how to reach each tool) and verifiable (the call is in the
+journal). Iris ships your first project with a working tool, so a fresh agent
+isn't an empty folder pointing at servers you'd have to build yourself.
 
 ## The bundled `now` tool
 

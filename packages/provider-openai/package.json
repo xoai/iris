@@ -2,7 +2,7 @@
   "name": "@irisrun/provider-openai",
   "version": "0.1.0",
   "type": "module",
-  "description": "Iris model_call performer — direct OpenAI Chat Completions adapter via built-in fetch (zero deps). Real adapter runs only with OPENAI_API_KEY; tests use a fake fetch / fake model. A peer of @irisrun/provider-anthropic behind the same model port.",
+  "description": "Vendor-neutral, replay-safe model adapter — the OpenAI model_call performer behind Iris's portable model port; a peer of @irisrun/provider-anthropic behind the same port, so swapping providers leaves the agent and its byte-identical journal replay unchanged. Direct OpenAI Chat Completions over built-in fetch (zero deps). Real adapter runs only with OPENAI_API_KEY; tests use a fake fetch / fake model.",
   "exports": {
     ".": {
       "iris-src": "./src/index.ts",
