@@ -137,8 +137,14 @@ function looksScalar(item: string): boolean {
 }
 
 function parseScalar(s: string, lineNo: number): Json {
+  // The ONLY supported flow collections are the EMPTY literals `[]` and `{}` — so a
+  // no-skills / no-connections agent (very common) is authorable in YAML, which the
+  // block `- ` / `key:` syntax cannot express. NON-empty flow stays rejected (no
+  // general flow support). Initiative 20260620-agentfile-env-secrets.
+  if (s === "[]") return [];
+  if (s === "{}") return {};
   if (s.startsWith("[") || s.startsWith("{")) {
-    throw new Error(`Agentfile YAML: flow collections ([..]/{..}) are unsupported (line ${lineNo})`);
+    throw new Error(`Agentfile YAML: non-empty flow collections ([..]/{..}) are unsupported — only the empty literals [] and {} (line ${lineNo})`);
   }
   if (s.startsWith("&") || s.startsWith("*")) {
     throw new Error(`Agentfile YAML: anchors/aliases (&/*) are unsupported (line ${lineNo})`);

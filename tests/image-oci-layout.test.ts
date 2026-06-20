@@ -40,6 +40,24 @@ test("T5: inspectImage returns the resolved intent", async () => {
   assert.ok("instructions.md" in info.content);
 });
 
+test("T5: inspectImage surfaces declared secrets + environment (omitted when absent)", async () => {
+  const base = inspectImage(await buildImage(MODEL, { resolver, readFile }));
+  assert.ok(!("secrets" in base), "absent secrets omitted from inspection");
+  assert.ok(!("environment" in base), "absent environment omitted from inspection");
+
+  const withEnv = parseAgentfileJson(JSON.stringify({
+    apiVersion: "iris/v1", kind: "Agent", name: "support-triage", model: "anthropic/claude-x",
+    instructions: "./instructions.md", skills: [],
+    tools: [{ ref: "mcp://registry/issue-tracker@^2" }], connections: [],
+    harness: { bundle: "default" }, requires: { tool_locality: "remote" },
+    sandbox: { backend: "inmemory", network: "deny-all" },
+    secrets: ["GITHUB_TOKEN"], environment: { LOG_LEVEL: "info" },
+  }));
+  const info = inspectImage(await buildImage(withEnv, { resolver, readFile }));
+  assert.deepEqual(info.secrets, ["GITHUB_TOKEN"]);
+  assert.deepEqual(info.environment, { LOG_LEVEL: "info" });
+});
+
 test("T5: OCI layout write→read round-trips the image (structural files present)", async () => {
   const img = await buildImage(MODEL, { resolver, readFile });
   const dir = await mkdtemp(join(tmpdir(), "iris-oci-"));

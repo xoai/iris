@@ -37,6 +37,19 @@ process.stdin.on("data", () => {
 // Reads stdin but NEVER responds — must be bounded by the timeout.
 const HANG_TOOL = `process.stdin.resume(); setInterval(() => {}, 1000);`;
 
+// Returns the SORTED names of its OWN environment variables (to prove scoping).
+const ENV_ECHO_TOOL = `
+let buf = "";
+process.stdin.on("data", (d) => {
+  buf += d;
+  const nl = buf.indexOf("\\n");
+  if (nl < 0) return;
+  const req = JSON.parse(buf.slice(0, nl));
+  process.stdout.write(JSON.stringify({ id: req.id, ok: true, value: { keys: Object.keys(process.env).sort() } }) + "\\n");
+  process.exit(0);
+});
+`;
+
 function contract(
   transport: ToolContract["transport"],
   location: string,
@@ -93,6 +106,36 @@ test("T2: an unregistered subprocess location → loud {ok:false}", async () => 
   const res = await sp.invoke(contract("subprocess", "subprocess://nope"), {});
   assert.equal(res.ok, false);
   assert.equal(res.ok === false && res.error.code, "unknown_tool");
+});
+
+test("T2: a transport-level env scopes the child to EXACTLY that env (least-privilege)", async () => {
+  process.env.IRIS_LEAK_SENTINEL = "should-not-leak";
+  try {
+    const sp = makeSubprocessTransport(
+      { envt: { command: NODE, args: ["-e", ENV_ECHO_TOOL] } },
+      { env: { PATH: process.env.PATH ?? "", GITHUB_TOKEN: "ghp" } },
+    );
+    const res = await sp.invoke(contract("subprocess", "subprocess://envt"), {});
+    assert.equal(res.ok, true);
+    const keys = res.ok === true ? (res.value as { keys: string[] }).keys : [];
+    assert.ok(keys.includes("GITHUB_TOKEN"), "the declared secret is present in the child");
+    assert.ok(keys.includes("PATH"), "PATH is present");
+    assert.ok(!keys.includes("IRIS_LEAK_SENTINEL"), "an undeclared host var must NOT leak into the scoped child");
+  } finally {
+    delete process.env.IRIS_LEAK_SENTINEL;
+  }
+});
+
+test("T2: with NO env the child inherits process.env (byte-compatible with today)", async () => {
+  process.env.IRIS_INHERIT_SENTINEL = "yes";
+  try {
+    const sp = makeSubprocessTransport({ envt: { command: NODE, args: ["-e", ENV_ECHO_TOOL] } });
+    const res = await sp.invoke(contract("subprocess", "subprocess://envt"), {});
+    const keys = res.ok === true ? (res.value as { keys: string[] }).keys : [];
+    assert.ok(keys.includes("IRIS_INHERIT_SENTINEL"), "no env option → inherit process.env (historical behavior)");
+  } finally {
+    delete process.env.IRIS_INHERIT_SENTINEL;
+  }
 });
 
 test("T2: in-process transport calls a registered fn; the invoker dispatches by transport", async () => {

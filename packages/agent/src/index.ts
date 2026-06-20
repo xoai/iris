@@ -7,6 +7,7 @@ export {
   contentPaths,
   contractRefs,
   refScheme,
+  isEnvName,
 } from "./agentfile.ts";
 export type {
   AgentfileModel,

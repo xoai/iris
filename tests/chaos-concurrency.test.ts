@@ -5,7 +5,7 @@
 // persistence backends (store-fs on a temp dir, store-sqlite on a temp file),
 // not the in-memory fake. "Real hosts" here = real persistence + a simulated
 // co-located restart/partition; the literally-distributed run (live Cloudflare DO
-// + a VPS) is a documented residual (docs/security-sandbox-threat-model.md notes
+// + a VPS) is a documented residual (docs/reference/security-sandbox-threat-model.md notes
 // the analogous boundary), NOT faked with dead code. Only the STORE is the real
 // backend (the spine — CAS/fence/journal/snapshot — lives there); the scheduler
 // is in-memory. sqlite is synchronous inside BEGIN IMMEDIATE, so the storm

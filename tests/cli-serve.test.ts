@@ -15,7 +15,7 @@ const tmp = (p: string): Promise<string> => mkdtemp(join(tmpdir(), p));
 
 async function buildAndServe(web = false): Promise<ServeHandle> {
   const src = await tmp("iris-serve-src-");
-  await cmdInit(src);
+  await cmdInit(src, { json: true });
   const out = await tmp("iris-serve-out-");
   // the scaffold ships a bundled tool → build with its discovered resolver
   const resolver = (await loadBundledTools(join(src, "tools"))).resolver;

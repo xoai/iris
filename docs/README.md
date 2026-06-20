@@ -15,8 +15,10 @@ Follow these in order. Each page ends with a **Next →** link to the next stop.
    own**: `init → build → chat` with no API key, then a real model, and resume it
    across a restart.
 3. [03 — Tools](./03-tools.md) — tools as **versioned contracts you own**, every
-   call journaled for replay: the bundled `now` tool and the tool boundary
-   (in-process → subprocess → MCP → gRPC).
+   call journaled for replay: the bundled `now` tool, the tool boundary
+   (in-process → subprocess → MCP → gRPC), and **secrets & environment** declared
+   in the Agentfile and injected at run time (least-privilege; `--env-file` /
+   `--secret-files`).
 4. [04 — Channels](./04-channels.md) — **durable, resumable sessions** in the
    browser: serve over HTTP (SSE / WebSocket), the web chat UI, and the client
    SDK; survive a tab close.
@@ -36,15 +38,22 @@ Follow these in order. Each page ends with a **Next →** link to the next stop.
 9. [09 — Verifiable portable journals](./09-verifiable-journal.md) — the proof:
    export a session to a content-addressed `*.irisjournal` file, verify it with
    nothing but the file (`iris journal verify`), and migrate it across hosts.
-   The [format spec](./verifiable-journal-spec.md) and
-   [threat model](./threat-model.md) make the moat externally legible.
+   The [format spec](./reference/verifiable-journal-spec.md) and
+   [threat model](./reference/threat-model.md) make the moat externally legible.
 
-## Security
+## Reference
 
-- [Sandbox egress threat model](./security-sandbox-threat-model.md) — the
-  adversarial review of the egress firewall + credential broker: what the
-  deny-all floor, the host allowlist, and credential brokering guarantee, how
-  each is proven, and the honest limits.
+Deep-dive specs and threat models — not part of the linear funnel — live under
+[`reference/`](./reference/):
+
+- [Verifiable-journal format spec](./reference/verifiable-journal-spec.md) — the
+  exact bytes + algorithm; reproducible in any language from the document alone.
+- [Journal threat model](./reference/threat-model.md) — what journal verification
+  proves, and what it does not.
+- [Sandbox egress threat model](./reference/security-sandbox-threat-model.md) — the
+  adversarial review of the egress firewall + credential broker: what the deny-all
+  floor, the host allowlist, and credential brokering guarantee, how each is proven,
+  and the honest limits.
 
 ## How to run the commands
 

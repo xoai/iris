@@ -40,7 +40,7 @@ async function buildImage(overrides?: {
   model?: string;
 }) {
   const src = await tmp("iris-deploy-src-");
-  await cmdInit(src);
+  await cmdInit(src, { json: true });
   if (overrides) {
     const agentPath = join(src, "agent.json");
     const agent = JSON.parse(await readFile(agentPath, "utf8")) as Record<string, unknown>;

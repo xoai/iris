@@ -16,7 +16,8 @@ iris init ./my-agent
 
 This writes a **self-contained** project (not an empty folder):
 
-- `agent.json` — the Agentfile: the agent's name, `model`, instructions, and tools.
+- `agent.yaml` — the Agentfile: the agent's name, `model`, instructions, and tools.
+  (YAML is the default — it carries comments; prefer JSON? `iris init ./my-agent --json`.)
 - `instructions.md` — the system prompt.
 - `tools/now.mjs` + `tools/now.tool.json` — a bundled `now` tool the agent can call
   immediately, with no external server to stand up. (More on tools in
@@ -25,12 +26,13 @@ This writes a **self-contained** project (not an empty folder):
 ## 2. Build the image
 
 ```sh
-iris build --file ./my-agent/agent.json --out ./image
+iris build --file ./my-agent/agent.yaml --out ./image
 # → {"imageDigest":"sha256:…"}
 ```
 
-`iris build` compiles the folder into a content-addressed image. Look inside it or
-check its integrity any time:
+`iris build` compiles the folder into a content-addressed image. (Run it from inside
+the project and you can drop `--file` — `iris build --out ./image` auto-detects
+`agent.json`/`agent.yaml`/`agent.yml`.) Look inside it or check its integrity any time:
 
 ```sh
 iris inspect ./image
@@ -87,9 +89,10 @@ editing* with the published JSON Schema. Emit it once into your project:
 iris schema > agentfile.schema.json
 ```
 
-Then point your `agent.json` at it — editors that understand `$schema` (VS Code,
+Then reference it from your Agentfile — editors that understand `$schema` (VS Code,
 most JSON/YAML extensions) will autocomplete fields and red-underline a bad
-`tool_locality`, a missing `sandbox`, or a tool ref with the wrong scheme:
+`tool_locality`, a missing `sandbox`, or a tool ref with the wrong scheme. In JSON,
+add a `$schema` key; in YAML, add a `# yaml-language-server` comment at the top:
 
 ```json
 {
@@ -98,6 +101,13 @@ most JSON/YAML extensions) will autocomplete fields and red-underline a bad
   "kind": "Agent",
   "name": "my-agent"
 }
+```
+
+```yaml
+# yaml-language-server: $schema=./agentfile.schema.json
+apiVersion: iris/v1
+kind: Agent
+name: my-agent
 ```
 
 The `$schema` key is editor/CI metadata only — Iris ignores it, so it never

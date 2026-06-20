@@ -57,6 +57,16 @@ test("T2: booleans parse as booleans (not strings)", () => {
   assert.equal(m.requires.tool_locality, "local");
 });
 
+test("T3: YAML secrets + environment validate; a numeric env scalar coerces to a string", () => {
+  const y =
+    YAML +
+    "secrets:\n  - GITHUB_TOKEN\n  - OPENAI_API_KEY\n" +
+    "environment:\n  LOG_LEVEL: info\n  PORT: 8080\n";
+  const m = parseAgentfileYaml(y);
+  assert.deepEqual(m.secrets, ["GITHUB_TOKEN", "OPENAI_API_KEY"]);
+  assert.deepEqual(m.environment, { LOG_LEVEL: "info", PORT: "8080" });
+});
+
 test("T2: a quoted value containing ' #' is NOT truncated (quote-aware comment stripping)", () => {
   const v = parseYamlValue("name: 'a #b'\nother: x  # a real comment") as {
     name: string;
@@ -68,6 +78,14 @@ test("T2: a quoted value containing ' #' is NOT truncated (quote-aware comment s
 
 test("T2: duplicate map keys are rejected loudly", () => {
   assert.throws(() => parseYamlValue("name: a\nname: b"), /duplicate key/i);
+});
+
+test("T3: empty flow literals [] and {} are supported (so a no-skills/no-connections agent is authorable)", () => {
+  const v = parseYamlValue("skills: []\nrequires: {}") as { skills: unknown; requires: unknown };
+  assert.deepEqual(v.skills, []);
+  assert.deepEqual(v.requires, {});
+  // a non-empty flow is STILL rejected (no general flow support)
+  assert.throws(() => parseYamlValue("skills: [a]"), /flow|unsupported/i);
 });
 
 test("T2: unsupported YAML constructs are rejected loudly", () => {

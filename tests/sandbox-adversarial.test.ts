@@ -1,5 +1,5 @@
 // Adversarial review of the sandbox security spine (roadmap v0.2 P2 #8; see
-// docs/security-sandbox-threat-model.md). Proves the egress firewall is
+// docs/reference/security-sandbox-threat-model.md). Proves the egress firewall is
 // FAIL-CLOSED against bypass attempts
 // and that a brokered secret never escapes to any sandbox-visible surface, the
 // upstream marker, the response, or a CONNECT tunnel. Also pins the host-
@@ -305,7 +305,7 @@ test("adversarial/leak: unknown / empty / wrong-case secret name → 403 before 
   // NOTE: secret NAMES are exact-match and case-SENSITIVE (broker store keys).
   // (A leading/trailing-space name like " API_KEY " is NOT tested here: HTTP
   // transport strips OWS per RFC 7230, so it resolves to the valid "API_KEY" —
-  // benign, documented in docs/security-sandbox-threat-model.md, not a leak.)
+  // benign, documented in docs/reference/security-sandbox-threat-model.md, not a leak.)
   const up = await makeUpstream();
   const broker = makeCredentialBroker({ API_KEY: SECRET });
   const proxy = await startEgressProxy({ policy: { allow: ["127.0.0.1"] }, broker, host: "127.0.0.1" });
