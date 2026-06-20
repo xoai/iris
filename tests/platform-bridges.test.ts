@@ -148,6 +148,10 @@ test("teams bridge: a wrong HMAC is refused 401; a non-message activity is ignor
     // wrong secret → wrong HMAC → 401
     const wrongSecret = Buffer.from("not-the-secret").toString("base64");
     assert.equal((await bridge.handle(teamsAuth(body, wrongSecret), body)).status, 401);
+    // a malformed (wrong-LENGTH) token must fail closed with 401, NOT crash
+    // timingSafeEqual — pins the length guard before the constant-time compare.
+    assert.equal((await bridge.handle({ authorization: "HMAC A" }, body)).status, 401);
+    assert.equal((await bridge.handle({ authorization: "not-hmac-scheme" }, body)).status, 401);
     // valid auth but a non-message activity → ignored
     const ping = JSON.stringify({ type: "conversationUpdate", conversation: { id: "19:x" } });
     const r = await bridge.handle(teamsAuth(ping), ping);

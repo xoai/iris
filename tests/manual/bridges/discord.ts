@@ -31,12 +31,9 @@ export function discordAdapter(opts: { publicKeyHex: string }): PlatformAdapter<
       const sig = headers["x-signature-ed25519"];
       const ts = headers["x-signature-timestamp"];
       if (typeof sig !== "string" || typeof ts !== "string") return false;
-      let sigBytes: Buffer;
-      try {
-        sigBytes = Buffer.from(sig, "hex");
-      } catch {
-        return false;
-      }
+      // Buffer.from(_, "hex") never throws (it silently drops non-hex chars), so the
+      // length guard below — NOT a try/catch — is what rejects a non-hex/short sig.
+      const sigBytes = Buffer.from(sig, "hex");
       if (sigBytes.length !== 64) return false; // an ed25519 sig is 64 bytes
       try {
         return edVerify(null, Buffer.from(ts + rawBody, "utf8"), key, sigBytes);

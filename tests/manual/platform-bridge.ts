@@ -23,7 +23,7 @@ export interface PlatformAdapter<Reply> {
 
 export interface PlatformBridgeResult<Reply> {
   status: number;
-  body: Reply | { error: string };
+  body: Reply | { error: string } | { ok: true; reason: string };
 }
 
 export interface PlatformBridge<Reply> {
@@ -48,7 +48,8 @@ export function makePlatformBridge<Reply>(
       }
       const inbound = adapter.parse(rawBody);
       if (inbound.kind === "handshake") return { status: 200, body: inbound.response };
-      if (inbound.kind === "ignore") return { status: 200, body: { error: `ignored: ${inbound.reason}` } };
+      // An ignored (but authenticated) event is a SUCCESS, not an error — 200 + a reason.
+      if (inbound.kind === "ignore") return { status: 200, body: { ok: true, reason: `ignored: ${inbound.reason}` } };
       try {
         // 2. Drive the durable session over the wire protocol, then format the reply.
         const reply = await bridge.onMessage({ conversationId: inbound.conversationId, text: inbound.text });
