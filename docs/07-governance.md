@@ -45,6 +45,35 @@ It's wired into `iris run`/`serve` as an opt-in `governance` option, so the defa
 (ungoverned) path is byte-identical to before. For the whole-session compliance
 audit and reproducible evals built on top of this, continue to chapter 08.
 
+## Turn it on from the CLI: `iris serve --policy`
+
+You don't have to write code to use it. Point `iris serve` at a policy file:
+
+```sh
+iris serve ./image --policy policy.json
+```
+
+`policy.json` is the `ApprovalPolicy` — who may approve what (an empty `rules` with
+`"default":"deny"` denies everyone; a rule grants by role or principal id):
+
+```json
+{ "rules": [{ "tool": "rm", "anyOfRoles": ["admin"] }], "default": "deny" }
+```
+
+When the agent reaches an irreversible tool, the session parks on a HITL approval.
+A client submits the decision as a field on the **next message body** — no extra
+endpoint, the decision rides the protocol you already use:
+
+```json
+{ "approve": { "callId": "<from the parked wait>", "name": "rm",
+               "principal": { "id": "alice", "roles": ["admin"] }, "intent": "approve" } }
+```
+
+The decision is policy-checked, identity-stamped, and journaled; an unauthorized or
+denied approval skips the tool rather than honoring it. Every decision then appears
+in `iris audit` (chapter 08) as part of the replayable approval trail. Omit
+`--policy` and serve is ungoverned — byte-identical to before.
+
 ## Beyond approvals: the whole-session audit
 
 This page covered the *approval* trail. Chapter 08 turns the same substrate into a

@@ -39,7 +39,9 @@ import {
   type ProviderDescriptor,
 } from "./providers.ts";
 import { makeGovernedApprovalPerformer } from "@iris/auth";
-import type { ApprovalPolicy, ApprovalInbox } from "@iris/auth";
+import type { ApprovalPolicy, ApprovalInbox, Principal, RawApproval } from "@iris/auth";
+import { makeSubagentPerformer } from "@iris/subagents";
+import type { SubagentPerformerDeps } from "@iris/subagents";
 
 // Opt-in governance (roadmap P1-5): when a policy + inbox are configured, register the
 // governed `signal_recv` performer so the HITL gate becomes policy-checked and
@@ -50,6 +52,91 @@ export function governancePerformers(
   governance?: { policy: ApprovalPolicy; inbox: ApprovalInbox },
 ): { signal_recv?: Performer } {
   return governance ? { signal_recv: makeGovernedApprovalPerformer(governance) } : {};
+}
+
+// Opt-in subagent delegation (roadmap P2-9). `names` are the delegate tool names the
+// kernel routes as `subagent` effects (passed to harnessProgram as subagentTools AND
+// gate-allowed via safeTools); `makeResolveChild` builds the per-(parent-session)
+// resolver the host runs the child agent with. Absent → no `subagent` effect, no
+// subagentTools (byte-identical to today). Shared by cmdRun + cmdServe.
+export interface CliSubagents {
+  names: string[];
+  makeResolveChild: (parentSessionId: string) => SubagentPerformerDeps["resolveChild"];
+}
+
+export function subagentPerformers(
+  subagents: CliSubagents | undefined,
+  parentSessionId: string,
+): { subagent?: Performer } {
+  return subagents
+    ? { subagent: makeSubagentPerformer({ parentSessionId, resolveChild: subagents.makeResolveChild(parentSessionId) }) }
+    : {};
+}
+
+// Parse + validate a `--policy <file>` JSON document into an ApprovalPolicy. LOUD on
+// any malformation — a bad policy must NEVER silently fall back to ungoverned (that
+// would be silent policy widening). The testable seam serveCommand wires (cli-main.ts
+// does the real readFile). `source` only enriches error messages.
+export function loadApprovalPolicy(text: string, source = "--policy"): ApprovalPolicy {
+  let raw: unknown;
+  try {
+    raw = JSON.parse(text);
+  } catch (e) {
+    throw new Error(`iris ${source}: policy file is not valid JSON — ${(e as Error).message}`);
+  }
+  if (raw === null || typeof raw !== "object" || Array.isArray(raw)) {
+    throw new Error(`iris ${source}: policy must be a JSON object with a "rules" array`);
+  }
+  const o = raw as { rules?: unknown; default?: unknown };
+  if (!Array.isArray(o.rules)) {
+    throw new Error(`iris ${source}: policy "rules" must be an array (got ${typeof o.rules})`);
+  }
+  if (o.default !== undefined && o.default !== "deny" && o.default !== "permit") {
+    throw new Error(`iris ${source}: policy "default" must be "deny" or "permit" (got ${JSON.stringify(o.default)})`);
+  }
+  // Rules are validated structurally by @iris/auth's `authorize` at decision time
+  // (each field is optional); we guard only the envelope here.
+  return o as ApprovalPolicy;
+}
+
+// When governance is configured, a continue-message body MAY carry an approval
+// decision: `approve: { callId, name, principal, intent }`. Submit it to the shared
+// inbox BEFORE the turn runs, so the governed signal_recv performer reads it on the
+// HITL resume. A malformed `approve` is a client error — warn and skip (never crash
+// the turn); an absent field is the normal (non-approval) case. Returns silently.
+function submitApprovalFromBody(
+  inbox: ApprovalInbox,
+  body: Json,
+  onWarn: (m: string) => void,
+): void {
+  if (body === null || typeof body !== "object" || Array.isArray(body)) return;
+  const approve = (body as { approve?: Json }).approve;
+  if (approve === undefined) return; // the common case: an ordinary message
+  if (approve === null || typeof approve !== "object" || Array.isArray(approve)) {
+    onWarn("iris serve: ignoring malformed `approve` body (must be an object)");
+    return;
+  }
+  const a = approve as { callId?: Json; name?: Json; principal?: Json; intent?: Json };
+  if (typeof a.callId !== "string" || a.callId === "" || typeof a.name !== "string" || a.name === "") {
+    onWarn("iris serve: ignoring `approve` body without non-empty string callId + name");
+    return;
+  }
+  if (a.intent !== "approve" && a.intent !== "deny") {
+    onWarn(`iris serve: ignoring \`approve\` body with intent ${JSON.stringify(a.intent)} (want "approve"|"deny")`);
+    return;
+  }
+  if (a.principal === null || typeof a.principal !== "object" || Array.isArray(a.principal) || typeof (a.principal as { id?: Json }).id !== "string") {
+    onWarn("iris serve: ignoring `approve` body without a principal {id:string, roles?:string[]}");
+    return;
+  }
+  // Guard `roles` too — a non-array would throw in `authorize` (roles.includes) at the
+  // HITL resume. This is the untrusted-HTTP-body boundary: validate, don't trust.
+  const roles = (a.principal as { roles?: Json }).roles;
+  if (roles !== undefined && (!Array.isArray(roles) || !roles.every((r) => typeof r === "string"))) {
+    onWarn("iris serve: ignoring `approve` body whose principal.roles is not a string[]");
+    return;
+  }
+  inbox.submit({ name: a.name, callId: a.callId }, { principal: a.principal as Principal, intent: a.intent });
 }
 
 // --- 9a: init / build / inspect / verify -------------------------------------
@@ -209,6 +296,8 @@ export interface CliRunOptions {
   // Opt-in governance: a who-may-approve policy + the approval inbox the channel/UI
   // submits decisions to. Absent → ungoverned (existing behavior, byte-identical).
   governance?: { policy: ApprovalPolicy; inbox: ApprovalInbox };
+  // Opt-in subagent delegation (P2-9). Absent → no `subagent` effect (byte-identical).
+  subagents?: CliSubagents;
   // Retain the full journal (no truncation after a snapshot) so the governance audit
   // trail (auditApprovals) stays COMPLETE across long sessions. Default undefined →
   // false → the engine truncates as before (existing behavior, byte-identical).
@@ -230,7 +319,10 @@ export async function cmdRun(
   }
   const defDigest = held ?? image.lock.imageDigest;
 
-  const bundle = defaultBundle({ safeTools: opts.safeTools });
+  // Delegate tool names (if any) are gate-allowed (so a delegation doesn't park on
+  // approval — matches demo.ts) AND routed as `subagent` effects via subagentTools.
+  const subNames = opts.subagents?.names ?? [];
+  const bundle = defaultBundle({ safeTools: [...(opts.safeTools ?? []), ...subNames] });
   // Reconstruct minimal contracts from the lock for dispatch (description/
   // inputSchema are model-perceived only — not needed to INVOKE). The tool
   // transport is INJECTED (default: an empty invoker, so a fake model that calls
@@ -253,12 +345,16 @@ export async function cmdRun(
       store: opts.store,
       scheduler: opts.scheduler,
       clock: opts.clock,
-      program: harnessProgram(opts.input ?? { messages: [{ role: "user", content: "hi" }] }),
+      program: harnessProgram(
+        opts.input ?? { messages: [{ role: "user", content: "hi" }] },
+        subNames.length ? { subagentTools: subNames } : undefined,
+      ),
       performers: {
         tactic: bundle.tacticPerformer,
         model_call: opts.modelPerformer,
         tool_call: toolPerformer,
         ...governancePerformers(opts.governance),
+        ...subagentPerformers(opts.subagents, opts.sessionId),
       },
       defDigest,
       holderId: "iris-run",
@@ -294,6 +390,8 @@ export interface CliServeOptions {
   safeTools?: string[]; // tools allowed without an approval gate (bundled retrySafe)
   // Opt-in governance (same shape as cmdRun): policy + inbox. Absent → ungoverned.
   governance?: { policy: ApprovalPolicy; inbox: ApprovalInbox };
+  // Opt-in subagent delegation (P2-9). Absent → no `subagent` effect (byte-identical).
+  subagents?: CliSubagents;
 }
 
 export interface ServeHandle {
@@ -308,7 +406,8 @@ export interface ServeHandle {
 export async function cmdServe(layoutdir: string, opts: CliServeOptions): Promise<ServeHandle> {
   const image = await readOciLayout(layoutdir);
   const modelId = image.lock.model.id; // the harness model_call request has no model
-  const bundle = defaultBundle({ safeTools: opts.safeTools });
+  const subNames = opts.subagents?.names ?? []; // delegate tool names (P2-9)
+  const bundle = defaultBundle({ safeTools: [...(opts.safeTools ?? []), ...subNames] });
   const onWarn = opts.onWarn ?? ((m: string) => console.warn(m));
   const clock = opts.clock ?? { now: (): number => 0 };
 
@@ -338,6 +437,10 @@ export async function cmdServe(layoutdir: string, opts: CliServeOptions): Promis
     // (POST /v1/*) and the WS upgrade are untouched.
     ...(opts.web ? { webHandler: makeWebHandler() } : {}),
     makeTurnInputs: async (sessionId: string, body: Json, emit?: (ev: StreamEvent) => void) => {
+      // Governance: a continue-message body may carry an approval decision; submit it
+      // to the shared inbox BEFORE the turn so the HITL resume reads it (zero channel
+      // surgery — the decision rides the existing message body). No-op when ungoverned.
+      if (opts.governance) submitApprovalFromBody(opts.governance.inbox, body, onWarn);
       // Resolve the HELD pin per turn (never silently override it — same posture as
       // cmdRun); the channel is multi-session so this is per-(session, turn).
       const held = await governingDigest(opts.store, sessionId);
@@ -349,12 +452,16 @@ export async function cmdServe(layoutdir: string, opts: CliServeOptions): Promis
       const defDigest = held ?? image.lock.imageDigest;
       const onDelta = emit ? (t: string): void => emit({ type: "delta", text: t }) : undefined;
       return {
-        program: harnessProgram(bodyToInput(body)),
+        program: harnessProgram(
+          bodyToInput(body),
+          subNames.length ? { subagentTools: subNames } : undefined,
+        ),
         performers: {
           tactic: bundle.tacticPerformer,
           model_call: opts.makeModelPerformer(modelId, onDelta),
           tool_call: toolPerformer,
           ...governancePerformers(opts.governance),
+          ...subagentPerformers(opts.subagents, sessionId),
         },
         clock,
         defDigest,

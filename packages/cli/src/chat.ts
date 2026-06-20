@@ -24,6 +24,7 @@ import type {
 import { normalizeContentKey } from "@iris/agent";
 import type { AgentImage } from "@iris/agent";
 import { stripModelPrefix } from "./providers.ts";
+import { subagentPerformers, type CliSubagents } from "./iris.ts";
 
 // --- model-call wrapper ------------------------------------------------------
 
@@ -248,6 +249,11 @@ export interface ChatDeps {
   // `renderOutcome` the reply already streamed, so it is not printed twice.
   // Absent → buffered behavior (reply printed once after the turn parks).
   streamSink?: StreamSink;
+  // Opt-in subagent delegation (P2-9). Absent → no `subagent` effect, no subagentTools
+  // (byte-identical chat registry). The delegate names must ALSO be in the safeTools of
+  // the injected tacticPerformer's bundle (built by cli-main) so a delegation doesn't
+  // park on the gate.
+  subagents?: CliSubagents;
 }
 
 /** Run ONE user message as a turn against the durable session. The message is
@@ -257,14 +263,19 @@ export async function chatTurn(deps: ChatDeps, message: string): Promise<TurnOut
     tactic: deps.tacticPerformer,
     model_call: deps.modelPerformer,
     user_recv: async () => ({ ok: true, value: { content: message } }),
+    ...subagentPerformers(deps.subagents, deps.sessionId),
   };
   if (deps.toolPerformer) performers.tool_call = deps.toolPerformer;
+  const subNames = deps.subagents?.names ?? [];
   return runTurn<HarnessState>(
     {
       store: deps.store,
       scheduler: deps.scheduler,
       clock: deps.clock,
-      program: harnessProgram({ messages: [] }, { interactive: true }),
+      program: harnessProgram(
+        { messages: [] },
+        subNames.length ? { interactive: true, subagentTools: subNames } : { interactive: true },
+      ),
       performers,
       defDigest: deps.defDigest,
       holderId: "iris-chat",

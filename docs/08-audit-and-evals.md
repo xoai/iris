@@ -101,6 +101,50 @@ A real determinism leak (a tactic that sneaks in wall-clock or shared mutable
 state) makes `reproducible` go `false` and points at the first divergence — so a
 flaky eval is a caught bug, not a mystery.
 
+### From the CLI: `iris eval`
+
+Reproducible evals are also a command. An eval **suite module** exports `cases` and
+a `scorer` (it builds each case over `@iris/core` + a store package); point
+`iris eval` at it:
+
+```sh
+iris eval ./evals/suite.mjs                 # run the suite → one line per case
+iris eval ./evals/suite.mjs --reproduce 3   # prove each case byte-identical over 3 runs
+```
+
+With `--reproduce N` each line reports `reproducible=<bool>` and the journal digest,
+and locates the first divergence (`divergence@<run>:<field>`) when a case isn't
+reproducible. Add `--json` for structured output.
+
+## Subagents & schedules (P2-9)
+
+Two more capabilities fall out of the same journaled substrate — both durably
+replayable.
+
+**Delegation.** An agent can delegate a sub-task to a *child* agent, which runs in
+its own durable session. Declare children in a `subagents.json` beside the agent,
+mapping a delegate tool name to a child image:
+
+```json
+[{ "name": "delegate", "image": "./children/researcher" }]
+```
+
+`iris run`, `iris serve`, and `iris chat` pick it up: when the model calls
+`delegate`, the kernel runs the child agent and rides its result back as the tool
+result. The child's output is journaled in the parent, so the parent **replays
+without re-running the child** — and a recovery re-enters the same deterministic
+child session.
+
+**Schedules.** A recurring job parks on durable timers between runs; the cadence
+lives in the journal, so the whole schedule replays identically:
+
+```sh
+iris schedule ./image --interval 10 --max-runs 3 --db sched.sqlite
+```
+
+A host-side pump advances logical time, resumes each due cycle, and confirms a
+wakeup only after the turn commits (at-least-once). One effect runs per cycle.
+
 ## Why this is hard to copy
 
 Audit, reproducible evals, and cross-host resume aren't three features bolted on —
@@ -108,7 +152,7 @@ they're three views of one property: the journal is the source of truth and repl
 is deterministic. A system that logs *alongside* execution can always drift from
 what really ran. Here, the record **is** the execution. That's the moat.
 
-For the full positioning and roadmap, see the project roadmap at
-`.sage/docs/adoption-roadmap.md` (item P2-8).
+For the full positioning and status, see the [project README](../README.md)
+(this is roadmap item P2-8 — auditability + reproducible evals as the product).
 
 **Next → [Back to the funnel index](./README.md)**

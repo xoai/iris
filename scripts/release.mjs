@@ -3,15 +3,16 @@
 // convention: push/pull operate on a local OCI layout, `iris deploy --deploy`
 // needs IRIS_DEPLOY=1, and a real `npm publish` needs IRIS_PUBLISH=1.
 //
-// HARD PREREQUISITE (do not remove): the packages currently ship raw .ts source
+// HARD PREREQUISITE (do not remove): the packages ship raw .ts source in dev
 // (the "no build step" dev model). Node REFUSES to type-strip .ts files once
 // they live under an installed node_modules tree
 //   "Stripping types is currently unsupported for files under node_modules"
-// so a published .ts-source package fails to import for any consumer. A
+// so a published .ts-source package would fail to import for any consumer. The
 // compile-to-JS publish build (src → dist/*.js + *.d.ts, with exports/bin/files
-// pointed at ./dist) is REQUIRED before a real publish — tracked as a follow-up
-// (see RELEASING.md). This script REFUSES to publish until that build output
-// exists, so it can never push broken packages.
+// pointed at ./dist) IS IMPLEMENTED (`npm run build` / scripts/build.mjs) and
+// this script ALWAYS runs it first (see below). The dist-existence check is a
+// safety net — it REFUSES to publish if any package is missing its build output,
+// so it can never push broken packages.
 import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";

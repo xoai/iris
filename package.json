@@ -2,8 +2,8 @@
   "name": "iris-workspace",
   "private": true,
   "type": "module",
-  "version": "0.0.1",
-  "description": "Iris — a portable durability runtime for stateful agents (M0 + early-M1 core).",
+  "version": "0.1.0",
+  "description": "Iris — a portable durability runtime for stateful agents.",
   "license": "MIT",
   "engines": {
     "node": ">=24"
