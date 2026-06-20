@@ -11,7 +11,7 @@
     }
   },
   "bin": {
-    "iris": "./dist/cli-main.js"
+    "iris": "dist/cli-main.js"
   },
   "dependencies": {
     "@irisrun/core": "^0.1.0",

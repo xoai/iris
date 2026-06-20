@@ -59,7 +59,7 @@ async function main(): Promise<void> {
     // 3. The `iris` tarball ships compiled dist (not src), bin → dist, shebang intact.
     execFileSync("tar", ["-xzf", join(packDir, "iris-runtime-0.1.0.tgz"), "-C", packDir], { stdio: "ignore" });
     const pkgJson = JSON.parse(await readFile(join(packDir, "package", "package.json"), "utf8"));
-    assert.deepEqual(pkgJson.bin, { iris: "./dist/cli-main.js" }, "bin → dist");
+    assert.deepEqual(pkgJson.bin, { iris: "dist/cli-main.js" }, "bin → dist (no leading ./ — npm normalizes it away on publish)");
     assert.ok(existsSync(join(packDir, "package", "dist", "cli-main.js")), "dist/cli-main.js shipped");
     assert.ok(!existsSync(join(packDir, "package", "src")), "src NOT shipped (dist only)");
     const binSrc = await readFile(join(packDir, "package", "dist", "cli-main.js"), "utf8");
