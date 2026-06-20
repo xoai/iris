@@ -20,6 +20,7 @@ import { cmdEval, loadEvalSuite } from "./eval-cmd.ts";
 import { cmdSchedule } from "./schedule-cmd.ts";
 import { loadSubagents } from "./subagents-cfg.ts";
 import { createApprovalInbox } from "@iris/auth";
+import type { ApprovalPolicy, Principal } from "@iris/auth";
 import { loadBundledTools } from "./tools.ts";
 import { echoStreamingPerformer } from "./echo.ts";
 import { runChat, wrapModelForImage, makeChatFakeModel, makeChatStreamingFakeModel, makeStreamSink } from "./chat.ts";
@@ -33,6 +34,16 @@ import {
 function flag(argv: string[], name: string): string | undefined {
   const i = argv.indexOf(name);
   return i >= 0 && i + 1 < argv.length ? argv[i + 1] : undefined;
+}
+
+// Collect a REPEATABLE flag (e.g. `--role admin --role oncall`) into a string[].
+// `flag` returns only the first occurrence; chat's `--role` needs all of them.
+function flagAll(argv: string[], name: string): string[] {
+  const out: string[] = [];
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === name && i + 1 < argv.length) out.push(argv[i + 1]);
+  }
+  return out;
 }
 
 // Discover the project's bundled tools for run/chat/serve. The tools dir defaults
@@ -261,11 +272,27 @@ async function serveCommand(argv: string[]): Promise<void> {
 async function chatCommand(argv: string[]): Promise<void> {
   const layout = argv[1];
   if (!layout) {
-    throw new Error("usage: iris chat <layoutdir> --session <id> [--db <path>] [--tools <dir>] [--subagents <file>] [--fake]");
+    throw new Error("usage: iris chat <layoutdir> --session <id> [--db <path>] [--tools <dir>] [--subagents <file>] [--policy <file.json>] [--as <id>] [--role <r>] [--fake]");
   }
   const session = flag(argv, "--session") ?? "default";
   const db = flag(argv, "--db") ?? ":memory:";
   const forceFake = argv.includes("--fake");
+
+  // In-chat HITL governance. A tool call gated to "ask" pauses for an inline y/n
+  // approval. `--policy` loads a who-may-approve policy (identity-checked, journaled,
+  // auditable with `iris audit`); without it, the local terminal user is the approver
+  // (a permissive default policy, so an approve just runs the tool). The principal
+  // stamps each decision; `--as`/`--role` override the local default.
+  const policyFile = flag(argv, "--policy");
+  const policy: ApprovalPolicy = policyFile
+    ? loadApprovalPolicy(await readFile(policyFile, "utf8"), `--policy ${policyFile}`)
+    : { rules: [], default: "permit" };
+  const governance = { policy, inbox: createApprovalInbox() };
+  const roleFlags = flagAll(argv, "--role");
+  const principal: Principal = {
+    id: flag(argv, "--as") ?? "local",
+    roles: roleFlags.length ? roleFlags : ["operator"],
+  };
 
   const sqlite = await import("@iris/store-sqlite");
   const handle = sqlite.openDatabase(db);
@@ -341,7 +368,9 @@ async function chatCommand(argv: string[]): Promise<void> {
   const isInteractive = process.stdin.isTTY === true;
   const banner =
     `iris chat — session '${session}' (db ${db})${useFake ? " (fake model)" : ` (${image.agentfile.model})`}\n` +
-    "Type a message and press enter; /exit, /quit, or Ctrl-D to leave (the session stays durable).\n";
+    "Type a message and press enter; /exit, /quit, or Ctrl-D to leave (the session stays durable).\n" +
+    `A non-safe tool call pauses for your approval — reply y (approve) or n (deny)` +
+    `${policyFile ? ` (policy: ${policyFile}, as '${principal.id}')` : ""}.\n`;
 
   // SIGINT lives HERE (the real-IO entry), not in runChat — so runChat stays a
   // testable unit free of process-global side effects.
@@ -368,6 +397,8 @@ async function chatCommand(argv: string[]): Promise<void> {
       isInteractive,
       banner,
       streamSink: sink,
+      governance,
+      principal,
       ...(subagents ? { subagents } : {}),
     });
   } finally {
