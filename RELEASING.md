@@ -56,9 +56,14 @@ bypasses 2FA, which non-interactive publishing requires (a normal token fails wi
 ```sh
 node scripts/version.mjs X.Y.Z      # or: npm run version:set -- X.Y.Z
 git commit -am "release: vX.Y.Z"
-git tag vX.Y.Z
+git tag -a vX.Y.Z -m "vX.Y.Z"       # MUST be annotated — see note below
 git push --follow-tags
 ```
+
+> **The tag must be annotated** (`git tag -a`). `git push --follow-tags` only
+> pushes *annotated* tags, so a lightweight `git tag vX.Y.Z` is silently left
+> behind and the release workflow never fires. Push it explicitly if in doubt:
+> `git push origin vX.Y.Z`.
 
 `scripts/version.mjs` sets every `packages/*` version **and** rewrites the internal
 `@irisrun/*` dependency ranges to `^X.Y.Z` (they move in lockstep). On the pushed
@@ -66,6 +71,25 @@ tag, the workflow: verifies `vX.Y.Z` equals `packages/cli/package.json` (fails
 loudly on drift), runs typecheck + the full suite, publishes via `npm run release`
 (skipping packages whose version is already live — so re-pushing a tag is safe),
 and cuts a GitHub Release. `v0.0.1` predates this; `v0.1.0` is the first synced tag.
+
+### If a publish is interrupted (npm rate-limit / partial release)
+
+Publishing a monorepo of ~28 packages can trip npm's per-token publish
+rate-limit (`E429 Too Many Requests — rate limited exceeded`) part-way through,
+leaving some packages at the new version and the rest behind. `npm run release`
+publishes **per package and idempotently** — it skips every package already live
+at the target version and only publishes the rest, aborting fast if npm is
+throttling the whole token (rather than hammering the registry). To finish a
+partial release, **wait for the rate-limit to cool down (~15–30 min), then
+re-run** by re-pushing the tag:
+
+```sh
+git push -f origin vX.Y.Z     # re-fires the workflow; the publish resumes where it stopped
+```
+
+It will skip what's already live and publish only what remains. Verify the whole
+set landed with `npm view <pkg>@X.Y.Z version` for each, or just re-run until the
+publish step reports `0 still missing` and the GitHub Release is created.
 
 ## How to publish manually (fallback)
 
