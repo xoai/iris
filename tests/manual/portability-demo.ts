@@ -1,8 +1,8 @@
 // MANUAL demo — the README portability proof. Unlike the docker/registry smokes
 // this runs INSTALL-FREE (node:sqlite + node:fs + workspace packages), so it needs
 // no env gate:
-//   node manual/portability-demo.ts
-// It is NOT in the unit suite and NOT typechecked (manual/ is outside the
+//   node tests/manual/portability-demo.ts
+// It is NOT in the unit suite and NOT typechecked (tests/manual/ is outside the
 // tsconfig include and the tests/**/*.test.ts runner glob); the same proof is
 // regression-locked by tests/cross-host-resume.test.ts.
 //

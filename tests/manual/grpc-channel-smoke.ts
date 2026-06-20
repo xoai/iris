@@ -1,5 +1,5 @@
-// MANUAL smoke — NOT in the unit suite, NOT typechecked (repo-root manual/).
-//   IRIS_GRPC_SMOKE=1 node manual/grpc-channel-smoke.ts
+// MANUAL smoke — NOT in the unit suite, NOT typechecked (tests/manual/).
+//   IRIS_GRPC_SMOKE=1 node tests/manual/grpc-channel-smoke.ts
 //
 // A gRPC server-streaming channel (ADR-0009; the natural fit for token/event
 // streaming) is a REAL external target needing @grpc/grpc-js — kept OUT of the

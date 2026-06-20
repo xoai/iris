@@ -1,4 +1,4 @@
-// Sandbox boundary types (spec §3.6, Spec 04 §5, ADR-0010). Untrusted tool code
+// Sandbox boundary types (spec §3.6, Spec 04 §5). Untrusted tool code
 // runs inside a SandboxSession rooted at /workspace, with a deny-all network
 // floor and credential brokering — secrets are injected ONLY at the egress
 // firewall, never materialized inside the sandbox. Host-side.
