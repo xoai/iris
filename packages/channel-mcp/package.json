@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@irisrun/core": "^0.1.0",
+    "@irisrun/channel-core": "^0.1.0",
     "@irisrun/host": "^0.1.0"
   },
   "license": "MIT",

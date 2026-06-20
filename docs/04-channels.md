@@ -62,4 +62,25 @@ tab can close and reopen, rebuild the client from the saved handle, and resume t
 the token in memory; surviving a *server* restart is what the edge deploy in the
 next chapter is for.)
 
+## The channel port
+
+REST, MCP, and Slack are different wires in front of the **same** durable session.
+What they share — mint the `sessionId`, own and **rotate a single-use continuation
+token**, refuse a stale/missing/unknown/in-flight turn **loudly** — is factored into
+one port, `@irisrun/channel-core`, the way `StateStore` is the store port. A channel
+is then just: normalize the platform's inbound event → drive the shared session →
+emit the platform's reply.
+
+The rule that makes this replay-safe by construction: the token rotates **only on a
+committed turn** (`finished`/`parked`). A turn that journaled nothing — `contended`
+(the lease was held elsewhere) or `aborted` (the lease was lost mid-flight) — **keeps
+the prior token**, so the client safely retries the same single-use credential. The
+in-flight claim is atomic, so a concurrent replay of a token is refused, never
+double-applied.
+
+Because the contract is one shared driver, it is verified by **one conformance suite
+any channel must pass** — `channel-rest` and `channel-mcp` both run it. A new channel
+that passes the suite is durable and replay-safe by construction. The normative
+contract is [the channel-port spec](./channel-port-spec.md).
+
 **Next → [05 — Deploy](./05-deploy.md)**

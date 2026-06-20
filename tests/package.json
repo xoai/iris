@@ -12,6 +12,7 @@
     "@irisrun/store-do": "*",
     "@irisrun/bundle-coding": "*",
     "@irisrun/host": "*",
+    "@irisrun/channel-core": "*",
     "@irisrun/channel-rest": "*",
     "@irisrun/channel-mcp": "*",
     "@irisrun/inspect": "*",

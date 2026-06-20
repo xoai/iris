@@ -17,6 +17,7 @@ import type {
   TurnOutcome,
 } from "@irisrun/core";
 import { type StreamEvent, toOutcomeEvent } from "./events.ts";
+import { makeChannelSession, type ChannelRefusal } from "@irisrun/channel-core";
 import { wantsStream, openSse } from "./sse.ts";
 import {
   writeHandshake,
@@ -98,72 +99,64 @@ function turnResponse<S extends Json>(
 }
 
 export function makeRestChannel<S extends Json>(opts: RestChannelOptions<S>): RestChannel {
-  const mintSessionId = opts.mintSessionId ?? (() => randomUUID());
-  const mintToken = opts.mintToken ?? (() => randomUUID());
-  // The channel OWNS the current continuationToken per session (in-process here;
-  // a real deploy would persist it). It rotates on every committed turn.
-  const tokens = new Map<string, string>();
-  // Sessions with a turn in flight — enforces the token's SINGLE-USE invariant
-  // under concurrency (the token rotates only after the turn commits, so without
-  // this a second concurrent request presenting the same valid token would slip
-  // past the check before rotation; ADR-0009 advertises single-use, so we honor it).
-  const inFlight = new Set<string>();
+  // The two-identifier protocol (mint sessionId, own/rotate a single-use token, atomic
+  // single-use, committed-only rotation) lives in the shared channel-core port — the
+  // SAME driver channel-mcp uses. This REST transport maps refusals to HTTP status and
+  // adds the SSE/WS framing. `runTurn` builds the per-request journal-timeline tap.
+  const session = makeChannelSession<S>({
+    runTurn: async (sessionId, body, emit) => {
+      const inputs = await opts.makeTurnInputs(sessionId, body, emit as ((ev: StreamEvent) => void) | undefined);
+      // onRecord is the per-REQUEST journal-timeline tap (only on a streaming request).
+      // It rides RunTurnOnOptions, NOT TurnInputs (per-session-static).
+      const onRecord = emit
+        ? (r: JournalRecord): void => emit({ type: "record", record: r as unknown as Json })
+        : undefined;
+      return runTurnOn(opts.adapter, {
+        sessionId,
+        ...inputs,
+        ...(onRecord ? { onRecord } : {}),
+      });
+    },
+    mintSessionId: opts.mintSessionId ?? (() => randomUUID()),
+    mintToken: opts.mintToken ?? (() => randomUUID()),
+  });
 
-  // Rotate the continuationToken ONLY on a COMMITTED turn (single-use). A
-  // `contended` turn journaled nothing — the lease was held elsewhere — so the
-  // prior token stays valid and the client retries it (no rotation). A START turn
-  // (priorToken === null) always issues a fresh token. Used by all three paths
-  // (buffered/SSE/WS) so token discipline is identical across them.
-  const issueToken = (
-    sessionId: string,
-    outcome: TurnOutcome<S>,
-    priorToken: string | null,
-  ): string => {
-    if (priorToken !== null && outcome.status === "contended") return priorToken;
-    const token = mintToken();
-    tokens.set(sessionId, token);
-    return token;
+  // Map a channel-core refusal to its LOUD HTTP status (preserving the prior messages).
+  const REFUSAL_STATUS: Record<ChannelRefusal, number> = {
+    "unknown-session": 404,
+    "missing-token": 400,
+    "stale-token": 409,
+    "in-flight": 409,
+  };
+  const refusalMessage = (reason: ChannelRefusal, sessionId: string): string => {
+    switch (reason) {
+      case "unknown-session":
+        return `unknown session '${sessionId}'`;
+      case "missing-token":
+        return "missing continuationToken";
+      case "stale-token":
+        return "stale or invalid continuationToken";
+      case "in-flight":
+        return "a turn is already in flight for this session";
+    }
   };
 
-  const runTurn = async (
-    sessionId: string,
-    body: Json,
-    emit?: (ev: StreamEvent) => void,
-  ): Promise<TurnOutcome<S>> => {
-    const inputs = await opts.makeTurnInputs(sessionId, body, emit);
-    // onRecord is the per-REQUEST journal-timeline tap (only on a streaming
-    // request). It rides RunTurnOnOptions, NOT TurnInputs (per-session-static).
-    const onRecord = emit
-      ? (r: JournalRecord): void => emit({ type: "record", record: r as unknown as Json })
-      : undefined;
-    return runTurnOn(opts.adapter, {
-      sessionId,
-      ...inputs,
-      ...(onRecord ? { onRecord } : {}),
-    });
-  };
-
-  // Drive one turn into an SSE stream: records + deltas, then a terminal outcome
-  // carrying the rotated token. Validation (loud 4xx) already ran in the handler
+  // Drive a session op into an SSE stream: records + deltas, then a terminal outcome
+  // carrying the rotated token. Any loud refusal (4xx) already ran in the handler
   // BEFORE this opens the stream, so a refusal is never a half-open SSE.
-  const streamTurn = async (
+  const runSse = async (
     res: ServerResponse,
-    sessionId: string,
-    body: Json,
-    priorToken: string | null, // null on START; the current token on CONTINUE
+    produce: (emit: (ev: StreamEvent) => void) => Promise<{ sessionId: string; token: string; outcome: TurnOutcome<S> }>,
   ): Promise<void> => {
     const sse = openSse(res);
     const emit = (ev: StreamEvent): void => sse.emit(ev);
-    let outcome: TurnOutcome<S>;
     try {
-      outcome = await runTurn(sessionId, body, emit);
+      const r = await produce(emit);
+      emit(toOutcomeEvent(r.sessionId, r.outcome, r.token));
     } catch (err) {
       // The turn threw AFTER the stream opened — surface it in-band, loudly.
       emit({ type: "error", message: err instanceof Error ? err.message : String(err) });
-      sse.end();
-      return;
     }
-    emit(toOutcomeEvent(sessionId, outcome, issueToken(sessionId, outcome, priorToken)));
     sse.end();
   };
 
@@ -190,14 +183,15 @@ export function makeRestChannel<S extends Json>(opts: RestChannelOptions<S>): Re
 
     // --- start: MINT a session + the first continuationToken --------------
     if (url === "/v1/session") {
-      const sessionId = mintSessionId();
       if (stream) {
-        await streamTurn(res, sessionId, body, null); // START → always issues a fresh token
+        await runSse(res, async (emit) => {
+          const r = await session.start(body, emit); // START → always issues a fresh token
+          return { sessionId: r.sessionId, token: r.token, outcome: r.outcome };
+        });
         return;
       }
-      const outcome = await runTurn(sessionId, body);
-      const token = issueToken(sessionId, outcome, null);
-      send(res, 200, turnResponse(sessionId, token, outcome));
+      const r = await session.start(body);
+      send(res, 200, turnResponse(r.sessionId, r.token, r.outcome));
       return;
     }
 
@@ -205,10 +199,6 @@ export function makeRestChannel<S extends Json>(opts: RestChannelOptions<S>): Re
     const m = SESSION_MESSAGE.exec(url);
     if (m) {
       const sessionId = decodeURIComponent(m[1]);
-      if (!tokens.has(sessionId)) {
-        send(res, 404, { error: `unknown session '${sessionId}'` });
-        return;
-      }
       const headerToken = req.headers["x-continuation-token"];
       const presented =
         typeof body.continuationToken === "string"
@@ -216,35 +206,32 @@ export function makeRestChannel<S extends Json>(opts: RestChannelOptions<S>): Re
           : typeof headerToken === "string"
             ? headerToken
             : null;
-      if (presented === null || presented === "") {
-        send(res, 400, { error: "missing continuationToken" });
-        return;
-      }
-      if (presented !== tokens.get(sessionId)) {
-        send(res, 409, { error: "stale or invalid continuationToken" });
-        return;
-      }
-      // The token check above and this in-flight claim run in ONE event-loop
-      // callback with no interleaving, so a SECOND concurrent request presenting
-      // the same valid token is refused HERE — before the token rotates — instead
-      // of slipping past the check. The flag also keeps the token usable across a
-      // failed turn: we rotate ONLY on success, in the finally we just release.
-      if (inFlight.has(sessionId)) {
-        send(res, 409, { error: "a turn is already in flight for this session" });
-        return;
-      }
-      inFlight.add(sessionId);
-      try {
-        if (stream) {
-          await streamTurn(res, sessionId, body, presented); // CONTINUE → rotate only if committed
-        } else {
-          const outcome = await runTurn(sessionId, body);
-          const next = issueToken(sessionId, outcome, presented);
-          send(res, 200, turnResponse(sessionId, next, outcome));
+      if (stream) {
+        // Validate the token AND peek in-flight BEFORE opening the stream — these
+        // checks plus the advance() claim run with no `await` between, so the
+        // single-use claim stays atomic and a refusal is never a half-open SSE.
+        const refusal = session.validateContinue(sessionId, presented);
+        if (refusal) {
+          send(res, REFUSAL_STATUS[refusal], { error: refusalMessage(refusal, sessionId) });
+          return;
         }
-      } finally {
-        inFlight.delete(sessionId);
+        if (session.inFlight(sessionId)) {
+          send(res, 409, { error: "a turn is already in flight for this session" });
+          return;
+        }
+        await runSse(res, async (emit) => {
+          const r = await session.advance(sessionId, body, emit); // rotate only if committed
+          if (!r.ok) throw new Error("a turn is already in flight for this session");
+          return { sessionId, token: r.token, outcome: r.outcome };
+        });
+        return;
       }
+      const r = await session.continueTurn(sessionId, presented, body);
+      if (!r.ok) {
+        send(res, REFUSAL_STATUS[r.reason], { error: refusalMessage(r.reason, sessionId) });
+        return;
+      }
+      send(res, 200, turnResponse(sessionId, r.token, r.outcome));
       return;
     }
 
@@ -287,27 +274,35 @@ export function makeRestChannel<S extends Json>(opts: RestChannelOptions<S>): Re
           sendEvent({ type: "error", message: "present no continuationToken to start a session" });
           return;
         }
-        sessionId = mintSessionId();
+        // Bind the session to the connection SYNCHRONOUSLY (before the first turn
+        // runs) so a second frame on this connection sees the bound session.
+        sessionId = session.newSessionId();
       } else if (presented !== null) {
-        if (presented !== tokens.get(sessionId)) {
+        // The held connection authorizes continuation; a presented token (if any) is
+        // validated against the current one (read fresh, never cached).
+        if (presented !== session.currentToken(sessionId)) {
           sendEvent({ type: "error", message: "stale or invalid continuationToken" });
           return;
         }
       }
 
-      if (inFlight.has(sessionId)) {
+      // in-flight peek then advance() claim run with no `await` between → atomic
+      // single-use even across two frames interleaving at their awaits.
+      if (session.inFlight(sessionId)) {
         sendEvent({ type: "error", message: "a turn is already in flight for this session" });
         return;
       }
-      const priorToken = tokens.get(sessionId) ?? null; // null on this connection's START turn
-      inFlight.add(sessionId);
       try {
-        const outcome = await runTurn(sessionId, body, sendEvent);
-        sendEvent(toOutcomeEvent(sessionId, outcome, issueToken(sessionId, outcome, priorToken)));
+        // advance on a freshly-minted (unregistered) session runs as a START (prior
+        // token null → mints); on a bound session it rotates per the committed rule.
+        const r = await session.advance(sessionId, body, sendEvent);
+        if (!r.ok) {
+          sendEvent({ type: "error", message: "a turn is already in flight for this session" });
+          return;
+        }
+        sendEvent(toOutcomeEvent(sessionId, r.outcome, r.token));
       } catch (err) {
         sendEvent({ type: "error", message: err instanceof Error ? err.message : String(err) });
-      } finally {
-        inFlight.delete(sessionId);
       }
     };
 
