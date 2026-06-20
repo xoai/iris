@@ -124,3 +124,7 @@ otherwise exact-match and **case-sensitive** (broker store keys).
   network boundary (not the cooperative default) — needs real infra.
 - Brokering-over-TLS, if ever required, needs an explicit TLS-termination design
   (and a re-review) — today it is correctly refused, not faked.
+
+---
+
+Back to the **[Tools chapter](../03-tools.md)** · the sibling **[journal threat model](./threat-model.md)** · the **[project README](../../README.md)**.

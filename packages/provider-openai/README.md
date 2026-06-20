@@ -20,8 +20,9 @@ OpenAI only when `OPENAI_API_KEY` is set; tests use a fake `fetch` / fake model.
 
 Selected automatically from an `openai/…` model prefix in your Agentfile:
 
-```json
-{ "model": "openai/gpt-x" }
+```yaml
+# agent.yaml
+model: openai/gpt-x
 ```
 
 …or serve it explicitly with `iris serve --model openai`.

@@ -316,7 +316,7 @@ Drop the `Accept` header for one buffered JSON reply, or hold a whole conversati
 The install-free portability proof: the **same image** starts on host A (sqlite, long-running), parks at a human-in-the-loop boundary, and resumes on host B (serverless-style, no held process) — same journal, byte-identical output.
 
 ```sh
-node tests/examples/portability-demo.ts        # prints the proof, exits 0 on PASS
+node --conditions=iris-src tests/examples/portability-demo.ts        # prints the proof, exits 0 on PASS
 ```
 
 ```text
@@ -394,18 +394,19 @@ A monorepo (npm workspaces). The **pure core** imports nothing host/transport/No
 | `@irisrun/provider-compat` | The conformance-verified **compatibility matrix** — OpenAI- and Anthropic-protocol endpoints (Groq, Together, DeepSeek, Azure, Bedrock, Vertex, …) classified replay-safe vs known-divergent, each pinned by a CI test so "OpenAI-compatible" becomes a tested, replay-safe guarantee, not a loose claim. `iris providers --matrix`. |
 | `@irisrun/auth` | A journaled, replayable approval audit you own — principal identity and a declarative who-may-approve policy on the existing approval gate, with every decision in the same event log as model calls and tool effects (`makeGovernedApprovalPerformer`). Wired into `iris serve --policy`. |
 | `@irisrun/audit` | Whole-session compliance audit — the full retained journal + a completeness check and an offline replay-verified verdict; drives `iris audit`. |
+| `@irisrun/journal-export` | Verifiable portable journals — a content-addressed (SHA-256 hash-chain) export of a session that verifies from the file alone and imports across hosts; drives `iris journal export/verify/import`. |
 | `@irisrun/subagents` · `@irisrun/schedule` | Breadth on the journaled substrate — durable **delegation** to a child agent (its output journaled in the parent, so the parent replays without re-running it) and **recurring jobs** that park on durable timers between runs. Both replayable. |
 | `@irisrun/demo` | The no-model counter machine that parks and resumes across a restart. |
 
 ## Tested & proven
 
-The unit suite is **install-free, deterministic, zero-dependency** — **801 passing** on Node 24 (plus **6** live-provider conformance tests gated on API keys), `tsc --noEmit` clean. Every claim in this README is regression-locked: CAS + fencing, park/resume across a forced restart, replay purity (the always-on assertion catches injected nondeterminism; `IRIS_ASSERT=0` turns it off), the crash matrix (at-least-once, never double-applied), a **10,000-session** determinism run, cross-store and **cross-host** resume, a **chaos/concurrency suite** that stresses contention, a simulated partition, and redeploy-recovery against the **real fs + sqlite backends**, an **adversarial sandbox-egress** [threat model](docs/reference/security-sandbox-threat-model.md) (bypass + secret-leak attempts), **provider canonicalization** + a **conformance-verified provider compatibility matrix** + **model-call record-replay fidelity**, the **channel-port conformance suite** (two channels behind one port), **Slack durable-HITL across a redeploy**, deterministic image digest + loud verify, the single-use-token channel discipline, and the SSE/WebSocket streaming layer.
+The unit suite is **install-free, deterministic, zero-dependency** — **801 passing** on Node 24 (plus **6** live-provider conformance tests gated on API keys), `tsc --noEmit` clean. Every claim in this README is regression-locked: CAS + fencing, park/resume across a forced restart, replay purity (the always-on assertion catches injected nondeterminism; `IRIS_ASSERT=0` turns it off), the crash matrix (at-least-once, never double-applied), a **10,000-session** determinism run, cross-store and **cross-host** resume, a **chaos/concurrency suite** that stresses contention, a simulated partition, and redeploy-recovery against the **real fs + sqlite backends**, an **adversarial sandbox-egress** [threat model](docs/reference/security-sandbox-threat-model.md) (bypass + secret-leak attempts), **provider canonicalization** + a **conformance-verified provider compatibility matrix** + **model-call record-replay fidelity**, the **channel-port conformance suite** (three channels behind one port), **Slack durable-HITL across a redeploy**, deterministic image digest + loud verify, the single-use-token channel discipline, and the SSE/WebSocket streaming layer.
 
 Real *egress* — OCI pushes, live Anthropic calls, `wrangler deploy` / Lambda upload, `npm publish`, OTLP export — stays **env-gated** as smoke tests under `tests/smoke/`, outside the suite.
 
 ```sh
 npm test                                 # the whole suite → 801 passing (6 live-conformance tests gated on API keys)
-node tests/examples/portability-demo.ts          # the cross-host proof (install-free)
+node --conditions=iris-src tests/examples/portability-demo.ts          # the cross-host proof (install-free)
 node tests/smoke/serverless-deploy-smoke.ts   # real Cloudflare DO / Lambda (gated)
 IRIS_SERVE_SMOKE=1 node tests/smoke/serve-streaming-smoke.ts  # real serve: REST + SSE + WS (gated)
 IRIS_PACK_SMOKE=1 node tests/smoke/npm-pack-smoke.ts          # npx iris-runtime init (gated)

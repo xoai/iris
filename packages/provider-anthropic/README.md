@@ -23,8 +23,9 @@ only when `ANTHROPIC_API_KEY` is set; the test suite runs it against a fake
 Selected automatically from an `anthropic/…` model prefix in your Agentfile — set
 the prefix once and `iris run` / `chat` / `serve` / `deploy` all follow it:
 
-```json
-{ "model": "anthropic/claude-x" }
+```yaml
+# agent.yaml
+model: anthropic/claude-x
 ```
 
 This adapter speaks the **Anthropic Messages protocol**, not just Anthropic itself:

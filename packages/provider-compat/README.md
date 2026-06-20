@@ -48,4 +48,4 @@ iris serve ./image --model openai --base-url https://api.groq.com/openai/v1/chat
 
 ---
 
-Part of Iris — own, portable, verifiable state.
+Part of [Iris](../../README.md) — own, portable, verifiable state.
