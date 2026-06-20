@@ -28,19 +28,17 @@ export type VerifyResult = {
   issues: string[]; // human-readable; empty ⇔ ok
 };
 
-/** Pure verification of a fold over `startState`. `records` is the retained tail to
- *  fold; `reducer` MUST match how the session was recorded (caller's responsibility).
- *  `opts.rowSeqs` are the store row positions for the self-seq integrity check. */
-export function verifyReplay<S extends Json>(
-  reducer: Reducer<S>,
+/** The reducer-FREE structural core (guarantee #1). Checks dense/monotonic seq,
+ *  self-seq vs store row position, ≤1 result per effectId, and — only when
+ *  `complete` — that every result joins a prior intent (an orphan result in a
+ *  truncated window is legitimate and NOT flagged). Pure; no reducer, no replay.
+ *  Reused by @irisrun/journal-export's file-only (Tier 1) verification. */
+export function verifyStructure(
   records: JournalRecord[],
-  startState: S,
-  opts: { complete?: boolean; firstSeq?: number; rowSeqs?: number[] } = {},
-): VerifyResult {
+  opts: { complete?: boolean; rowSeqs?: number[] } = {},
+): { ok: boolean; complete: boolean; issues: string[] } {
   const complete = opts.complete ?? true;
   const structural: string[] = [];
-
-  const retainedRange = records.length ? { from: records[0].seq, to: records[records.length - 1].seq } : null;
 
   // (a) dense, monotonic seq within the retained range
   for (let i = 1; i < records.length; i++) {
@@ -72,8 +70,25 @@ export function verifyReplay<S extends Json>(
     }
   }
 
-  const wellFormed = structural.length === 0;
-  const issues: string[] = [...structural];
+  return { ok: structural.length === 0, complete, issues: structural };
+}
+
+/** Pure verification of a fold over `startState`. `records` is the retained tail to
+ *  fold; `reducer` MUST match how the session was recorded (caller's responsibility).
+ *  `opts.rowSeqs` are the store row positions for the self-seq integrity check. */
+export function verifyReplay<S extends Json>(
+  reducer: Reducer<S>,
+  records: JournalRecord[],
+  startState: S,
+  opts: { complete?: boolean; firstSeq?: number; rowSeqs?: number[] } = {},
+): VerifyResult {
+  const retainedRange = records.length ? { from: records[0].seq, to: records[records.length - 1].seq } : null;
+
+  // structural integrity (guarantee #1) — delegated to the reducer-free core.
+  const struct = verifyStructure(records, { complete: opts.complete, rowSeqs: opts.rowSeqs });
+  const complete = struct.complete;
+  const wellFormed = struct.ok;
+  const issues: string[] = [...struct.issues];
 
   // replay: in-process determinism (fold twice) + totality
   let total = true;

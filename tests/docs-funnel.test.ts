@@ -20,10 +20,11 @@ const PAGES = [
   "06-providers.md",
   "07-governance.md",
   "08-audit-and-evals.md",
+  "09-verifiable-journal.md",
 ];
 const ALL = ["README.md", ...PAGES];
 
-test("docs-funnel: the eight funnel files exist", () => {
+test("docs-funnel: every funnel file exists", () => {
   for (const f of ALL) assert.ok(existsSync(join(DOCS, f)), `missing docs/${f}`);
 });
 
