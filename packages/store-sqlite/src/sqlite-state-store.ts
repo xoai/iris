@@ -8,7 +8,7 @@ import type {
   AppendResult,
   JournalRow,
   Version,
-} from "@iris/core";
+} from "@irisrun/core";
 import { applySchema } from "./schema.ts";
 
 /** Open (or create) a database file and apply the schema. */

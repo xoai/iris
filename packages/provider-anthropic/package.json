@@ -1,5 +1,5 @@
 {
-  "name": "@iris/provider-anthropic",
+  "name": "@irisrun/provider-anthropic",
   "version": "0.1.0",
   "type": "module",
   "description": "Iris model_call performer — direct Anthropic Messages adapter via built-in fetch (zero deps). Real adapter runs only with ANTHROPIC_API_KEY; tests use a fake fetch / fake model.",
@@ -11,7 +11,7 @@
     }
   },
   "dependencies": {
-    "@iris/core": "^0.1.0"
+    "@irisrun/core": "^0.1.0"
   },
   "license": "MIT",
   "engines": {

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { makeMcpStdioTransport } from "@iris/tools";
-import type { ToolContract } from "@iris/tools";
+import { makeMcpStdioTransport } from "@irisrun/tools";
+import type { ToolContract } from "@irisrun/tools";
 
 const NODE = process.execPath;
 

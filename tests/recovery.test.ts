@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { runTurn, acquireLease, encode } from "@iris/core";
+import { runTurn, acquireLease, encode } from "@irisrun/core";
 import type {
   JournalRecord,
   EffectResult,
@@ -10,7 +10,7 @@ import type {
   PerformerRegistry,
   Json,
   Version,
-} from "@iris/core";
+} from "@irisrun/core";
 import { MemStateStore, MemScheduler, TestClock } from "./lib/mem-store.ts";
 
 // A program that finishes once it has a recovered/echo result.

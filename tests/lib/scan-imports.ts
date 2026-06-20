@@ -56,7 +56,7 @@ export function specifiersInDir(dir: string): Reference[] {
 // produce a precise failure message (the relative-only rule below is the
 // primary check; this names *why* a non-relative import is bad).
 const HOST_DENYLIST: ReadonlyArray<RegExp> = [
-  /^@iris\/(store|host|channel|provider)/,
+  /^@irisrun\/(store|host|channel|provider)/,
   /^better-sqlite3/,
   /^sqlite3$/,
   /^pg$/,

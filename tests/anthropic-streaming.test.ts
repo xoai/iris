@@ -5,9 +5,9 @@
 // fallback, malformed-frame tolerance, and a loud failure on a missing model id.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import type { Json } from "@iris/core";
-import { anthropicStreamingModelPerformer } from "@iris/provider-anthropic";
-import type { ModelCallResult } from "@iris/provider-anthropic";
+import type { Json } from "@irisrun/core";
+import { anthropicStreamingModelPerformer } from "@irisrun/provider-anthropic";
+import type { ModelCallResult } from "@irisrun/provider-anthropic";
 
 function sseEvents(...objs: Json[]): string {
   return objs.map((o) => `event: e\ndata: ${JSON.stringify(o)}`).join("\n\n") + "\n\n";

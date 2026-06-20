@@ -2,7 +2,7 @@
 // tsconfig include and the tests/**/*.test.ts runner glob).
 //   IRIS_REST_SMOKE=1 node manual/rest-smoke.ts
 //
-// Proves the @iris/channel-rest two-identifier protocol (ADR-0009) over a REAL
+// Proves the @irisrun/channel-rest two-identifier protocol (ADR-0009) over a REAL
 // external HTTP socket (the install-free suite uses 127.0.0.1; here we bind a
 // reachable port). It exercises the round-trip the in-process test cannot fully
 // stand in for: a real client over the network presenting the issued
@@ -11,9 +11,9 @@ import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { harnessProgram, defaultBundle } from "@iris/core";
-import { FsStateStore, FsScheduler } from "@iris/store-fs";
-import { makeRestChannel } from "@iris/channel-rest";
+import { harnessProgram, defaultBundle } from "@irisrun/core";
+import { FsStateStore, FsScheduler } from "@irisrun/store-fs";
+import { makeRestChannel } from "@irisrun/channel-rest";
 
 const INPUT = { messages: [{ role: "user", content: "go" }] };
 

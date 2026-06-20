@@ -8,7 +8,7 @@ import type {
   EffectResult,
   Marker,
   Json,
-} from "@iris/core";
+} from "@irisrun/core";
 
 export const TIMER_DELAY = 10;
 

@@ -1,5 +1,5 @@
-// @iris/host — public surface (host-side; makes "same image, different host" explicit).
-export const PACKAGE = "@iris/host";
+// @irisrun/host — public surface (host-side; makes "same image, different host" explicit).
+export const PACKAGE = "@irisrun/host";
 
 export { runTurnOn, checkHostCapabilities } from "./adapter.ts";
 export type { HostAdapter, RunTurnOnOptions } from "./adapter.ts";

@@ -4,8 +4,8 @@ import {
   makeToolInvoker,
   makeInProcessTransport,
   makeSubprocessTransport,
-} from "@iris/tools";
-import type { ToolContract } from "@iris/tools";
+} from "@irisrun/tools";
+import type { ToolContract } from "@irisrun/tools";
 
 const NODE = process.execPath;
 

@@ -16,7 +16,7 @@ import type {
   AppendResult,
   JournalRow,
   Version,
-} from "@iris/core";
+} from "@irisrun/core";
 import type { DoStorage } from "./do-storage.ts";
 
 // Percent-encode every byte that is not unreserved (A-Z a-z 0-9 - _). This turns
@@ -66,7 +66,7 @@ function decodeKv(bytes: Uint8Array): KvRecord {
   return JSON.parse(TD.decode(bytes)) as KvRecord;
 }
 // Web-standard base64 (btoa/atob are globals on BOTH Node 24 and the edge V8
-// isolate) — NO Node `Buffer`, so @iris/store-do needs no `nodejs_compat` flag on
+// isolate) — NO Node `Buffer`, so @irisrun/store-do needs no `nodejs_compat` flag on
 // Cloudflare Workers. This keeps the edge adapter genuinely edge-native (the M6
 // portability claim). Journal/snapshot records are small, so the per-byte loop is fine.
 function toB64(bytes: Uint8Array): string {

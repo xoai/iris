@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import type { Json } from "@iris/core";
-import { anthropicModelPerformer } from "@iris/provider-anthropic";
-import type { ModelCallResult } from "@iris/provider-anthropic";
+import type { Json } from "@irisrun/core";
+import { anthropicModelPerformer } from "@irisrun/provider-anthropic";
+import type { ModelCallResult } from "@irisrun/provider-anthropic";
 
 // Real adapter — request shaping + response parsing via an INJECTED fake fetch.
 // No network, no key. (The real network path is manual-only, with a key.)

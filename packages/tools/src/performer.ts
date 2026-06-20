@@ -3,7 +3,7 @@
 // {callId,name,args}), resolve the ToolContract by name and invoke it across the
 // real protocol boundary via the ToolInvoker. The engine's effect/recovery/replay
 // machinery is reused verbatim — engine.ts is byte-untouched. Host-side.
-import type { Performer, Outcome, Json } from "@iris/core";
+import type { Performer, Outcome, Json } from "@irisrun/core";
 import type { ToolRegistry } from "./contract.ts";
 import type { ToolInvoker } from "./invoker.ts";
 

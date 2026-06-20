@@ -7,20 +7,20 @@
 import { createInterface } from "node:readline";
 import { dirname, join, resolve, isAbsolute } from "node:path";
 import { pathToFileURL } from "node:url";
-import { readOciLayout, governingDigest, agentfileSchemaJson } from "@iris/agent";
-import type { AgentImage } from "@iris/agent";
-import { defaultBundle, harnessProgram } from "@iris/core";
-import type { Performer, Json, StateStore, Scheduler } from "@iris/core";
-import { makeToolPerformer, makeToolRegistry, makeToolInvoker, makeSubprocessTransport } from "@iris/tools";
-import type { ToolContract } from "@iris/tools";
+import { readOciLayout, governingDigest, agentfileSchemaJson } from "@irisrun/agent";
+import type { AgentImage } from "@irisrun/agent";
+import { defaultBundle, harnessProgram } from "@irisrun/core";
+import type { Performer, Json, StateStore, Scheduler } from "@irisrun/core";
+import { makeToolPerformer, makeToolRegistry, makeToolInvoker, makeSubprocessTransport } from "@irisrun/tools";
+import type { ToolContract } from "@irisrun/tools";
 import { readFile } from "node:fs/promises";
 import { cmdInit, cmdBuild, cmdInspect, cmdVerify, cmdPush, cmdPull, cmdRun, cmdServe, cmdDeploy, loadApprovalPolicy, type CliSubagents } from "./iris.ts";
 import { cmdAudit } from "./audit-cmd.ts";
 import { cmdEval, loadEvalSuite } from "./eval-cmd.ts";
 import { cmdSchedule } from "./schedule-cmd.ts";
 import { loadSubagents } from "./subagents-cfg.ts";
-import { createApprovalInbox } from "@iris/auth";
-import type { ApprovalPolicy, Principal } from "@iris/auth";
+import { createApprovalInbox } from "@irisrun/auth";
+import type { ApprovalPolicy, Principal } from "@irisrun/auth";
 import { loadBundledTools } from "./tools.ts";
 import { echoStreamingPerformer } from "./echo.ts";
 import { runChat, wrapModelForImage, makeChatFakeModel, makeChatStreamingFakeModel, makeStreamSink } from "./chat.ts";
@@ -154,7 +154,7 @@ async function runCommand(argv: string[]): Promise<void> {
   // model-id prefix (needs that provider's API key, e.g. ANTHROPIC_API_KEY /
   // OPENAI_API_KEY). The bare (prefix-stripped) model id is baked into the
   // performer since the harness model_call request carries no model.
-  const sqlite = await import("@iris/store-sqlite");
+  const sqlite = await import("@irisrun/store-sqlite");
   const image = await readOciLayout(layout);
   const provider = await loadModelProvider(providerNameForModel(image.lock.model.id));
   const handle = sqlite.openDatabase(db);
@@ -199,7 +199,7 @@ async function serveCommand(argv: string[]): Promise<void> {
     ? { policy: loadApprovalPolicy(await readFile(policyFile, "utf8"), `--policy ${policyFile}`), inbox: createApprovalInbox() }
     : undefined;
 
-  const sqlite = await import("@iris/store-sqlite");
+  const sqlite = await import("@irisrun/store-sqlite");
   const handle = sqlite.openDatabase(db);
   const store = new sqlite.SqliteStateStore(handle);
   const scheduler = new sqlite.SqliteScheduler(handle);
@@ -294,7 +294,7 @@ async function chatCommand(argv: string[]): Promise<void> {
     roles: roleFlags.length ? roleFlags : ["operator"],
   };
 
-  const sqlite = await import("@iris/store-sqlite");
+  const sqlite = await import("@irisrun/store-sqlite");
   const handle = sqlite.openDatabase(db);
   const store = new sqlite.SqliteStateStore(handle);
   const scheduler = new sqlite.SqliteScheduler(handle);
@@ -479,7 +479,7 @@ async function auditCommand(argv: string[]): Promise<void> {
   const json = argv.includes("--json");
   const forceInteractive = argv.includes("--interactive"); // override journal auto-detection
 
-  const sqlite = await import("@iris/store-sqlite");
+  const sqlite = await import("@irisrun/store-sqlite");
   const handle = sqlite.openDatabase(db);
   const store = new sqlite.SqliteStateStore(handle);
   try {
@@ -543,7 +543,7 @@ async function scheduleCommand(argv: string[]): Promise<void> {
     console.warn("iris schedule: --db :memory: — the schedule won't persist; pass --db <path> for a durable, resumable job");
   }
 
-  const sqlite = await import("@iris/store-sqlite");
+  const sqlite = await import("@irisrun/store-sqlite");
   const handle = sqlite.openDatabase(db);
   const store = new sqlite.SqliteStateStore(handle);
   const scheduler = new sqlite.SqliteScheduler(handle);

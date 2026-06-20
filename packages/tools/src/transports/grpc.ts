@@ -5,7 +5,7 @@
 // round-trip proves framing + codec — NOT protobuf interop (manual-only).
 // Host-side (node:http2).
 import http2 from "node:http2";
-import type { Json } from "@iris/core";
+import type { Json } from "@irisrun/core";
 import type { Transport, ToolResult } from "../invoker.ts";
 import { locationHandle, messageOf, toolFailure } from "../invoker.ts";
 

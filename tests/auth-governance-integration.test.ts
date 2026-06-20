@@ -14,7 +14,7 @@ import {
   composeDecideNext,
   reactAssembleContext,
   reactDecideNext,
-} from "@iris/core";
+} from "@irisrun/core";
 import type {
   EngineDeps,
   JournalRecord,
@@ -24,8 +24,8 @@ import type {
   Performer,
   Json,
   Version,
-} from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
+} from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
 import { TestClock } from "./lib/mem-store.ts";
 import { makeScriptedModel } from "./lib/fake-model.ts";
 import { makeTacticRouter } from "./lib/fake-tactic.ts";
@@ -35,9 +35,9 @@ import {
   makeGovernedApprovalPerformer,
   auditApprovals,
   approvalAudit,
-} from "@iris/auth";
-import type { ApprovalPolicy, GovernedAction, RawApproval } from "@iris/auth";
-import { inspectSession } from "@iris/inspect";
+} from "@irisrun/auth";
+import type { ApprovalPolicy, GovernedAction, RawApproval } from "@irisrun/auth";
+import { inspectSession } from "@irisrun/inspect";
 
 const INPUT = { messages: [{ role: "user", content: "go" }] };
 const ONE_TOOL_THEN_DONE: Json[] = [

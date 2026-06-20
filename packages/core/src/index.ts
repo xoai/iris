@@ -1,5 +1,5 @@
-// @iris/core — public surface (pure; no host/transport/Node-only imports).
-export const PACKAGE = "@iris/core";
+// @irisrun/core — public surface (pure; no host/transport/Node-only imports).
+export const PACKAGE = "@irisrun/core";
 
 export { canonicalize, encode, decode, canonicalEqual } from "./json.ts";
 export type { Json } from "./json.ts";

@@ -5,8 +5,8 @@
 // auditCommand (real sqlite IO) is not unit-tested per repo convention.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { MemoryStateStore } from "@iris/store-memory";
-import { cmdAudit } from "iris";
+import { MemoryStateStore } from "@irisrun/store-memory";
+import { cmdAudit } from "iris-runtime";
 import { recordGovernedSession, recordInteractiveSession } from "./lib/record-governed-session.ts";
 
 test("cmdAudit: non-interactive finished session → trail text + OK verify line", async () => {

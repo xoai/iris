@@ -15,7 +15,7 @@ import type {
   AppendResult,
   JournalRow,
   Version,
-} from "@iris/core";
+} from "@irisrun/core";
 
 export interface FsStoreOptions {
   root: string;

@@ -1,8 +1,8 @@
 {
-  "name": "@iris/schedule",
+  "name": "@irisrun/schedule",
   "version": "0.1.0",
   "type": "module",
-  "description": "Iris schedules — a recurring job as a durable, replayable agent: each cycle reads the logical clock, runs a job effect, and parks on a durable timer until the next run. A host-side multi-session pump (tick) discovers due sessions via the scheduler's dueWakeups and resumes them, confirming a wakeup only after a committed turn (at-least-once). Cadence lives in the journal, so the whole schedule replays identically. Deps @iris/core + @iris/host only.",
+  "description": "Iris schedules — a recurring job as a durable, replayable agent: each cycle reads the logical clock, runs a job effect, and parks on a durable timer until the next run. A host-side multi-session pump (tick) discovers due sessions via the scheduler's dueWakeups and resumes them, confirming a wakeup only after a committed turn (at-least-once). Cadence lives in the journal, so the whole schedule replays identically. Deps @irisrun/core + @irisrun/host only.",
   "exports": {
     ".": {
       "iris-src": "./src/index.ts",
@@ -11,8 +11,8 @@
     }
   },
   "dependencies": {
-    "@iris/core": "^0.1.0",
-    "@iris/host": "^0.1.0"
+    "@irisrun/core": "^0.1.0",
+    "@irisrun/host": "^0.1.0"
   },
   "license": "MIT",
   "engines": {

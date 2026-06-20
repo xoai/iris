@@ -6,8 +6,8 @@
 // Spans are derived from the journal and NEVER fed back into replayed state, so a
 // turn that was observed still replays byte-identically. A Sink decouples emission
 // from a backend (collecting/console here; real OTLP export is a manual smoke).
-import type { Json } from "@iris/core";
-import type { SessionInspection } from "@iris/inspect";
+import type { Json } from "@irisrun/core";
+import type { SessionInspection } from "@irisrun/inspect";
 
 export type SpanStatus = "OK" | "ERROR" | "UNSET";
 

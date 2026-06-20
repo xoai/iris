@@ -5,7 +5,7 @@ import {
   validateAgentfile,
   contentPaths,
   contractRefs,
-} from "@iris/agent";
+} from "@irisrun/agent";
 
 const VALID = {
   apiVersion: "iris/v1",

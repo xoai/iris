@@ -6,7 +6,7 @@
 // the genuinely-new recovery effect_result is).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { runTurn, acquireLease, encode } from "@iris/core";
+import { runTurn, acquireLease, encode } from "@irisrun/core";
 import type {
   JournalRecord,
   EffectResult,
@@ -16,8 +16,8 @@ import type {
   PerformerRegistry,
   Json,
   Version,
-} from "@iris/core";
-import { runTurnOn, type HostAdapter } from "@iris/host";
+} from "@irisrun/core";
+import { runTurnOn, type HostAdapter } from "@irisrun/host";
 import { MemStateStore, MemScheduler, TestClock } from "./lib/mem-store.ts";
 
 // --- an authored TWO-effect program: echo 10, echo 20, then finish -----------
@@ -166,7 +166,7 @@ const rProgram: Program<RS> = {
       : { type: "effect", effectKind: "echo", request: 7, idempotencyKey: "k" },
 };
 
-test("onRecord: threads through @iris/host runTurnOn (the per-request seam, not TurnInputs)", async () => {
+test("onRecord: threads through @irisrun/host runTurnOn (the per-request seam, not TurnInputs)", async () => {
   const store = new MemStateStore();
   const adapter: HostAdapter = {
     name: "test-host",

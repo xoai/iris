@@ -3,10 +3,10 @@
 // runChat) is appended in the REPL task.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import type { AgentImage } from "@iris/agent";
-import type { Performer, Json, HarnessState, TurnOutcome } from "@iris/core";
-import { defaultBundle } from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
+import type { AgentImage } from "@irisrun/agent";
+import type { Performer, Json, HarnessState, TurnOutcome } from "@irisrun/core";
+import { defaultBundle } from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
 import { TestClock } from "./lib/mem-store.ts";
 import {
   wrapModelForImage,
@@ -21,11 +21,11 @@ import {
   renderApprovalResult,
   type ChatDeps,
   type HitlRequest,
-} from "iris";
+} from "iris-runtime";
 import { makeScriptedModel } from "./lib/fake-model.ts";
 import { makeFakeTool, type ToolCallLog } from "./lib/fake-tool.ts";
-import { createApprovalInbox, auditApprovals } from "@iris/auth";
-import type { ApprovalPolicy, Principal } from "@iris/auth";
+import { createApprovalInbox, auditApprovals } from "@irisrun/auth";
+import type { ApprovalPolicy, Principal } from "@irisrun/auth";
 
 // A minimal literal image: the wrapper only reads agentfile.model,
 // agentfile.instructions, and content. `lock` is required by the type but unread.
@@ -522,7 +522,7 @@ test("runChat HITL: a streamed tool-call turn closes its line before the approva
   };
   const doneMsg: Json = { role: "assistant", content: "done", stopReason: "end_turn" };
   let call = 0;
-  const streamingToolThenDone: import("@iris/core").Performer = async () => {
+  const streamingToolThenDone: import("@irisrun/core").Performer = async () => {
     if (call++ === 0) {
       sink.onDelta("I'll ");
       sink.onDelta("run it");

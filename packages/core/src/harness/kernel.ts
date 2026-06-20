@@ -79,7 +79,7 @@ export interface HarnessConfig {
   // the gate/cursor/error machinery. Zero-value-off: absent/empty → every tool_exec still
   // emits `tool_call`, so the kernel is byte-identical to before (the gateAction approval
   // still runs upstream, so a delegate call can be allowed/denied/HITL-gated like any tool).
-  // The host registers a `subagent` performer (see @iris/subagents).
+  // The host registers a `subagent` performer (see @irisrun/subagents).
   subagentTools?: string[];
 }
 

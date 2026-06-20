@@ -2,7 +2,7 @@
 // connection ref (which may carry a version range `@^2`) to a concrete
 // ToolContract. Install-free: makeLocalResolver over an in-memory map; the real
 // external registry is a manual smoke. Host-side.
-import type { ToolContract } from "@iris/tools";
+import type { ToolContract } from "@irisrun/tools";
 
 export interface RegistryResolver {
   // Resolve a ref (with optional `@range`) to a concrete contract, or null if

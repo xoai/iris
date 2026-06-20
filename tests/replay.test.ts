@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { replay, canonicalize } from "@iris/core";
-import type { JournalRecord } from "@iris/core";
+import { replay, canonicalize } from "@irisrun/core";
+import type { JournalRecord } from "@irisrun/core";
 import { rec, intentRec, resultRec } from "./lib/journal-helpers.ts";
 import { sumReducer, sumInitial, type SumState } from "./lib/sample-program.ts";
 

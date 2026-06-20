@@ -1,6 +1,6 @@
-// @iris/bundle-coding — the first domain (coding) tactic bundle. HOST-SIDE: it
-// composes coding-specialized tactics on the 5 harness seams from @iris/core's
-// EXPORTED primitives ([[lrn-core-exports-functions-only]]), so @iris/core stays
+// @irisrun/bundle-coding — the first domain (coding) tactic bundle. HOST-SIDE: it
+// composes coding-specialized tactics on the 5 harness seams from @irisrun/core's
+// EXPORTED primitives ([[lrn-core-exports-functions-only]]), so @irisrun/core stays
 // byte-untouched. The assembled `codingBundle()` returns the SAME shape as core's
 // `defaultBundle()` — a pure `tacticPerformer` (a Performer answering a
 // {seam, payload} request with {seam, tacticId:"iris/coding", choice}) plus the
@@ -9,7 +9,7 @@
 // quarantine (replay folds the journaled choice, never re-invokes a tactic)
 // applies to this external bundle unchanged.
 //
-// Pure composition over core's surface — no host/Node imports (the @iris/core
+// Pure composition over core's surface — no host/Node imports (the @irisrun/core
 // dependency is the ONLY dependency; this package is NOT a host/transport package).
 import {
   composeAssemble,
@@ -20,7 +20,7 @@ import {
   windowCompaction,
   toolRepair,
   defaultInvariants,
-} from "@iris/core";
+} from "@irisrun/core";
 import type {
   Json,
   Performer,
@@ -35,7 +35,7 @@ import type {
   ModelContext,
   ToolCall,
   ErrorInfo,
-} from "@iris/core";
+} from "@irisrun/core";
 
 /** The stable id pinned into `Lock.tactics.bundle` and journaled as the tacticId. */
 export const BUNDLE_ID = "iris/coding";

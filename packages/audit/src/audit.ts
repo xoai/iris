@@ -1,7 +1,7 @@
 // auditSession (roadmap P2-8): a whole-session, compliance-grade audit. UNLIKE
 // `inspectSession` (which reads only the POST-snapshot tail), this reads the FULL
 // retained journal from seq 0 — every effect intent/result, every marker — plus the
-// governed approval trail (via @iris/auth's `auditApprovals`, also full-journal).
+// governed approval trail (via @irisrun/auth's `auditApprovals`, also full-journal).
 //
 // COMPLETENESS (the load-bearing property, LRN:gotcha d8ddf8a1): the engine snapshots
 // and TRUNCATES the journal past each boundary unless a turn ran with `keepHistory:true`.
@@ -10,7 +10,7 @@
 // pre-snapshot events. `complete` ⇔ the retained journal still starts at seq 0.
 //
 // Pure over the journal bytes ⇒ re-auditing the same store is byte-identical.
-import { decode } from "@iris/core";
+import { decode } from "@irisrun/core";
 import type {
   StateStore,
   JournalRecord,
@@ -21,9 +21,9 @@ import type {
   Decision,
   Marker,
   Json,
-} from "@iris/core";
-import { auditApprovals, renderApprovalAudit } from "@iris/auth";
-import type { ApprovalAuditEntry } from "@iris/auth";
+} from "@irisrun/core";
+import { auditApprovals, renderApprovalAudit } from "@irisrun/auth";
+import type { ApprovalAuditEntry } from "@irisrun/auth";
 
 /** One journal record, audit-projected. A superset of inspect's InspectedRecord:
  *  effect entries carry typed `effectKind`/`effectId`/`outcome` so a compliance
@@ -55,7 +55,7 @@ export type SessionAudit = {
   counts: { effects: number; results: number; markers: number; decisions: number };
 };
 
-// Deterministic one-line summary per record (mirrors @iris/inspect's private summarize
+// Deterministic one-line summary per record (mirrors @irisrun/inspect's private summarize
 // so audit and inspect renderings read alike).
 function summarize(rec: JournalRecord): string {
   switch (rec.kind) {

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseAgentfileYaml, parseAgentfileJson, parseYamlValue } from "@iris/agent";
+import { parseAgentfileYaml, parseAgentfileJson, parseYamlValue } from "@irisrun/agent";
 
 const YAML = `# an authored Agentfile
 apiVersion: iris/v1

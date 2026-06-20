@@ -1,8 +1,8 @@
 // model_call request/result shapes — these MIRROR the model-port contract (cf.
-// @iris/provider-anthropic/src/types.ts). The shared conformance suite
+// @irisrun/provider-anthropic/src/types.ts). The shared conformance suite
 // (tests/lib/model-provider-conformance.ts) guarantees both providers honor the
 // SAME shape, so the contract is DUPLICATED here rather than promoted into
-// @iris/core — the engine/core stays untouched (an Iris invariant). The performer
+// @irisrun/core — the engine/core stays untouched (an Iris invariant). The performer
 // casts Json ↔ these at the effect boundary.
 
 export interface ModelMessage {

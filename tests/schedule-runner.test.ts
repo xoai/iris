@@ -5,14 +5,14 @@
 // satisfy WakeupSource.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { runTurnOn } from "@iris/host";
-import type { HostAdapter } from "@iris/host";
-import { replay } from "@iris/core";
-import type { PerformerRegistry, Json, LogicalClock } from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
-import { SqliteScheduler } from "@iris/store-sqlite";
-import { makeScheduleRunner, scheduleProgram, type WakeupSource, type ResumeInputs } from "@iris/schedule";
-import type { ScheduleState } from "@iris/schedule";
+import { runTurnOn } from "@irisrun/host";
+import type { HostAdapter } from "@irisrun/host";
+import { replay } from "@irisrun/core";
+import type { PerformerRegistry, Json, LogicalClock } from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
+import { SqliteScheduler } from "@irisrun/store-sqlite";
+import { makeScheduleRunner, scheduleProgram, type WakeupSource, type ResumeInputs } from "@irisrun/schedule";
+import type { ScheduleState } from "@irisrun/schedule";
 import { makeAbortOnAppendStore, makeContendedStore } from "./lib/flaky-store.ts";
 
 // ── T3.2 compile-time guard: concrete schedulers satisfy the host WakeupSource ──────────

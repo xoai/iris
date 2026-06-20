@@ -2,14 +2,14 @@
 // tsconfig include and the tests/**/*.test.ts runner glob).
 //   IRIS_DEPLOY_SMOKE=1 node manual/iris-deploy-smoke.ts
 //
-// Proves `iris deploy`'s GENERATED worker.mjs actually boots the SAME @iris/core
+// Proves `iris deploy`'s GENERATED worker.mjs actually boots the SAME @irisrun/core
 // unchanged: scaffold the project, dynamically import the generated worker, and drive
 // its AgentDO.fetch against an in-memory fake DurableObjectStorage (the install-free
 // edge analogue — same approach as tests/store-do*.test.ts). Asserts a turn returns a
 // valid status. This needs NO Cloudflare account and NO miniflare.
 //
 // The REAL edge deploy is the env-gated operator step (documented, not run here):
-//   cd <outDir> && wrangler deploy        # bundles @iris/* (esbuild) + uploads to CF
+//   cd <outDir> && wrangler deploy        # bundles @irisrun/* (esbuild) + uploads to CF
 //   wrangler secret put ANTHROPIC_API_KEY # for a real model (else the worker echoes)
 // (A miniflare run of the bundled worker is the other manual option, cf.
 //  manual/cloudflare-workers-smoke.ts.)
@@ -18,8 +18,8 @@ import { mkdtemp, rm, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { cmdInit, cmdBuild, cmdDeploy } from "iris";
-import { makeLocalResolver } from "@iris/agent";
+import { cmdInit, cmdBuild, cmdDeploy } from "iris-runtime";
+import { makeLocalResolver } from "@irisrun/agent";
 
 // A minimal in-memory DurableObjectStorage (the shape the generated doStorageAdapter
 // wraps): Map-backed get/put/delete/list + a pass-through transaction + alarm hint.
@@ -59,7 +59,7 @@ async function main() {
   const oci = await mkdtemp(join(tmpdir(), "iris-deploy-oci-"));
   await cmdBuild({ file: agentPath, out: oci, resolver: makeLocalResolver({}) });
 
-  // Generate UNDER the repo tree so the worker's bare `@iris/*` imports resolve via
+  // Generate UNDER the repo tree so the worker's bare `@irisrun/*` imports resolve via
   // Node's upward node_modules search (on a real deploy, wrangler/esbuild bundles them).
   const outDir = await mkdtemp(join(process.cwd(), ".iris-edge-smoke-"));
   try {

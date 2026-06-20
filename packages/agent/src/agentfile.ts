@@ -1,11 +1,11 @@
 // Agentfile model + JSON parser + validation (spec §3.2, ADR-0005). The Agentfile
 // is a RECIPE: it references content (embedded by hash) and contracts (pinned by
 // digest) and contains NO executable behavior. Host-side; zero deps.
-import type { Json } from "@iris/core";
+import type { Json } from "@irisrun/core";
 
-// The capability profile (ADR-0008). NEW @iris/agent type (the framework doc
+// The capability profile (ADR-0008). NEW @irisrun/agent type (the framework doc
 // defines the shape; no core type exists). `tool_locality:"in-process"` is a
-// legal PROFILE value (it mirrors @iris/tools ToolLocality) — distinct from a
+// legal PROFILE value (it mirrors @irisrun/tools ToolLocality) — distinct from a
 // resolved tool-contract transport, which may NOT be in-process in an Agentfile.
 export interface CapabilityProfile {
   long_running?: boolean;

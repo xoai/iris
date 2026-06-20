@@ -1,9 +1,9 @@
-// @iris/auth — the governance layer (roadmap P1-5). Identity + a declarative
+// @irisrun/auth — the governance layer (roadmap P1-5). Identity + a declarative
 // who-may-approve authorization policy on the existing HITL approval gate, plus a
 // journaled, queryable approval audit trail. Pure: the governed decision rides the
 // existing journaled `signal_recv` effect result (the kernel's `foldApproval` reads
 // only `approved===true`), so governance enriches that value with ZERO kernel change.
-export const PACKAGE = "@iris/auth";
+export const PACKAGE = "@irisrun/auth";
 
 // identity.ts — the domain nouns (who + what)
 export type { Principal, GovernedAction } from "./identity.ts";

@@ -90,7 +90,7 @@ times and proves byte-identical results — score, status, *and the entire recor
 journal*:
 
 ```ts
-import { reproduce } from "@iris/evals";
+import { reproduce } from "@irisrun/evals";
 
 const report = await reproduce(myCase, myScorer, { runs: 3 });
 // report.reproducible === true   → every run produced an identical journal
@@ -104,7 +104,7 @@ flaky eval is a caught bug, not a mystery.
 ### From the CLI: `iris eval`
 
 Reproducible evals are also a command. An eval **suite module** exports `cases` and
-a `scorer` (it builds each case over `@iris/core` + a store package); point
+a `scorer` (it builds each case over `@irisrun/core` + a store package); point
 `iris eval` at it:
 
 ```sh

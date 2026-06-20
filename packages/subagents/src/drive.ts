@@ -2,16 +2,16 @@
 // repeatedly running turns on the child's host. A child that PARKS (HITL/timer/user/signal)
 // is reported as parked — NOT force-driven — because parking is a legitimate durable state
 // the child chose; the caller decides what to do with the returned sessionId. Host-side
-// (reuses @iris/host runTurnOn); the engine's replay/recovery does the determinism.
-import { runTurnOn } from "@iris/host";
-import type { HostAdapter } from "@iris/host";
+// (reuses @irisrun/host runTurnOn); the engine's replay/recovery does the determinism.
+import { runTurnOn } from "@irisrun/host";
+import type { HostAdapter } from "@irisrun/host";
 import type {
   Program,
   PerformerRegistry,
   LogicalClock,
   Json,
   WaitSpec,
-} from "@iris/core";
+} from "@irisrun/core";
 
 export const DEFAULT_MAX_TURNS = 64;
 

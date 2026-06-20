@@ -1,6 +1,6 @@
 // M6 T8 — replay-incorruptibility of an INSTALLED external bundle (C4 extended,
 // spec §4.3 / §6 done-when #3b). Mirrors tests/tactic-swap.test.ts exactly, but
-// with @iris/bundle-coding's tacticPerformer as the session's installed tactic.
+// with @irisrun/bundle-coding's tacticPerformer as the session's installed tactic.
 // Proof that an installed third-party (or malicious) bundle CANNOT corrupt a
 // replayed session: (1) pure replay() with ZERO performers reconstructs the turn
 // byte-identically; (2) resuming with an ADVERSARIAL performer (every seam choice
@@ -9,10 +9,10 @@
 // `choice` regardless of the authoring performer; `tacticId` is a label only.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { runTurn, replay, canonicalize, decode, harnessProgram } from "@iris/core";
-import type { EngineDeps, JournalRecord, HarnessState, Invariants, Performer, Json } from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
-import { codingBundle } from "@iris/bundle-coding";
+import { runTurn, replay, canonicalize, decode, harnessProgram } from "@irisrun/core";
+import type { EngineDeps, JournalRecord, HarnessState, Invariants, Performer, Json } from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
+import { codingBundle } from "@irisrun/bundle-coding";
 import { TestClock } from "./lib/mem-store.ts";
 import { makeScriptedModel } from "./lib/fake-model.ts";
 import { makeFakeTool, type ToolCallLog } from "./lib/fake-tool.ts";

@@ -3,7 +3,7 @@
 // durable timer at `now + intervalTicks`; on the next wake it loops. Cadence derives ONLY
 // from journaled clock results (never `record.ts`), so the whole schedule replays
 // identically. `maxRuns` bounds the session (and tests). Pure — no I/O, no clock/RNG reads.
-import type { Program, Action, JournalRecord, EffectResult, Marker, Json, EffectKind } from "@iris/core";
+import type { Program, Action, JournalRecord, EffectResult, Marker, Json, EffectKind } from "@irisrun/core";
 
 // The per-tick job: one effect run each cycle. Its performer is supplied by the host
 // (e.g. `echo`, `clock`, a `tool_call`, or a `subagent` spawn — see the composition test).

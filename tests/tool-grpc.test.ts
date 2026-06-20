@@ -6,9 +6,9 @@ import {
   jsonCodec,
   frameMessage,
   makeFrameReader,
-} from "@iris/tools";
-import type { ToolContract } from "@iris/tools";
-import type { Json } from "@iris/core";
+} from "@irisrun/tools";
+import type { ToolContract } from "@irisrun/tools";
+import type { Json } from "@irisrun/core";
 
 // An in-process HTTP/2 server speaking gRPC framing + the JSON codec. It writes
 // the response frame in TWO chunks to force the client to reassemble a partial

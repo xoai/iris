@@ -9,16 +9,16 @@
 // label the §3 refusal message interpolates — so the rendered refusal is
 // byte-identical to ADR-0008's example.
 //
-// The package deps only @iris/core, so the HostAdapter SHAPE is declared
-// structurally here (HostAdapter from @iris/host is structurally identical); the
-// capabilities object matches @iris/agent's CapabilityProfile field-for-field.
-import type { StateStore, Scheduler } from "@iris/core";
+// The package deps only @irisrun/core, so the HostAdapter SHAPE is declared
+// structurally here (HostAdapter from @irisrun/host is structurally identical); the
+// capabilities object matches @irisrun/agent's CapabilityProfile field-for-field.
+import type { StateStore, Scheduler } from "@irisrun/core";
 import { DoStateStore } from "./store.ts";
 import { DoScheduler } from "./scheduler.ts";
 import type { DoStorage } from "./do-storage.ts";
 
-// Structurally identical to @iris/host's HostAdapter (avoids a host/agent dep —
-// the package stays @iris/core-only per the workstream boundary).
+// Structurally identical to @irisrun/host's HostAdapter (avoids a host/agent dep —
+// the package stays @irisrun/core-only per the workstream boundary).
 export interface EdgeHostAdapter {
   name: string;
   capabilities: {

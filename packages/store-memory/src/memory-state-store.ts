@@ -9,7 +9,7 @@ import type {
   AppendResult,
   JournalRow,
   Version,
-} from "@iris/core";
+} from "@irisrun/core";
 
 export class MemoryStateStore implements StateStore {
   private kv = new Map<string, { bytes: Uint8Array; version: Version }>();

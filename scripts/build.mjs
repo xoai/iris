@@ -1,10 +1,10 @@
 // Publish build: compile every publishable package's src/*.ts → dist/*.js (+ .d.ts)
 // so the npm artifacts are importable once installed (Node won't type-strip .ts under
-// node_modules). Dev is unaffected — `npm test`/`typecheck` resolve @iris/* to src via
+// node_modules). Dev is unaffected — `npm test`/`typecheck` resolve @irisrun/* to src via
 // the `iris-src` export condition; this build only runs at publish (via release.mjs).
 //
 // Each package compiles INDEPENDENTLY (order-free): cross-package imports are bare
-// (`@iris/core`) and resolve to deps' SRC for types through the iris-src condition, so
+// (`@irisrun/core`) and resolve to deps' SRC for types through the iris-src condition, so
 // no dist needs to exist for a dependency. The per-package tsconfig.build.json is a
 // generated, gitignored artifact (extends tsconfig.build.base.json).
 import { spawnSync } from "node:child_process";

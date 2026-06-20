@@ -8,11 +8,11 @@
 // effect + a durable timer park), NOT a full agent turn — a recurring single-effect job
 // (e.g. echo, a tool_call, or a subagent spawn). Determinism comes from the journaled
 // clock results; given the same config + performers the whole schedule replays identically.
-import { runTurnOn } from "@iris/host";
-import type { HostAdapter } from "@iris/host";
-import { scheduleProgram, makeScheduleRunner } from "@iris/schedule";
-import type { ScheduleJob, WakeupSource } from "@iris/schedule";
-import type { PerformerRegistry, TurnOutcome, Json } from "@iris/core";
+import { runTurnOn } from "@irisrun/host";
+import type { HostAdapter } from "@irisrun/host";
+import { scheduleProgram, makeScheduleRunner } from "@irisrun/schedule";
+import type { ScheduleJob, WakeupSource } from "@irisrun/schedule";
+import type { PerformerRegistry, TurnOutcome, Json } from "@irisrun/core";
 
 export interface CmdScheduleOptions {
   host: HostAdapter; // the store + scheduler the schedule session lives on

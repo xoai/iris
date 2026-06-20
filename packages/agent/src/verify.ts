@@ -4,7 +4,7 @@
 // is still resolvable + unchanged; (3) the recomputed imageDigest equals the
 // stored one (recompute strips the self-referential field, exactly as build does).
 // Host-side.
-import { contractDigest } from "@iris/tools";
+import { contractDigest } from "@irisrun/tools";
 import { sha256Hex, computeImageDigest, type AgentImage } from "./image.ts";
 import type { RegistryResolver } from "./resolver.ts";
 import { bundleDigest, type BundleResolver } from "./bundle.ts";

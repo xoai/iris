@@ -1,4 +1,4 @@
-// M6 T6 — @iris/bundle-coding, the first domain bundle. A HOST-SIDE package that
+// M6 T6 — @irisrun/bundle-coding, the first domain bundle. A HOST-SIDE package that
 // composes coding-specialized tactics on the 5 seams from core's EXPORTED
 // primitives (core stays byte-untouched). It produces the SAME journaled
 // `{seam, tacticId, choice}` shape as defaultBundle, so the ADR-0007 quarantine
@@ -8,10 +8,10 @@
 // core runTurn + scripted model/tool performers) and finishes.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { runTurn, harnessProgram } from "@iris/core";
-import type { EngineDeps, HarnessState, Json, Invariants, Performer } from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
-import { codingBundle, BUNDLE_ID, PACKAGE } from "@iris/bundle-coding";
+import { runTurn, harnessProgram } from "@irisrun/core";
+import type { EngineDeps, HarnessState, Json, Invariants, Performer } from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
+import { codingBundle, BUNDLE_ID, PACKAGE } from "@irisrun/bundle-coding";
 import { TestClock } from "./lib/mem-store.ts";
 import { makeScriptedModel } from "./lib/fake-model.ts";
 import { makeFakeTool, type ToolCallLog } from "./lib/fake-tool.ts";
@@ -26,7 +26,7 @@ async function perform(seam: string, payload: Json): Promise<Json> {
 }
 
 test("T6: codingBundle exposes its package + id", () => {
-  assert.equal(PACKAGE, "@iris/bundle-coding");
+  assert.equal(PACKAGE, "@irisrun/bundle-coding");
   assert.equal(BUNDLE_ID, "iris/coding");
 });
 

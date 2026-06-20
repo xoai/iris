@@ -5,10 +5,10 @@
 // rather than silently dropping pre-snapshot events.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { canonicalize } from "@iris/core";
-import type { Json } from "@iris/core";
-import { MemoryStateStore } from "@iris/store-memory";
-import { auditSession, renderAudit } from "@iris/audit";
+import { canonicalize } from "@irisrun/core";
+import type { Json } from "@irisrun/core";
+import { MemoryStateStore } from "@irisrun/store-memory";
+import { auditSession, renderAudit } from "@irisrun/audit";
 import { recordGovernedSession } from "./lib/record-governed-session.ts";
 
 test("audit (a) never-started session: complete:true (vacuous), empty trail, terminal open", async () => {

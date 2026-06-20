@@ -4,7 +4,7 @@
 // the seam's tactic chain and returns the decision as the effect result VALUE
 // { seam, tacticId, choice }. Replay never calls it (ADR-0007 quarantine), which
 // is what the tactic-swap proof (C4) relies on.
-import type { Performer, Json, Outcome } from "@iris/core";
+import type { Performer, Json, Outcome } from "@irisrun/core";
 
 // Structural counter (matches fake-model.ts's CallCounter by shape). Lets a test
 // assert the performer ran exactly once live and zero times on replay/resume.

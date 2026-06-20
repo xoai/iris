@@ -15,7 +15,7 @@ import {
   reactAssembleContext,
   reactDecideNext,
   toolRepair,
-} from "@iris/core";
+} from "@irisrun/core";
 import type {
   EngineDeps,
   JournalRecord,
@@ -26,8 +26,8 @@ import type {
   ErrorInfo,
   Performer,
   Json,
-} from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
+} from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
 import { TestClock } from "./lib/mem-store.ts";
 import { makeScriptedModel } from "./lib/fake-model.ts";
 import { makeTacticRouter } from "./lib/fake-tactic.ts";
@@ -36,8 +36,8 @@ import {
   makeToolRegistry,
   makeToolInvoker,
   makeInProcessTransport,
-} from "@iris/tools";
-import type { ToolContract } from "@iris/tools";
+} from "@irisrun/tools";
+import type { ToolContract } from "@irisrun/tools";
 
 const INPUT = { messages: [{ role: "user", content: "go" }] };
 const ONE_TOOL_THEN_DONE: Json[] = [

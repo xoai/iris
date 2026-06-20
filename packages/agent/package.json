@@ -1,5 +1,5 @@
 {
-  "name": "@iris/agent",
+  "name": "@irisrun/agent",
   "version": "0.1.0",
   "type": "module",
   "description": "Iris agent image toolchain — Agentfile model + parsers, builder (resolve/embed/pin/validate), content-addressed inspectable image + OCI layout, lockfile, integrity verify, and session pinning + definition migration. Host-side, zero external deps.",
@@ -11,8 +11,8 @@
     }
   },
   "dependencies": {
-    "@iris/core": "^0.1.0",
-    "@iris/tools": "^0.1.0"
+    "@irisrun/core": "^0.1.0",
+    "@irisrun/tools": "^0.1.0"
   },
   "license": "MIT",
   "engines": {

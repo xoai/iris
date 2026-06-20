@@ -4,7 +4,7 @@ The [README](../README.md) is the manifesto: it tells you *why* Iris exists. Thi
 is the **funnel**: a path a stranger can follow, in order, from nothing to a
 deployed agent a real person can talk to.
 
-> **North star:** from `npx iris init` to a **deployed, talkable agent that
+> **North star:** from `npx iris-runtime init` to a **deployed, talkable agent that
 > survives a host migration** — in an afternoon.
 
 Follow these in order. Each page ends with a **Next →** link to the next stop.
@@ -22,7 +22,7 @@ Follow these in order. Each page ends with a **Next →** link to the next stop.
 6. [06 — Models & providers](./06-providers.md) — bring your own model. Anthropic
    and OpenAI behind one tested port; how to add a third.
 7. [07 — Governance & audit](./07-governance.md) — the approval gate, the
-   `@iris/auth` governance layer, and the journaled approval trail — turned on
+   `@irisrun/auth` governance layer, and the journaled approval trail — turned on
    from the CLI with `iris serve --policy`.
 8. [08 — Audit & reproducible evals](./08-audit-and-evals.md) — the headline:
    `iris audit` for a replay-verified, compliance-grade session trail, and
@@ -32,8 +32,8 @@ Follow these in order. Each page ends with a **Next →** link to the next stop.
 
 ## How to run the commands
 
-Once Iris is published, the `iris` command is just `npx iris <cmd>` (or
-`npm i -g iris`). Working from a clone before publish, run the bin from the
+Once Iris is published, the `iris` command is just `npx iris-runtime <cmd>` (or
+`npm i -g iris-runtime`). Working from a clone before publish, run the bin from the
 workspace with the dev resolution condition (no build step):
 
 ```sh

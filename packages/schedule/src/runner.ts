@@ -4,9 +4,9 @@
 // (non-aborted) turn — so an aborted resume re-fires next tick (at-least-once). It
 // generalizes demo/run.ts's single-session peek→resume→confirm to all due sessions.
 // Deterministic given `now`; the caller owns the wall-clock loop / logical-time advance.
-import { runTurnOn } from "@iris/host";
-import type { HostAdapter } from "@iris/host";
-import type { Program, PerformerRegistry, LogicalClock, Json, TurnOutcome } from "@iris/core";
+import { runTurnOn } from "@irisrun/host";
+import type { HostAdapter } from "@irisrun/host";
+import type { Program, PerformerRegistry, LogicalClock, Json, TurnOutcome } from "@irisrun/core";
 
 // The host-level peek/confirm surface every concrete scheduler implements (Memory/Sqlite/
 // Fs/Do) — NOT part of the core Scheduler port. May be sync or async (store-do is async).

@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { encode, decode } from "@iris/core";
-import type { Version } from "@iris/core";
-import { openDatabase, SqliteStateStore } from "@iris/store-sqlite";
+import { encode, decode } from "@irisrun/core";
+import type { Version } from "@irisrun/core";
+import { openDatabase, SqliteStateStore } from "@irisrun/store-sqlite";
 
 // A2 — CAS correctness + monotonic fencing on the REAL SQLite store.
 

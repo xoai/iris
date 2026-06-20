@@ -5,7 +5,7 @@
 // it is a thin call into the engine's runTurn with the adapter's ports injected.
 // `checkHostCapabilities` is the tool/host-level ADR-0008 refusal (the FULL host
 // capability-diff gate stays deferred to M6). Host-side; core stays pure.
-import { runTurn } from "@iris/core";
+import { runTurn } from "@irisrun/core";
 import type {
   StateStore,
   Scheduler,
@@ -15,8 +15,8 @@ import type {
   TurnOutcome,
   JournalRecord,
   Json,
-} from "@iris/core";
-import type { CapabilityProfile } from "@iris/agent";
+} from "@irisrun/core";
+import type { CapabilityProfile } from "@irisrun/agent";
 
 export interface HostAdapter {
   name: string;

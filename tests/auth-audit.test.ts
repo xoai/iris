@@ -4,10 +4,10 @@
 // signals and non-effect records are excluded, never crash the join.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { approvalAudit, renderApprovalAudit } from "@iris/auth";
-import type { GovernedApproval } from "@iris/auth";
-import type { SessionInspection, InspectedRecord } from "@iris/inspect";
-import type { Json } from "@iris/core";
+import { approvalAudit, renderApprovalAudit } from "@irisrun/auth";
+import type { GovernedApproval } from "@irisrun/auth";
+import type { SessionInspection, InspectedRecord } from "@irisrun/inspect";
+import type { Json } from "@irisrun/core";
 
 function rec(seq: number, kind: InspectedRecord["kind"], detail: Json): InspectedRecord {
   return { seq, ts: seq, defDigest: "d", kind, summary: "", detail };

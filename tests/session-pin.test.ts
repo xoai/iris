@@ -8,19 +8,19 @@ import {
   harnessProgram,
   composeAssemble,
   reactAssembleContext,
-} from "@iris/core";
+} from "@irisrun/core";
 import type {
   EngineDeps,
   HarnessState,
   ReadonlyHarnessView,
   ModelContext,
   Json,
-} from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
+} from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
 import { TestClock } from "./lib/mem-store.ts";
 import { makeScriptedModel } from "./lib/fake-model.ts";
 import { makeTacticRouter } from "./lib/fake-tactic.ts";
-import { governingDigest } from "@iris/agent";
+import { governingDigest } from "@irisrun/agent";
 
 const INPUT = { messages: [{ role: "user", content: "hi" }] };
 const MODEL_OUT: Json[] = [{ role: "assistant", content: "hello", stopReason: "end_turn" }];

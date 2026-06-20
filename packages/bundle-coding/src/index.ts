@@ -1,7 +1,7 @@
-// @iris/bundle-coding — public surface (host-side; composes from @iris/core's
-// exported tactic primitives only — @iris/core is the ONLY dependency, and this
+// @irisrun/bundle-coding — public surface (host-side; composes from @irisrun/core's
+// exported tactic primitives only — @irisrun/core is the ONLY dependency, and this
 // is NOT a host/transport package).
-export const PACKAGE = "@iris/bundle-coding";
+export const PACKAGE = "@irisrun/bundle-coding";
 
 export {
   codingBundle,

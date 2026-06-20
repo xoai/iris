@@ -6,8 +6,8 @@
 // assertion's job); (3) totality (replay does not throw). No snapshot-fidelity claim.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import type { Json, Reducer } from "@iris/core";
-import { verifyReplay, verifySession, fnv1a32hex } from "@iris/audit";
+import type { Json, Reducer } from "@irisrun/core";
+import { verifyReplay, verifySession, fnv1a32hex } from "@irisrun/audit";
 import { rec, intentRec, resultRec } from "./lib/journal-helpers.ts";
 import { recordGovernedSession, harnessReducer, harnessInitial } from "./lib/record-governed-session.ts";
 

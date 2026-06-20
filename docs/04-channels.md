@@ -15,7 +15,7 @@ iris serve ./image --port 8787 --web
 `--model anthropic` (or `--model openai`) with the matching API key for the real
 provider. See [06 — Models & providers](./06-providers.md).
 
-`--web` serves a minimal chat UI (from `@iris/channel-web`) at `GET /`. Open
+`--web` serves a minimal chat UI (from `@irisrun/channel-web`) at `GET /`. Open
 `http://127.0.0.1:8787/` in a browser and talk to the agent.
 
 ## The protocol
@@ -44,7 +44,7 @@ never a silent 200.
 
 ## The client SDK
 
-You rarely want to hand-roll that protocol. `@iris/client-sdk` is a thin, isomorphic
+You rarely want to hand-roll that protocol. `@irisrun/client-sdk` is a thin, isomorphic
 client (Node ≥ 24 and the browser; zero runtime deps) that mirrors the channel's
 discipline exactly — it adopts the rotated `continuationToken` the server returns
 and presents it on the next turn.

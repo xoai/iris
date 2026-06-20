@@ -1,6 +1,6 @@
 // Shared model-provider CONFORMANCE suite — the literal realization of the P1-6
 // "done when": "two providers pass the SAME conformance tests behind the model
-// port." Both @iris/provider-anthropic and @iris/provider-openai run this exact set
+// port." Both @irisrun/provider-anthropic and @irisrun/provider-openai run this exact set
 // of behavioral assertions; only provider-specific surface (URL, auth header, body
 // field names, SSE event shape, default stopReason value) comes from the fixture.
 //
@@ -10,7 +10,7 @@
 // these in an async IIFE or a deferred callback.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import type { Json, Performer } from "@iris/core";
+import type { Json, Performer } from "@irisrun/core";
 
 // A minimal structural view of a parsed ModelCallResult (both providers' shapes).
 interface Result {

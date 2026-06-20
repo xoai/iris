@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { canonicalize, encode, decode, canonicalEqual } from "@iris/core";
-import type { Json } from "@iris/core";
+import { canonicalize, encode, decode, canonicalEqual } from "@irisrun/core";
+import type { Json } from "@irisrun/core";
 
 test("canonicalize: object key order is irrelevant", () => {
   const a: Json = { a: 1, b: 2, nested: { x: 1, y: 2 } };

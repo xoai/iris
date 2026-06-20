@@ -13,9 +13,9 @@ import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { cmdInit, cmdBuild, cmdServe, loadBundledTools } from "iris";
-import { echoStreamingPerformer } from "iris";
-import { anthropicStreamingModelPerformer } from "@iris/provider-anthropic";
+import { cmdInit, cmdBuild, cmdServe, loadBundledTools } from "iris-runtime";
+import { echoStreamingPerformer } from "iris-runtime";
+import { anthropicStreamingModelPerformer } from "@irisrun/provider-anthropic";
 
 function parseSse(text) {
   const out = [];
@@ -42,7 +42,7 @@ async function main() {
   const resolver = (await loadBundledTools(join(root, "tools"))).resolver;
   await cmdBuild({ file: join(root, "agent.json"), out: layout, resolver });
 
-  const sqlite = await import("@iris/store-sqlite");
+  const sqlite = await import("@irisrun/store-sqlite");
   const handle = sqlite.openDatabase(join(root, "serve.sqlite"));
   const store = new sqlite.SqliteStateStore(handle);
   const scheduler = new sqlite.SqliteScheduler(handle);

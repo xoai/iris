@@ -33,7 +33,7 @@ it's a property a system without an event-sourced substrate can't easily retrofi
 
 ## The governance layer (P1-5, landed)
 
-The gate mechanism is now wrapped by a real **governance layer**, the `@iris/auth`
+The gate mechanism is now wrapped by a real **governance layer**, the `@irisrun/auth`
 package — opt-in, with zero change to the default behavior:
 
 - **Identity** — who an approver *is* (`Principal`: an id and roles).

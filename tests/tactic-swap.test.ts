@@ -6,9 +6,9 @@
 // swapped-in tactic is never called — the ADR-0007 quarantine.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { runTurn, replay, canonicalize, decode, harnessProgram, defaultBundle } from "@iris/core";
-import type { EngineDeps, JournalRecord, HarnessState, Invariants, Performer, Json } from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
+import { runTurn, replay, canonicalize, decode, harnessProgram, defaultBundle } from "@irisrun/core";
+import type { EngineDeps, JournalRecord, HarnessState, Invariants, Performer, Json } from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
 import { TestClock } from "./lib/mem-store.ts";
 import { makeScriptedModel } from "./lib/fake-model.ts";
 import { makeFakeTool, type ToolCallLog } from "./lib/fake-tool.ts";

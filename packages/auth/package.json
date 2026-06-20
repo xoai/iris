@@ -1,8 +1,8 @@
 {
-  "name": "@iris/auth",
+  "name": "@irisrun/auth",
   "version": "0.1.0",
   "type": "module",
-  "description": "Iris governance layer — identity + a declarative who-may-approve authorization policy on the existing HITL gate, plus a journaled, queryable approval audit trail. Pure: enriches the journaled signal_recv approval value (zero kernel change). Deps @iris/core + @iris/inspect only.",
+  "description": "Iris governance layer — identity + a declarative who-may-approve authorization policy on the existing HITL gate, plus a journaled, queryable approval audit trail. Pure: enriches the journaled signal_recv approval value (zero kernel change). Deps @irisrun/core + @irisrun/inspect only.",
   "exports": {
     ".": {
       "iris-src": "./src/index.ts",
@@ -11,8 +11,8 @@
     }
   },
   "dependencies": {
-    "@iris/core": "^0.1.0",
-    "@iris/inspect": "^0.1.0"
+    "@irisrun/core": "^0.1.0",
+    "@irisrun/inspect": "^0.1.0"
   },
   "license": "MIT",
   "engines": {

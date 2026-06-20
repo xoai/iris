@@ -8,7 +8,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import http from "node:http";
 import net from "node:net";
-import { startEgressProxy, SECRET_HEADER, makeCredentialBroker } from "@iris/sandbox";
+import { startEgressProxy, SECRET_HEADER, makeCredentialBroker } from "@irisrun/sandbox";
 
 const SECRET = "sk-egress-proxy-secret-xyz";
 

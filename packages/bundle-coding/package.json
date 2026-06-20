@@ -1,8 +1,8 @@
 {
-  "name": "@iris/bundle-coding",
+  "name": "@irisrun/bundle-coding",
   "version": "0.1.0",
   "type": "module",
-  "description": "Iris first domain tactic bundle — coding-specialized seam tactics (read-only tools allow / writes+shell gated to ask, a tool-loop decideNext, window-compaction + tool-repair) composed HOST-SIDE from @iris/core's exported primitives. Produces the defaultBundle shape {tacticPerformer, invariants}; journaled {seam, tacticId, choice} outcomes inherit the ADR-0007 replay quarantine. @iris/core dependency only; core stays byte-untouched.",
+  "description": "Iris first domain tactic bundle — coding-specialized seam tactics (read-only tools allow / writes+shell gated to ask, a tool-loop decideNext, window-compaction + tool-repair) composed HOST-SIDE from @irisrun/core's exported primitives. Produces the defaultBundle shape {tacticPerformer, invariants}; journaled {seam, tacticId, choice} outcomes inherit the ADR-0007 replay quarantine. @irisrun/core dependency only; core stays byte-untouched.",
   "exports": {
     ".": {
       "iris-src": "./src/index.ts",
@@ -11,7 +11,7 @@
     }
   },
   "dependencies": {
-    "@iris/core": "^0.1.0"
+    "@irisrun/core": "^0.1.0"
   },
   "license": "MIT",
   "engines": {

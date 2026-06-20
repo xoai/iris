@@ -1,8 +1,8 @@
 {
-  "name": "@iris/channel-web",
+  "name": "@irisrun/channel-web",
   "version": "0.1.0",
   "type": "module",
-  "description": "Iris web channel — a minimal, zero-dep web chat UI served by `iris serve --web` on the same port. `makeWebHandler` is a pre-POST GET hook (host-side, node:fs/http) that serves two static assets (index.html + iris-web.js). The browser shell talks the iris serve SSE protocol and persists {sessionId, continuationToken} to localStorage so a tab close/reload resumes the same session while the server is up. The shell MIRRORS @iris/client-sdk's wire logic (no bundler → no shared import); it is a static asset OUTSIDE the tsc include and the test glob.",
+  "description": "Iris web channel — a minimal, zero-dep web chat UI served by `iris serve --web` on the same port. `makeWebHandler` is a pre-POST GET hook (host-side, node:fs/http) that serves two static assets (index.html + iris-web.js). The browser shell talks the iris serve SSE protocol and persists {sessionId, continuationToken} to localStorage so a tab close/reload resumes the same session while the server is up. The shell MIRRORS @irisrun/client-sdk's wire logic (no bundler → no shared import); it is a static asset OUTSIDE the tsc include and the test glob.",
   "exports": {
     ".": {
       "iris-src": "./src/index.ts",

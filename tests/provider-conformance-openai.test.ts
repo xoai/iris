@@ -2,7 +2,7 @@
 // two providers pass the SAME tests behind the model port). See the Anthropic twin
 // in provider-conformance-anthropic.test.ts.
 import assert from "node:assert/strict";
-import { openaiModelPerformer, openaiStreamingModelPerformer } from "@iris/provider-openai";
+import { openaiModelPerformer, openaiStreamingModelPerformer } from "@irisrun/provider-openai";
 import { runModelProviderConformance } from "./lib/model-provider-conformance.ts";
 import type { ConformanceFixture } from "./lib/model-provider-conformance.ts";
 

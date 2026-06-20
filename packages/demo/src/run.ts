@@ -6,13 +6,13 @@
 //   node run.ts --session <id> --db <path> --resume --now <t>   # rehydrate from disk, continue
 //
 // Prints a single JSON line to stdout: { status, output?, wait? }.
-import { runTurn } from "@iris/core";
-import type { LogicalClock } from "@iris/core";
+import { runTurn } from "@irisrun/core";
+import type { LogicalClock } from "@irisrun/core";
 import {
   openDatabase,
   SqliteStateStore,
   SqliteScheduler,
-} from "@iris/store-sqlite";
+} from "@irisrun/store-sqlite";
 import { counterProgram } from "./counter-program.ts";
 import { makeDemoPerformers } from "./performers.ts";
 

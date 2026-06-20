@@ -5,10 +5,10 @@
 // and never writes. Re-inspecting the same store is byte-identical (canonicalize).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { runTurn, harnessProgram, defaultBundle, canonicalize } from "@iris/core";
-import type { EngineDeps, HarnessState, Json, PerformerRegistry } from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
-import { inspectSession, renderTimeline } from "@iris/inspect";
+import { runTurn, harnessProgram, defaultBundle, canonicalize } from "@irisrun/core";
+import type { EngineDeps, HarnessState, Json, PerformerRegistry } from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
+import { inspectSession, renderTimeline } from "@irisrun/inspect";
 import { TestClock } from "./lib/mem-store.ts";
 import { makeScriptedModel } from "./lib/fake-model.ts";
 import { makeFakeTool } from "./lib/fake-tool.ts";

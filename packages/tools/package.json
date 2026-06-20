@@ -1,5 +1,5 @@
 {
-  "name": "@iris/tools",
+  "name": "@irisrun/tools",
   "version": "0.1.0",
   "type": "module",
   "description": "Iris tool boundary — ToolContract + contractDigest, the uniform ToolInvoker, real transports (in-process/subprocess/MCP-stdio/gRPC-over-http2+JSON), and the real tool_call performer. Host-side, zero external deps.",
@@ -11,7 +11,7 @@
     }
   },
   "dependencies": {
-    "@iris/core": "^0.1.0"
+    "@irisrun/core": "^0.1.0"
   },
   "license": "MIT",
   "engines": {

@@ -2,7 +2,7 @@
 // built-in `fetch` (zero deps); `fetch` is injectable so unit tests run with no
 // network/key. A missing key is a CONSTRUCTION-time config error (loud) — never
 // a mid-turn laundered failure.
-import type { Performer, Json, Outcome } from "@iris/core";
+import type { Performer, Json, Outcome } from "@irisrun/core";
 import type { ModelCallRequest, ModelCallResult } from "./types.ts";
 import { readAnthropicSse } from "./sse.ts";
 

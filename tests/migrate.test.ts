@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { migrateSession, acquireLease, encode, decode } from "@iris/core";
-import type { Version } from "@iris/core";
-import { MemoryStateStore } from "@iris/store-memory";
+import { migrateSession, acquireLease, encode, decode } from "@irisrun/core";
+import type { Version } from "@irisrun/core";
+import { MemoryStateStore } from "@irisrun/store-memory";
 
 // Task 3 unit: migrateSession copies snapshot + journal tail faithfully,
 // including across a snapshot boundary (the hwm-seeding case).

@@ -10,8 +10,8 @@ import {
   jsonCodec,
   frameMessage,
   makeFrameReader,
-} from "@iris/tools";
-import type { LogicalTool, LocalityOptions } from "@iris/tools";
+} from "@irisrun/tools";
+import type { LogicalTool, LocalityOptions } from "@irisrun/tools";
 
 const NODE = process.execPath;
 

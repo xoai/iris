@@ -7,7 +7,7 @@ import type {
   Marker,
   PerformerRegistry,
   Json,
-} from "@iris/core";
+} from "@irisrun/core";
 import { TestClock } from "./mem-store.ts";
 
 export function makePerformers(clock: TestClock): PerformerRegistry {

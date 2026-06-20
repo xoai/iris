@@ -3,11 +3,11 @@
 // image)). The canonical image EXCLUDES the self-referential imageDigest field;
 // content values are base64 STRINGS (canonicalize rejects Buffer/Uint8Array) and
 // content keys are normalized (forward-slash, relative) for cross-platform
-// determinism. Host-side (node:crypto + @iris/core canonicalize).
+// determinism. Host-side (node:crypto + @irisrun/core canonicalize).
 import { createHash } from "node:crypto";
 import { mkdir, writeFile, readFile as fsReadFile } from "node:fs/promises";
 import { join } from "node:path";
-import { canonicalize, type Json } from "@iris/core";
+import { canonicalize, type Json } from "@irisrun/core";
 import {
   contentPaths,
   contractRefs,

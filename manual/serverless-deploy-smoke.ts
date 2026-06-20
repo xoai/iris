@@ -15,10 +15,10 @@ import assert from "node:assert/strict";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { migrateSession, harnessProgram, defaultBundle } from "@iris/core";
-import { openDatabase, SqliteStateStore, SqliteScheduler } from "@iris/store-sqlite";
-import { FsStateStore, FsScheduler } from "@iris/store-fs";
-import { runTurnOn } from "@iris/host";
+import { migrateSession, harnessProgram, defaultBundle } from "@irisrun/core";
+import { openDatabase, SqliteStateStore, SqliteScheduler } from "@irisrun/store-sqlite";
+import { FsStateStore, FsScheduler } from "@irisrun/store-fs";
+import { runTurnOn } from "@irisrun/host";
 
 const INPUT = { messages: [{ role: "user", content: "go" }] };
 const ONE_TOOL_THEN_DONE = [

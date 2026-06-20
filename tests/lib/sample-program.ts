@@ -6,7 +6,7 @@ import type {
   Decision,
   Marker,
   Json,
-} from "@iris/core";
+} from "@irisrun/core";
 
 export interface SumState extends Record<string, Json> {
   sum: number;

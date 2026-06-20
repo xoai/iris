@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { runTurn, acquireLease, encode } from "@iris/core";
-import type { JournalRecord, Json, Version } from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
+import { runTurn, acquireLease, encode } from "@irisrun/core";
+import type { JournalRecord, Json, Version } from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
 import { TestClock } from "./lib/mem-store.ts";
 import { makeFakeModel, type CallCounter } from "./lib/fake-model.ts";
 import { modelProgram, type MState } from "./lib/model-program.ts";

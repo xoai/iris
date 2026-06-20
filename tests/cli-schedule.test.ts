@@ -5,11 +5,11 @@
 // (the journal digest matches); loud failure on a non-positive interval/max-runs.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { canonicalize, decode } from "@iris/core";
-import type { PerformerRegistry, Json } from "@iris/core";
-import type { HostAdapter } from "@iris/host";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
-import { cmdSchedule } from "iris";
+import { canonicalize, decode } from "@irisrun/core";
+import type { PerformerRegistry, Json } from "@irisrun/core";
+import type { HostAdapter } from "@irisrun/host";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
+import { cmdSchedule } from "iris-runtime";
 
 // One cycle's performers: a `clock` bound to `now` + the job's `echo` performer
 // (deterministic, no key — exactly the demo's schedule wiring).

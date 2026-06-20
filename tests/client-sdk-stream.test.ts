@@ -1,4 +1,4 @@
-// Phase A — @iris/client-sdk streaming (SSE). A streamed turn surfaces ordered
+// Phase A — @irisrun/client-sdk streaming (SSE). A streamed turn surfaces ordered
 // `delta` text whose concatenation equals the final reply (RECONCILE invariant) and
 // the committed `record` timeline; a turn that throws AFTER the stream opens emits a
 // mid-stream `error` event that the SDK turns into onError() AND a rejected promise
@@ -6,12 +6,12 @@
 // throws after the stream opens, mirroring channel-sse.test.ts:267).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { harnessProgram, defaultBundle } from "@iris/core";
-import type { Performer, Json } from "@iris/core";
-import { makeRestChannel, type StreamEvent } from "@iris/channel-rest";
-import type { HostAdapter } from "@iris/host";
+import { harnessProgram, defaultBundle } from "@irisrun/core";
+import type { Performer, Json } from "@irisrun/core";
+import { makeRestChannel, type StreamEvent } from "@irisrun/channel-rest";
+import type { HostAdapter } from "@irisrun/host";
 import { MemStateStore, MemScheduler, TestClock } from "./lib/mem-store.ts";
-import { IrisClient, IrisError } from "@iris/client-sdk";
+import { IrisClient, IrisError } from "@irisrun/client-sdk";
 
 const REPLY = "hello there world";
 

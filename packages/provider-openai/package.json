@@ -1,8 +1,8 @@
 {
-  "name": "@iris/provider-openai",
+  "name": "@irisrun/provider-openai",
   "version": "0.1.0",
   "type": "module",
-  "description": "Iris model_call performer — direct OpenAI Chat Completions adapter via built-in fetch (zero deps). Real adapter runs only with OPENAI_API_KEY; tests use a fake fetch / fake model. A peer of @iris/provider-anthropic behind the same model port.",
+  "description": "Iris model_call performer — direct OpenAI Chat Completions adapter via built-in fetch (zero deps). Real adapter runs only with OPENAI_API_KEY; tests use a fake fetch / fake model. A peer of @irisrun/provider-anthropic behind the same model port.",
   "exports": {
     ".": {
       "iris-src": "./src/index.ts",
@@ -11,7 +11,7 @@
     }
   },
   "dependencies": {
-    "@iris/core": "^0.1.0"
+    "@irisrun/core": "^0.1.0"
   },
   "license": "MIT",
   "engines": {

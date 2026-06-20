@@ -1,8 +1,8 @@
 {
-  "name": "iris",
+  "name": "iris-runtime",
   "version": "0.1.0",
   "type": "module",
-  "description": "Iris CLI — iris init/build/inspect/verify/push/pull/run. Command functions over @iris/agent (so they are unit-testable with injected deps) + a zero-dep argv dispatcher. push/pull operate on a local OCI layout (real registry = manual); run drives the existing host adapters.",
+  "description": "Iris CLI — iris init/build/inspect/verify/push/pull/run. Command functions over @irisrun/agent (so they are unit-testable with injected deps) + a zero-dep argv dispatcher. push/pull operate on a local OCI layout (real registry = manual); run drives the existing host adapters.",
   "exports": {
     ".": {
       "iris-src": "./src/index.ts",
@@ -14,21 +14,21 @@
     "iris": "./dist/cli-main.js"
   },
   "dependencies": {
-    "@iris/core": "^0.1.0",
-    "@iris/tools": "^0.1.0",
-    "@iris/agent": "^0.1.0",
-    "@iris/host": "^0.1.0",
-    "@iris/channel-rest": "^0.1.0",
-    "@iris/channel-web": "^0.1.0",
-    "@iris/store-do": "^0.1.0",
-    "@iris/store-sqlite": "^0.1.0",
-    "@iris/provider-anthropic": "^0.1.0",
-    "@iris/provider-openai": "^0.1.0",
-    "@iris/auth": "^0.1.0",
-    "@iris/audit": "^0.1.0",
-    "@iris/evals": "^0.1.0",
-    "@iris/subagents": "^0.1.0",
-    "@iris/schedule": "^0.1.0"
+    "@irisrun/core": "^0.1.0",
+    "@irisrun/tools": "^0.1.0",
+    "@irisrun/agent": "^0.1.0",
+    "@irisrun/host": "^0.1.0",
+    "@irisrun/channel-rest": "^0.1.0",
+    "@irisrun/channel-web": "^0.1.0",
+    "@irisrun/store-do": "^0.1.0",
+    "@irisrun/store-sqlite": "^0.1.0",
+    "@irisrun/provider-anthropic": "^0.1.0",
+    "@irisrun/provider-openai": "^0.1.0",
+    "@irisrun/auth": "^0.1.0",
+    "@irisrun/audit": "^0.1.0",
+    "@irisrun/evals": "^0.1.0",
+    "@irisrun/subagents": "^0.1.0",
+    "@irisrun/schedule": "^0.1.0"
   },
   "license": "MIT",
   "engines": {

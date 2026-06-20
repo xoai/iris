@@ -3,9 +3,9 @@
 // sessionId. READ-ONLY: it reads snapshot + journal, decodes, and summarizes; it
 // never writes and nothing it derives re-enters replayed state (determinism). The
 // governing digest is re-derived LOCALLY (snapshot-safely — the post-snapshot tail,
-// mirroring pin.ts:latestRecord), so @iris/inspect deps @iris/core ONLY. The result
+// mirroring pin.ts:latestRecord), so @irisrun/inspect deps @irisrun/core ONLY. The result
 // is a pure function of the journal bytes → re-inspecting is byte-identical.
-import { decode } from "@iris/core";
+import { decode } from "@irisrun/core";
 import type {
   StateStore,
   JournalRecord,
@@ -15,7 +15,7 @@ import type {
   Decision,
   Marker,
   Json,
-} from "@iris/core";
+} from "@irisrun/core";
 
 export interface InspectedRecord {
   seq: number;

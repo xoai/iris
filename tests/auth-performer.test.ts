@@ -5,8 +5,8 @@
 // across a recovery re-perform (same callId → same decision, never flips).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { createApprovalInbox, makeGovernedApprovalPerformer } from "@iris/auth";
-import type { ApprovalPolicy, GovernedAction, GovernedApproval } from "@iris/auth";
+import { createApprovalInbox, makeGovernedApprovalPerformer } from "@irisrun/auth";
+import type { ApprovalPolicy, GovernedAction, GovernedApproval } from "@irisrun/auth";
 
 const rm: GovernedAction = { name: "rm", callId: "c1" };
 const adminOnly: ApprovalPolicy = { rules: [{ tool: "rm", anyOfRoles: ["admin"] }] };

@@ -4,7 +4,7 @@
 // anchors/aliases (`&`/`*`), multi-document (`---`), tab indentation — is REJECTED
 // LOUDLY (no silent misparse). The result is fed through validateAgentfile, so the
 // authored format never affects the digest (the canonical surface is JSON). Host-side.
-import type { Json } from "@iris/core";
+import type { Json } from "@irisrun/core";
 import { validateAgentfile, type AgentfileModel } from "./agentfile.ts";
 
 interface Line {

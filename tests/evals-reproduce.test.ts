@@ -5,10 +5,10 @@
 // with the first divergence located. Builds on the EvalCase pattern in evals.test.ts.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { harnessProgram, defaultBundle } from "@iris/core";
-import type { EngineDeps, HarnessState, Json } from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
-import { reproduce, type EvalCase, type Scorer } from "@iris/evals";
+import { harnessProgram, defaultBundle } from "@irisrun/core";
+import type { EngineDeps, HarnessState, Json } from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
+import { reproduce, type EvalCase, type Scorer } from "@irisrun/evals";
 import { TestClock } from "./lib/mem-store.ts";
 import { makeScriptedModel } from "./lib/fake-model.ts";
 import { makeFakeTool } from "./lib/fake-tool.ts";

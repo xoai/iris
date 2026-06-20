@@ -1,4 +1,4 @@
-// M6 T3 — @iris/store-do DoScheduler + edgeHost (spec §2.3, §2.4). Mirrors the
+// M6 T3 — @irisrun/store-do DoScheduler + edgeHost (spec §2.3, §2.4). Mirrors the
 // FsScheduler conformance (dueWakeups PEEKS at-least-once; confirmWoken consumes
 // AFTER the resumed turn commits; durable across a cold isolate) AND adds the DO
 // alarm wiring: sleepUntil sets the DO alarm to the EARLIEST due time across all
@@ -6,7 +6,7 @@
 // edgeHost exposes the remote-only capability profile + the wired ports.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { DoScheduler, edgeHost, DoStateStore } from "@iris/store-do";
+import { DoScheduler, edgeHost, DoStateStore } from "@irisrun/store-do";
 import { FakeDoStorage } from "./lib/fake-do.ts";
 
 test("T3-sched: a timer is not due before its wake time", async () => {

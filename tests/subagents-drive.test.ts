@@ -4,14 +4,14 @@
 // creation (a fresh sessionId is created from program.initial by its first turn).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { harnessProgram, defaultBundle } from "@iris/core";
-import type { HostAdapter } from "@iris/host";
-import type { PerformerRegistry, Json, HarnessState, StateStore } from "@iris/core";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
+import { harnessProgram, defaultBundle } from "@irisrun/core";
+import type { HostAdapter } from "@irisrun/host";
+import type { PerformerRegistry, Json, HarnessState, StateStore } from "@irisrun/core";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
 import { TestClock } from "./lib/mem-store.ts";
 import { makeScriptedModel } from "./lib/fake-model.ts";
 import { makeContendedStore, makeAbortOnAppendStore } from "./lib/flaky-store.ts";
-import { driveToCompletion } from "@iris/subagents";
+import { driveToCompletion } from "@irisrun/subagents";
 
 const INPUT = { messages: [{ role: "user", content: "hi" }] };
 const REPLY: Json = { role: "assistant", content: "child-done", stopReason: "end_turn" };

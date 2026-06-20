@@ -18,12 +18,12 @@ import {
   governancePerformers,
   loadApprovalPolicy,
   type ServeHandle,
-} from "iris";
-import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
+} from "iris-runtime";
+import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
 import { TestClock } from "./lib/mem-store.ts";
 import { makeScriptedModel } from "./lib/fake-model.ts";
-import { createApprovalInbox, auditApprovals } from "@iris/auth";
-import type { ApprovalPolicy, ApprovalInbox } from "@iris/auth";
+import { createApprovalInbox, auditApprovals } from "@irisrun/auth";
+import type { ApprovalPolicy, ApprovalInbox } from "@irisrun/auth";
 
 const tmp = (p: string): Promise<string> => mkdtemp(join(tmpdir(), p));
 const scaffoldResolver = async (src: string) => (await loadBundledTools(join(src, "tools"))).resolver;

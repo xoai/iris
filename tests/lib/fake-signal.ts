@@ -5,7 +5,7 @@
 // danglingIntent re-performs a dangling signal_recv intent once on recovery, and
 // a non-idempotent fixture could flip approve↔deny. (Real signal-payload
 // delivery over a transport is M3+; M2 does not extend the Scheduler port.)
-import type { Performer, Outcome } from "@iris/core";
+import type { Performer, Outcome } from "@irisrun/core";
 
 export interface CallCounter {
   n: number;
