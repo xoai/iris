@@ -25,6 +25,8 @@ import { normalizeContentKey } from "@iris/agent";
 import type { AgentImage } from "@iris/agent";
 import { stripModelPrefix } from "./providers.ts";
 import { subagentPerformers, type CliSubagents } from "./iris.ts";
+import { makeGovernedApprovalPerformer, decideApproval } from "@iris/auth";
+import type { ApprovalPolicy, ApprovalInbox, Principal } from "@iris/auth";
 
 // --- model-call wrapper ------------------------------------------------------
 
@@ -187,6 +189,84 @@ export function renderOutcome(
   }
 }
 
+// --- HITL approval (in-chat) -------------------------------------------------
+
+/** A pending human-in-the-loop approval: the tool call the agent gated to "ask",
+ *  surfaced for an inline approve/deny. `callId` is the parked `hitl:<callId>`
+ *  signal's id (the inbox key the governed `signal_recv` performer reads). */
+export interface HitlRequest {
+  callId: string;
+  name: string;
+  args: Json;
+}
+
+/** If `outcome` parked on a HITL approval signal (`hitl:<callId>`), return the
+ *  pending tool call (name + args); otherwise null. PURE and TOTAL — every Json
+ *  shape is guarded and it never throws. The current tool call is read INLINE from
+ *  the parked `HarnessState` (the kernel's `toolCallsOf`/`currentToolCall` are
+ *  private to @iris/core): `state.modelOut.toolCalls[state.toolCursor]`. The
+ *  authoritative `callId` is taken from the signal name (what the inbox is keyed
+ *  on); the call's own name/args are for display. A malformed/absent call still
+ *  yields a request (with empty name) so the human can still decide. */
+export function hitlRequest(outcome: TurnOutcome<HarnessState>): HitlRequest | null {
+  if (outcome.status !== "parked") return null;
+  const wait = outcome.wait;
+  if (wait.kind !== "signal" || !wait.name.startsWith("hitl:")) return null;
+  const callId = wait.name.slice("hitl:".length);
+  const state = outcome.state;
+  const modelOut = state.modelOut;
+  if (modelOut === null || typeof modelOut !== "object" || Array.isArray(modelOut)) {
+    return { callId, name: "", args: null };
+  }
+  const toolCalls = (modelOut as { toolCalls?: Json }).toolCalls;
+  const cursor = typeof state.toolCursor === "number" ? state.toolCursor : 0;
+  const call = Array.isArray(toolCalls) ? toolCalls[cursor] : undefined;
+  if (call === null || typeof call !== "object" || Array.isArray(call)) {
+    return { callId, name: "", args: null };
+  }
+  const c = call as { name?: Json; args?: Json };
+  return { callId, name: typeof c.name === "string" ? c.name : "", args: c.args ?? null };
+}
+
+/** Map a REPL line to an approval intent. `y|yes|approve|a` → approve,
+ *  `n|no|deny|d` → deny (case-insensitive, trimmed); anything else → null
+ *  (the caller re-prompts). PURE. */
+export function parseApproval(line: string): "approve" | "deny" | null {
+  const s = line.trim().toLowerCase();
+  if (s === "y" || s === "yes" || s === "approve" || s === "a") return "approve";
+  if (s === "n" || s === "no" || s === "deny" || s === "d") return "deny";
+  return null;
+}
+
+/** The inline approval prompt for a parked HITL request. PURE. When `opts.streamed`
+ *  is true (the tool-call turn already streamed text to the current line), lead with
+ *  a newline so the prompt starts on its own line. */
+export function renderHitlRequest(req: HitlRequest, opts: { streamed?: boolean } = {}): string {
+  const lead = opts.streamed === true ? "\n" : "";
+  const args = JSON.stringify(req.args ?? null);
+  return (
+    `${lead}⚠️ approval needed — the agent wants to run tool '${req.name}' ` +
+    `(call ${req.callId}) with args ${args}\n` +
+    `approve? [y/n] `
+  );
+}
+
+/** What to print after an approval decision is recorded. PURE. `ran` is whether the
+ *  governed decision actually runs the tool (approve + authorized); `reason` is the
+ *  GovernedApproval explanation (policy verdict) when present. */
+export function renderApprovalResult(input: {
+  intent: "approve" | "deny";
+  ran: boolean;
+  reason?: string;
+}): string {
+  const verb = input.ran
+    ? "approved — running the tool"
+    : input.intent === "deny"
+      ? "denied — skipping the tool"
+      : "not authorized — skipping the tool";
+  return `· ${verb}${input.reason ? ` (${input.reason})` : ""}\n`;
+}
+
 // --- streaming sink ----------------------------------------------------------
 
 /** A live token sink for the chat REPL. `onDelta` is handed to the streaming
@@ -254,18 +334,45 @@ export interface ChatDeps {
   // the injected tacticPerformer's bundle (built by cli-main) so a delegation doesn't
   // park on the gate.
   subagents?: CliSubagents;
+  // Opt-in in-chat HITL governance. When present, a tool call gated to "ask" parks on
+  // a `hitl:<callId>` signal and `runChat` resolves it INLINE: it surfaces the pending
+  // call, reads an approve/deny line, records the decision in `inbox`, and resumes the
+  // durable session (running or skipping the tool). The journaled `GovernedApproval` is
+  // identical to serve's, so `iris audit` sees chat approvals too. ABSENT → a hitl park
+  // renders the legacy "not resumable from chat yet" line (byte-identical ungoverned
+  // path; the `signal_recv` performer is not even registered).
+  governance?: { policy: ApprovalPolicy; inbox: ApprovalInbox };
+  // The approver identity stamped on each decision (audit). Defaults to
+  // `{ id: "local", roles: ["operator"] }` when governance is present.
+  principal?: Principal;
 }
 
-/** Run ONE user message as a turn against the durable session. The message is
- *  delivered via a per-turn `user_recv` performer (journaled → deterministic). */
-export async function chatTurn(deps: ChatDeps, message: string): Promise<TurnOutcome<HarnessState>> {
+/** Assemble the per-turn performer registry. With `message` set (a new user turn),
+ *  `user_recv` delivers it; without (a HITL resume turn, which re-enters at
+ *  `recv_hitl`, never `recv_user`), `user_recv` is a defensive throw that the
+ *  per-turn try/catch isolates if the contract is ever violated. The governed
+ *  `signal_recv` performer is registered ONLY when governance is wired — absent it,
+ *  the registry is byte-identical to the pre-HITL chat. */
+function chatPerformers(deps: ChatDeps, message?: string): PerformerRegistry {
   const performers: PerformerRegistry = {
     tactic: deps.tacticPerformer,
     model_call: deps.modelPerformer,
-    user_recv: async () => ({ ok: true, value: { content: message } }),
+    user_recv:
+      message !== undefined
+        ? async () => ({ ok: true, value: { content: message } })
+        : async () => {
+            throw new Error("iris chat: unexpected user_recv during a HITL resume");
+          },
     ...subagentPerformers(deps.subagents, deps.sessionId),
   };
   if (deps.toolPerformer) performers.tool_call = deps.toolPerformer;
+  if (deps.governance) performers.signal_recv = makeGovernedApprovalPerformer(deps.governance);
+  return performers;
+}
+
+/** Drive ONE turn against the durable session with a prepared registry. Shared by
+ *  `chatTurn` (a user message) and `resumeTurn` (a HITL approval resume). */
+function runChatTurn(deps: ChatDeps, performers: PerformerRegistry): Promise<TurnOutcome<HarnessState>> {
   const subNames = deps.subagents?.names ?? [];
   return runTurn<HarnessState>(
     {
@@ -285,6 +392,20 @@ export async function chatTurn(deps: ChatDeps, message: string): Promise<TurnOut
   );
 }
 
+/** Run ONE user message as a turn against the durable session. The message is
+ *  delivered via a per-turn `user_recv` performer (journaled → deterministic). */
+export async function chatTurn(deps: ChatDeps, message: string): Promise<TurnOutcome<HarnessState>> {
+  return runChatTurn(deps, chatPerformers(deps, message));
+}
+
+/** Resume a session parked on a HITL approval signal. The decision must already be in
+ *  the inbox; the turn re-enters at `recv_hitl`, emits `signal_recv`, and the governed
+ *  performer reads the recorded decision — running or skipping the gated tool. No user
+ *  message is delivered (the resume turn never reaches `recv_user`). */
+export async function resumeTurn(deps: ChatDeps): Promise<TurnOutcome<HarnessState>> {
+  return runChatTurn(deps, chatPerformers(deps));
+}
+
 /** The chat REPL: read lines, drive a turn per message, render the reply, until
  *  `/exit`, `/quit`, or end-of-input. Pure of process-global side effects (SIGINT
  *  lives in the cli-main entry) so it is unit-testable with an injected line
@@ -294,18 +415,98 @@ export async function runChat(deps: ChatDeps): Promise<void> {
   const prompt = (): void => {
     if (deps.isInteractive) deps.output.write("you> ");
   };
+  const approvalPrompt = (): void => {
+    if (deps.isInteractive) deps.output.write("approve> ");
+  };
   const hint = "(session is durable — resume later with the same --session and --db)\n";
+  const pendingHint =
+    "(session parked awaiting your approval — resume with the same --session and --db to decide)\n";
+
+  // The approver identity stamped on each decision; only meaningful when governance
+  // is wired. Defaults to a local operator.
+  const principal: Principal = deps.principal ?? { id: "local", roles: ["operator"] };
+
+  // Set while a turn is parked on a HITL approval; the next line is then read as an
+  // approve/deny answer rather than a new message. Only ever armed when governance is
+  // wired (the ungoverned path keeps the legacy render and never sets this). It is
+  // reassigned from `handle`'s RETURN (not mutated in a closure) so the loop's control
+  // flow narrows it correctly.
+  let pending: HitlRequest | null = null;
+
+  // Examine a turn outcome: a HITL park (governance on) renders the request and returns
+  // it as the new `pending`; anything else renders via `renderOutcome`. `stop` is whether
+  // the loop should end (a terminal outcome).
+  const handle = (
+    outcome: TurnOutcome<HarnessState>,
+  ): { pending: HitlRequest | null; stop: boolean } => {
+    const req = deps.governance ? hitlRequest(outcome) : null;
+    if (req !== null) {
+      deps.output.write(renderHitlRequest(req, { streamed: deps.streamSink?.wroteAny() === true }));
+      return { pending: req, stop: false };
+    }
+    const { text, shouldBreak } = renderOutcome(outcome, {
+      streamed: deps.streamSink?.wroteAny() === true,
+    });
+    deps.output.write(text);
+    return { pending: null, stop: shouldBreak };
+  };
+
   prompt();
   for await (const raw of deps.input) {
     const line = raw.trim();
     if (line === "") {
-      prompt();
+      if (pending) approvalPrompt();
+      else prompt();
       continue;
     }
+    // /exit and /quit work in both modes. With an approval pending, do NOT fabricate a
+    // decision — the session stays parked, resumable later (chat or serve).
     if (line === "/exit" || line === "/quit") {
-      deps.output.write(hint);
+      deps.output.write(pending ? pendingHint : hint);
       return;
     }
+
+    if (pending) {
+      // Interpret the line as an approve/deny answer.
+      const intent = parseApproval(line);
+      if (intent === null) {
+        deps.output.write("· please answer y (approve) or n (deny)\n");
+        approvalPrompt();
+        continue;
+      }
+      const gov = deps.governance;
+      if (!gov) {
+        // Unreachable (pending is only armed when governance is on); fail safe.
+        pending = null;
+        prompt();
+        continue;
+      }
+      const action = { name: pending.name, callId: pending.callId };
+      gov.inbox.submit(action, { principal, intent });
+      // Compute the decision locally for display — the SAME pure function the governed
+      // performer applies on resume, so the printed verdict matches what runs.
+      const decision = decideApproval({ policy: gov.policy, principal, intent, action });
+      deps.output.write(renderApprovalResult({ intent, ran: decision.approved, reason: decision.reason }));
+      let outcome: TurnOutcome<HarnessState>;
+      try {
+        deps.streamSink?.begin();
+        outcome = await resumeTurn(deps);
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        deps.output.write(`iris chat: resume failed (${msg}); session preserved — try again\n`);
+        pending = null;
+        prompt();
+        continue;
+      }
+      const res = handle(outcome);
+      pending = res.pending;
+      if (res.stop) return;
+      if (pending) approvalPrompt();
+      else prompt();
+      continue;
+    }
+
+    // A normal user message.
     let outcome: TurnOutcome<HarnessState>;
     try {
       // Reset the sink BEFORE the turn so `wroteAny()` reflects only this turn's
@@ -322,13 +523,12 @@ export async function runChat(deps: ChatDeps): Promise<void> {
       prompt();
       continue;
     }
-    const { text, shouldBreak } = renderOutcome(outcome, {
-      streamed: deps.streamSink?.wroteAny() === true,
-    });
-    deps.output.write(text);
-    if (shouldBreak) return; // finished / contended / aborted — a terminal outcome
-    prompt();
+    const res = handle(outcome); // finished / contended / aborted — a terminal outcome
+    pending = res.pending;
+    if (res.stop) return;
+    if (pending) approvalPrompt();
+    else prompt();
   }
   // input ended (EOF / Ctrl-D) without an explicit /exit — the session stays put.
-  deps.output.write(hint);
+  deps.output.write(pending ? pendingHint : hint);
 }
