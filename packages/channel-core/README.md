@@ -27,8 +27,8 @@ protocol. This package is that protocol, factored into one driver:
   agree field-for-field.
 
 The proof that channels are interchangeable is a single shared **conformance suite**
-(`tests/lib/channel-port-conformance.ts`) that channel-rest and channel-mcp both pass —
-"two channels behind one port" is a literal, executed guarantee.
+(`tests/lib/channel-port-conformance.ts`) that `channel-rest`, `channel-mcp`, and
+`channel-slack` all pass — "channels behind one port" is a literal, executed guarantee.
 
 The continuation token is an instance-local ordering credential; the **durable**
 session lives in the StateStore journal. See `docs/channel-port-spec.md`.

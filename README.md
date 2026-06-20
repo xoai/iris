@@ -32,7 +32,7 @@ Iris is a portable runtime for durable AI agents — built so an agent is never 
 - **Config, not code** — describe the agent in a small `Agentfile` (JSON or YAML). Tools live outside the agent and are referenced by address (MCP / gRPC / subprocess), so they can be written in any language and run on any host.
 - **Ships like a Docker image** — `iris build` produces a content-addressed image you can `inspect` and `verify`, then **push to any OCI registry and pull and run anywhere**.
 - **Talk to it, deploy it in one command** — a built-in web chat UI (`iris serve --web`) and a small isomorphic client SDK (`@irisrun/client-sdk`) put a human in front of the agent, and `iris deploy` lands it on a real edge host (Cloudflare Durable Objects), where a tab close or a host migration resumes the same session.
-- **Bring your own model** — the model call is just another recorded step behind a small adapter. Anthropic and OpenAI adapters ship (both pass one shared conformance suite); others drop in. No provider is baked into the core.
+- **Bring your own model** — the model call is just another recorded step behind a small adapter. Anthropic and OpenAI adapters ship (both pass one shared conformance suite), and any OpenAI- or Anthropic-compatible endpoint (Groq, Together, DeepSeek, vLLM, Ollama, …) is reachable via `--base-url` — classified replay-safe vs known-divergent by a conformance-tested matrix (`iris providers --matrix`). No provider is baked into the core.
 - **A small, safe core you can extend** — a thin kernel enforces the safety rules; the agent's decisions (when to summarize context, when to stop, when to ask a human) are pluggable, and every choice is recorded so replay stays exact.
 - **Secure by default** — tools run sandboxed with networking denied by default, and credentials are brokered so secrets never enter the sandbox. Real per-host allowlist egress + brokering for the docker backend ride a host-side sidecar egress proxy.
 
@@ -219,7 +219,7 @@ That's the core loop. The rest of the command surface is below.
 <details>
 <summary><b>The full lifecycle — every command</b></summary>
 
-`init → build → inspect → schema → verify → run → serve/chat → deploy`
+`init → build → inspect → schema → providers → verify → run → serve/chat → deploy → audit/eval/schedule → journal`
 
 ```sh
 iris init    ./my-agent                                   # scaffold a project: agent.json + instructions.md + a bundled `now` tool
@@ -349,7 +349,7 @@ A monorepo (npm workspaces). The **pure core** imports nothing host/transport/No
 | `@irisrun/store-sqlite` · `@irisrun/store-fs` · `@irisrun/store-memory` · `@irisrun/store-do` | The four host adapters — long-running (sqlite), serverless (fs, O_EXCL), in-memory, and edge (Durable Objects). |
 | `@irisrun/host` | `HostAdapter` + `runTurnOn` + the capability-diff deploy gate. |
 | `@irisrun/agent` | The image toolchain — Agentfile parse/validate, resolve/embed/pin, deterministic `imageDigest`, OCI layout, loud `verify`, session pinning + definition migration. |
-| `iris` | The CLI (`iris` binary): `init / build / inspect / schema / verify / push / pull / run / serve / chat / deploy / audit / eval / schedule`. `serve` boots the HTTP server (`--policy` governance, `--web` chat UI); `chat` resolves approval gates inline; `audit` / `eval` / `schedule` add compliance, reproducible evals, and recurring jobs. |
+| `iris` | The CLI (`iris` binary): `init / build / inspect / schema / providers / verify / push / pull / run / serve / chat / deploy / audit / eval / schedule / journal`. `serve` boots the HTTP server (`--policy` governance, `--web` chat UI); `run` / `serve` / `chat` accept `--base-url` to point a portable image at any compatible endpoint; `providers [--matrix]` prints the compatibility matrix; `chat` resolves approval gates inline; `audit` / `eval` / `schedule` / `journal` add compliance, reproducible evals, recurring jobs, and verifiable journal export/verify/import. |
 | `@irisrun/tools` | The tool boundary — contract + digest, the uniform invoker, in-process/subprocess/MCP/gRPC transports, the retry-safe `tool_call` performer. |
 | `@irisrun/sandbox` | The security floor — deny-all network + credential brokering + a host-side sidecar egress proxy (real per-host allowlist egress). inmemory (unit) + docker (manual smoke). |
 | `@irisrun/channel-core` | The narrow channel **port** — mint the sessionId, own/rotate a single-use continuation token (rotate only on a committed turn), an atomic single-use claim, and a loud refusal taxonomy, the way `StateStore` is the store port. The shared driver behind every channel, with **one conformance suite any channel must pass**. |

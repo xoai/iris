@@ -41,12 +41,25 @@ Follow these in order. Each page ends with a **Next →** link to the next stop.
    The [format spec](./verifiable-journal-spec.md) and
    [threat model](./threat-model.md) make the moat externally legible.
 
+## Reference specs
+
+Normative contracts referenced from the funnel above, collected for quick access:
+
+- [Channel-port spec](./channel-port-spec.md) — the contract every channel passes
+  (the two-identifier protocol, token rotation, refusal taxonomy, conformance).
+- [Bridge pattern](./bridge-pattern.md) — reaching Discord/Telegram/Teams/etc. as
+  external bridges (not first-party packages), with worked examples.
+- [Verifiable-journal spec](./verifiable-journal-spec.md) — the content-addressed
+  journal-export format, reproducible in any language.
+
 ## Security
 
 - [Sandbox egress threat model](./security-sandbox-threat-model.md) — the
   adversarial review of the egress firewall + credential broker: what the
   deny-all floor, the host allowlist, and credential brokering guarantee, how
   each is proven, and the honest limits.
+- [Verifiable-journal threat model](./threat-model.md) — what journal verification
+  detects (tamper / reorder / truncate) and what it deliberately does not claim.
 
 ## How to run the commands
 
