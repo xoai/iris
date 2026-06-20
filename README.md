@@ -12,7 +12,7 @@
   <a href="https://www.npmjs.com/package/iris-runtime"><img alt="npm version" src="https://img.shields.io/npm/v/iris-runtime?style=for-the-badge&logo=npm&logoColor=white&label=iris-runtime&color=CB3837&labelColor=000000"></a>
   <a href="https://nodejs.org"><img alt="Node ≥ 24" src="https://img.shields.io/badge/node-%E2%89%A5%2024-339933?style=for-the-badge&logo=nodedotjs&logoColor=white&labelColor=000000"></a>
   <img alt="TypeScript — no build step" src="https://img.shields.io/badge/TypeScript-no%20build%20step-3178C6?style=for-the-badge&logo=typescript&logoColor=white&labelColor=000000">
-  <img alt="tests: 745 passing" src="https://img.shields.io/badge/tests-745%20passing-44CC11?style=for-the-badge&labelColor=000000">
+  <img alt="tests: 754 passing" src="https://img.shields.io/badge/tests-754%20passing-44CC11?style=for-the-badge&labelColor=000000">
   <a href="LICENSE"><img alt="license: MIT" src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge&labelColor=000000"></a>
 </p>
 
@@ -174,7 +174,7 @@ TypeScript runs directly via Node's native type-stripping — no build step. Fro
 
 ```sh
 npm install        # links the local workspaces (offline)
-npm test           # 745 passing (+6 live-conformance tests gated on API keys)
+npm test           # 754 passing (+6 live-conformance tests gated on API keys)
 npm run typecheck  # tsc --noEmit — clean
 # run the CLI straight from source, no install:
 node --conditions=iris-src packages/cli/src/cli-main.ts <cmd>
@@ -367,12 +367,12 @@ A monorepo (npm workspaces). The **pure core** imports nothing host/transport/No
 
 ## Tested & proven
 
-The unit suite is **install-free, deterministic, zero-dependency** — **745 passing** on Node 24 (plus **6** live-provider conformance tests gated on API keys), `tsc --noEmit` clean. Every claim in this README is regression-locked: CAS + fencing, park/resume across a forced restart, replay purity (the always-on assertion catches injected nondeterminism; `IRIS_ASSERT=0` turns it off), the crash matrix (at-least-once, never double-applied), a **10,000-session** determinism run, cross-store and **cross-host** resume, a **chaos/concurrency suite** that stresses contention, a simulated partition, and redeploy-recovery against the **real fs + sqlite backends**, an **adversarial sandbox-egress** [threat model](docs/security-sandbox-threat-model.md) (bypass + secret-leak attempts), **provider canonicalization** + a **conformance-verified provider compatibility matrix** + **model-call record-replay fidelity**, the **channel-port conformance suite** (two channels behind one port), **Slack durable-HITL across a redeploy**, deterministic image digest + loud verify, the single-use-token channel discipline, and the SSE/WebSocket streaming layer.
+The unit suite is **install-free, deterministic, zero-dependency** — **754 passing** on Node 24 (plus **6** live-provider conformance tests gated on API keys), `tsc --noEmit` clean. Every claim in this README is regression-locked: CAS + fencing, park/resume across a forced restart, replay purity (the always-on assertion catches injected nondeterminism; `IRIS_ASSERT=0` turns it off), the crash matrix (at-least-once, never double-applied), a **10,000-session** determinism run, cross-store and **cross-host** resume, a **chaos/concurrency suite** that stresses contention, a simulated partition, and redeploy-recovery against the **real fs + sqlite backends**, an **adversarial sandbox-egress** [threat model](docs/security-sandbox-threat-model.md) (bypass + secret-leak attempts), **provider canonicalization** + a **conformance-verified provider compatibility matrix** + **model-call record-replay fidelity**, the **channel-port conformance suite** (two channels behind one port), **Slack durable-HITL across a redeploy**, deterministic image digest + loud verify, the single-use-token channel discipline, and the SSE/WebSocket streaming layer.
 
 Real *egress* — OCI pushes, live Anthropic calls, `wrangler deploy` / Lambda upload, `npm publish`, OTLP export — stays **env-gated** as manual smokes under `tests/manual/`, outside the suite.
 
 ```sh
-npm test                                 # the whole suite → 745 passing (6 live-conformance tests gated on API keys)
+npm test                                 # the whole suite → 754 passing (6 live-conformance tests gated on API keys)
 node tests/manual/portability-demo.ts          # the cross-host proof (install-free)
 node tests/manual/serverless-deploy-smoke.ts   # real Cloudflare DO / Lambda (gated)
 IRIS_SERVE_SMOKE=1 node tests/manual/serve-streaming-smoke.ts  # real serve: REST + SSE + WS (gated)
