@@ -87,10 +87,19 @@ Normative specs and lookups, in [`reference/`](./reference/):
 
 ## Contributing
 
-- [Adding a tactic](./contributing/adding-a-tactic.md) — write a seam tactic and compose
-  a bundle (the coding bundle as the worked example).
+Start with **[CONTRIBUTING](../CONTRIBUTING.md)** — the dev loop (install-free,
+`npm test` / `npm run typecheck`), the CI gate, and the house rules. Then:
 
-<!-- Growing next: Guides → secrets & env; Reference → Agentfile schema, architecture;
-Contributing → CONTRIBUTING/setup, conventions, adding a provider / channel / store. -->
+- [Architecture](./architecture.md) — how the ~29 packages fit: the pure core, the two
+  host ports (`StateStore` / `Scheduler`), and the adapter layers.
+- [Conventions](./conventions.md) — the enforced house rules (core-is-pure, zero-dep,
+  loud-refusal, tests-first).
+- Extension recipes, each with a conformance suite that defines "done":
+  [add a provider](./contributing/adding-a-provider.md) ·
+  [add a channel](./contributing/adding-a-channel.md) ·
+  [add a store](./contributing/adding-a-store.md) ·
+  [add a tactic](./contributing/adding-a-tactic.md).
+
+<!-- Growing next: Guides → secrets & env; Reference → Agentfile schema. -->
 
 **Next → [Introduction](./introduction.md)**

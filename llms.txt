@@ -37,7 +37,10 @@
 - [Sandbox-egress threat model](docs/reference/security-sandbox-threat-model.md): the egress firewall + credential broker.
 
 ## Contributing
-- [Adding a tactic](docs/contributing/adding-a-tactic.md): write a seam tactic and compose a bundle (coding bundle as the worked example).
+- [CONTRIBUTING](CONTRIBUTING.md): the dev loop (install-free; npm test / typecheck), the CI gate (npm ci → typecheck → test), and the house rules.
+- [Architecture](docs/architecture.md): the pure core + the two host ports (StateStore/Scheduler) + the adapter layers (how the ~29 packages fit).
+- [Conventions](docs/conventions.md): enforced house rules — core-is-pure (relative imports only), zero-dep, loud-refusal/no-silent-failure, tests-first.
+- [Add a provider](docs/contributing/adding-a-provider.md) / [channel](docs/contributing/adding-a-channel.md) / [store](docs/contributing/adding-a-store.md) / [tactic](docs/contributing/adding-a-tactic.md): the extension recipes, each with a conformance suite.
 
 ## Discovery
 - [agents.md](agents.md): how an AI agent or tool integrates with Iris — Agentfile schema, MCP server, REST API.

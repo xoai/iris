@@ -22,7 +22,8 @@ Iris is a portable runtime for durable AI agents — built so an agent is never 
 
 > **New here?** This README is the manifesto — *why* Iris exists. For a guided
 > path from `npx iris-runtime init` to a deployed, talkable agent, follow the
-> **[docs funnel](docs/README.md)** in order.
+> **[docs](docs/README.md)** in order. Building on Iris? Start with
+> **[CONTRIBUTING](CONTRIBUTING.md)** and the **[architecture map](docs/architecture.md)**.
 
 ## Key features
 
