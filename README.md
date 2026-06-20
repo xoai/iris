@@ -181,7 +181,7 @@ iris chat    ./image --session s1 --db /tmp/s1.sqlite     # talk to the agent �
 iris deploy  ./image --out ./iris-edge                    # scaffold a Cloudflare Worker + Durable Object project (one-command edge deploy)
 ```
 
-(Before publish, run the bin from the workspace with the dev resolution condition — no build step: `node --conditions=iris-src packages/cli/src/cli-main.ts <cmd> …`.) `iris run` performs a real model call, so it needs `ANTHROPIC_API_KEY` — for a no-key run, use the demo below. `iris serve` defaults to a **no-key echo model** (set `--model anthropic` with a key for the real provider), so streaming is demoable immediately: `POST /v1/session` (add `Accept: text/event-stream` for SSE), `POST /v1/session/<id>/message` to continue, or connect a WebSocket to `ws://<host>/v1/ws`.
+(Working from a clone instead of the published package, run the bin from the workspace with the dev resolution condition — no build step: `node --conditions=iris-src packages/cli/src/cli-main.ts <cmd> …`.) `iris run` performs a real model call, so it needs `ANTHROPIC_API_KEY` — for a no-key run, use the demo below. `iris serve` defaults to a **no-key echo model** (set `--model anthropic` with a key for the real provider), so streaming is demoable immediately: `POST /v1/session` (add `Accept: text/event-stream` for SSE), `POST /v1/session/<id>/message` to continue, or connect a WebSocket to `ws://<host>/v1/ws`.
 
 ### A minimal example — park and resume across a real restart
 

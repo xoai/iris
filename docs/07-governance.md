@@ -42,8 +42,9 @@ package — opt-in, with zero change to the default behavior:
 - A first-class, queryable **approval audit** over the journal (`auditApprovals`),
   reading the *full retained journal* so the trail stays complete across snapshots.
 
-It's wired into `iris run`/`serve` as an opt-in `governance` option, so the default
-(ungoverned) path is byte-identical to before. For the whole-session compliance
+It's wired into the `cmdRun`/`cmdServe` runtime as an opt-in `governance` option, so
+the default (ungoverned) path is byte-identical to before (the CLI exposes it via
+`iris serve --policy` and `iris chat --policy`, below). For the whole-session compliance
 audit and reproducible evals built on top of this, continue to chapter 08.
 
 ## Turn it on from the CLI: `iris serve --policy`

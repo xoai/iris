@@ -79,7 +79,7 @@ un-gate** the docker backend.
 - Additive and opt-in (zero-value-off): a session with no proxy and a
   deny-all/allow-all policy behaves byte-identically to before — no existing test
   re-baselined. This initiative added 11 unit tests (9 proxy + 2 docker
-  with-proxy); after integrating concurrent `main`, the full suite stands at 559.
+  with-proxy); after integrating concurrent `main` and the later merges, the full suite stands at 592.
 - No runtime dependency added (`node:http`/`node:net` only; `@irisrun/core` and the
   kernel untouched).
 - **Out of scope (pre-existing gap):** wiring the docker sandbox / sandboxed tool

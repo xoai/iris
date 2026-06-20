@@ -32,9 +32,9 @@ Follow these in order. Each page ends with a **Next →** link to the next stop.
 
 ## How to run the commands
 
-Once Iris is published, the `iris` command is just `npx iris-runtime <cmd>` (or
-`npm i -g iris-runtime`). Working from a clone before publish, run the bin from the
-workspace with the dev resolution condition (no build step):
+The `iris` command is `npx iris-runtime <cmd>` (or `npm i -g iris-runtime`).
+Working from a clone instead (no install), run the bin from the workspace with the
+dev resolution condition (no build step):
 
 ```sh
 node --conditions=iris-src packages/cli/src/cli-main.ts <cmd> …

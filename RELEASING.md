@@ -1,8 +1,9 @@
 # Releasing Iris to npm
 
-The package tree is publish-ready: a `tsc` build compiles each package to JS, the
-metadata is set (names, versions, `publishConfig`, `files`, `repository`), and
-`npm run release` is wired and gated behind `IRIS_PUBLISH=1`.
+Iris is **published on npm at `0.1.0`** — `iris-runtime` (the CLI) plus the
+`@irisrun/*` libraries. This document is how to cut the next release: a `tsc` build
+compiles each package to JS, the metadata is set (names, versions, `publishConfig`,
+`files`, `repository`), and `npm run release` is wired and gated behind `IRIS_PUBLISH=1`.
 
 ## How the build works (no dev build step)
 
