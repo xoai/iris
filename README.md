@@ -12,7 +12,7 @@
   <a href="https://www.npmjs.com/package/iris-runtime"><img alt="npm version" src="https://img.shields.io/npm/v/iris-runtime?style=for-the-badge&logo=npm&logoColor=white&label=iris-runtime&color=CB3837&labelColor=000000"></a>
   <a href="https://nodejs.org"><img alt="Node ≥ 24" src="https://img.shields.io/badge/node-%E2%89%A5%2024-339933?style=for-the-badge&logo=nodedotjs&logoColor=white&labelColor=000000"></a>
   <img alt="TypeScript — no build step" src="https://img.shields.io/badge/TypeScript-no%20build%20step-3178C6?style=for-the-badge&logo=typescript&logoColor=white&labelColor=000000">
-  <img alt="tests: 665 passing" src="https://img.shields.io/badge/tests-665%20passing-44CC11?style=for-the-badge&labelColor=000000">
+  <img alt="tests: 743 passing" src="https://img.shields.io/badge/tests-743%20passing-44CC11?style=for-the-badge&labelColor=000000">
   <a href="LICENSE"><img alt="license: MIT" src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge&labelColor=000000"></a>
 </p>
 
@@ -174,7 +174,7 @@ TypeScript runs directly via Node's native type-stripping — no build step. Fro
 
 ```sh
 npm install        # links the local workspaces (offline)
-npm test           # 665 passing (+6 live-conformance tests gated on API keys)
+npm test           # 743 passing (+6 live-conformance tests gated on API keys)
 npm run typecheck  # tsc --noEmit — clean
 # run the CLI straight from source, no install:
 node --conditions=iris-src packages/cli/src/cli-main.ts <cmd>
@@ -352,11 +352,14 @@ A monorepo (npm workspaces). The **pure core** imports nothing host/transport/No
 | `iris` | The CLI (`iris` binary): `init / build / inspect / schema / verify / push / pull / run / serve / chat / deploy / audit / eval / schedule`. `serve` boots the HTTP server (`--policy` governance, `--web` chat UI); `chat` resolves approval gates inline; `audit` / `eval` / `schedule` add compliance, reproducible evals, and recurring jobs. |
 | `@irisrun/tools` | The tool boundary — contract + digest, the uniform invoker, in-process/subprocess/MCP/gRPC transports, the retry-safe `tool_call` performer. |
 | `@irisrun/sandbox` | The security floor — deny-all network + credential brokering + a host-side sidecar egress proxy (real per-host allowlist egress). inmemory (unit) + docker (manual smoke). |
-| `@irisrun/channel-rest` · `@irisrun/channel-mcp` | Durable, replay-safe sessions over a wire — REST over `node:http` with live **SSE** and hand-rolled zero-dep **WebSocket** streaming of a turn (records + model token deltas), the rotated single-use continuation token, and the agent exposed *as* an MCP server. |
+| `@irisrun/channel-core` | The narrow channel **port** — mint the sessionId, own/rotate a single-use continuation token (rotate only on a committed turn), an atomic single-use claim, and a loud refusal taxonomy, the way `StateStore` is the store port. The shared driver behind every channel, with **one conformance suite any channel must pass**. |
+| `@irisrun/channel-rest` · `@irisrun/channel-mcp` | Durable, replay-safe sessions over a wire — REST over `node:http` with live **SSE** and hand-rolled zero-dep **WebSocket** streaming of a turn (records + model token deltas), the rotated single-use continuation token, and the agent exposed *as* an MCP server. Both on `@irisrun/channel-core`. |
 | `@irisrun/channel-web` · `@irisrun/client-sdk` | Durable, resumable sessions in front of a human — a zero-dep web chat UI (`iris serve --web`, persists the session so a tab close/reload resumes it) and a thin **isomorphic** client SDK that holds only a session handle, so a fresh process resumes the same session over the serve SSE protocol. |
+| `@irisrun/channel-slack` | Slack for **durable HITL** — an approval that pauses for hours, survives a redeploy, and resumes the same session byte-identically (the context rides the signed button value; the durable session is the journal). Zero-dep signature verify; built on the channel port. |
 | `@irisrun/bundle-coding` | The first domain tactic bundle — coding-specialized seam tactics. |
 | `@irisrun/inspect` · `@irisrun/observe` · `@irisrun/evals` | Read-only journal derivations — timeline viewer, OTel spans, reproducible-eval arbiter. |
-| `@irisrun/provider-anthropic` · `@irisrun/provider-openai` | Vendor-neutral, replay-safe model adapters — direct Anthropic Messages and OpenAI Chat Completions `model_call` performers via built-in `fetch`; the provider is chosen from the model-id prefix (`anthropic/…`, `openai/…`), swappable without touching the agent, and both pass one shared conformance suite. |
+| `@irisrun/provider-anthropic` · `@irisrun/provider-openai` | Vendor-neutral, replay-safe model adapters — direct Anthropic Messages and OpenAI Chat Completions `model_call` performers via built-in `fetch`; the provider is chosen from the model-id prefix (`anthropic/…`, `openai/…`), swappable without touching the agent, and both pass one shared conformance suite. Point `--base-url` at any compatible endpoint. |
+| `@irisrun/provider-compat` | The conformance-verified **compatibility matrix** — OpenAI- and Anthropic-protocol endpoints (Groq, Together, DeepSeek, Azure, Bedrock, Vertex, …) classified replay-safe vs known-divergent, each pinned by a CI test so "OpenAI-compatible" becomes a tested, replay-safe guarantee, not a loose claim. `iris providers --matrix`. |
 | `@irisrun/auth` | A journaled, replayable approval audit you own — principal identity and a declarative who-may-approve policy on the existing approval gate, with every decision in the same event log as model calls and tool effects (`makeGovernedApprovalPerformer`). Wired into `iris serve --policy`. |
 | `@irisrun/audit` | Whole-session compliance audit — the full retained journal + a completeness check and an offline replay-verified verdict; drives `iris audit`. |
 | `@irisrun/subagents` · `@irisrun/schedule` | Breadth on the journaled substrate — durable **delegation** to a child agent (its output journaled in the parent, so the parent replays without re-running it) and **recurring jobs** that park on durable timers between runs. Both replayable. |
@@ -364,12 +367,12 @@ A monorepo (npm workspaces). The **pure core** imports nothing host/transport/No
 
 ## Tested & proven
 
-The unit suite is **install-free, deterministic, zero-dependency** — **665 passing** on Node 24 (plus **6** live-provider conformance tests gated on API keys), `tsc --noEmit` clean. Every claim in this README is regression-locked: CAS + fencing, park/resume across a forced restart, replay purity (the always-on assertion catches injected nondeterminism; `IRIS_ASSERT=0` turns it off), the crash matrix (at-least-once, never double-applied), a **10,000-session** determinism run, cross-store and **cross-host** resume, a **chaos/concurrency suite** that stresses contention, a simulated partition, and redeploy-recovery against the **real fs + sqlite backends**, an **adversarial sandbox-egress** [threat model](docs/security-sandbox-threat-model.md) (bypass + secret-leak attempts), **provider canonicalization** + **model-call record-replay fidelity**, deterministic image digest + loud verify, the single-use-token channel discipline, and the SSE/WebSocket streaming layer.
+The unit suite is **install-free, deterministic, zero-dependency** — **743 passing** on Node 24 (plus **6** live-provider conformance tests gated on API keys), `tsc --noEmit` clean. Every claim in this README is regression-locked: CAS + fencing, park/resume across a forced restart, replay purity (the always-on assertion catches injected nondeterminism; `IRIS_ASSERT=0` turns it off), the crash matrix (at-least-once, never double-applied), a **10,000-session** determinism run, cross-store and **cross-host** resume, a **chaos/concurrency suite** that stresses contention, a simulated partition, and redeploy-recovery against the **real fs + sqlite backends**, an **adversarial sandbox-egress** [threat model](docs/security-sandbox-threat-model.md) (bypass + secret-leak attempts), **provider canonicalization** + a **conformance-verified provider compatibility matrix** + **model-call record-replay fidelity**, the **channel-port conformance suite** (two channels behind one port), **Slack durable-HITL across a redeploy**, deterministic image digest + loud verify, the single-use-token channel discipline, and the SSE/WebSocket streaming layer.
 
 Real *egress* — OCI pushes, live Anthropic calls, `wrangler deploy` / Lambda upload, `npm publish`, OTLP export — stays **env-gated** as manual smokes under `tests/manual/`, outside the suite.
 
 ```sh
-npm test                                 # the whole suite → 665 passing (6 live-conformance tests gated on API keys)
+npm test                                 # the whole suite → 743 passing (6 live-conformance tests gated on API keys)
 node tests/manual/portability-demo.ts          # the cross-host proof (install-free)
 node tests/manual/serverless-deploy-smoke.ts   # real Cloudflare DO / Lambda (gated)
 IRIS_SERVE_SMOKE=1 node tests/manual/serve-streaming-smoke.ts  # real serve: REST + SSE + WS (gated)
