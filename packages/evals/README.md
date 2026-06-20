@@ -21,7 +21,7 @@ claim that a live model is deterministic. Depends on `@irisrun/core` +
 iris eval ./evals/suite.mjs    # reproducible scenario scoring
 ```
 
-See **[docs/08 — Audit & reproducible evals](../../docs/08-audit-and-evals.md)**.
+See **[docs/Audit & reproducible evals](../../docs/audit-and-evals.md)**.
 
 ---
 Part of [Iris](../../README.md) — own, portable, verifiable state.

@@ -1,4 +1,4 @@
-# 08 — Audit & reproducible evals
+# Audit & reproducible evals
 
 This is the chapter the rest of the funnel was building toward. Everything Iris
 does is recorded in a deterministic, event-sourced journal — so "what happened"
@@ -155,4 +155,4 @@ what really ran. Here, the record **is** the execution. That's the moat.
 For the full positioning and status, see the [project README](../README.md).
 Auditability and reproducible evals are the product.
 
-**Next → [09 — Verifiable portable journals](./09-verifiable-journal.md)**
+**Next → [Verifiable portable journals](./verifiable-journal.md)**

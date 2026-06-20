@@ -1,4 +1,4 @@
-# 01 — Introduction
+# Introduction
 
 Iris is a **portable runtime for durable AI agents**. You declare an agent as a
 config file plus a folder (instructions, tools, skills), and `iris build` compiles
@@ -42,4 +42,4 @@ provider, and seen its approval audit trail — each step grounded in a real com
 For the full rationale, comparisons, and architecture, read the
 [README](../README.md).
 
-**Next → [02 — Your first agent](./02-first-agent.md)**
+**Next → [Your first agent](./first-agent.md)**

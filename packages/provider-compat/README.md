@@ -19,7 +19,7 @@ terminators, IDs) — is exactly where "compatible" breaks, and the one place th
   Bedrock's SigV4, Vertex's OAuth — named in `note`).
 - `entriesByProtocol(p)`, `findEntry(id)` — accessors.
 - `renderCompatMatrix()` — a deterministic markdown table, used by
-  `iris providers --matrix` and pinned to `docs/06-providers.md` by a drift guard.
+  `iris providers --matrix` and pinned to `docs/providers.md` by a drift guard.
 
 Every entry is run through the matching adapter in CI
 (`tests/provider-compat-matrix.test.ts`) and must canonicalize to the stable

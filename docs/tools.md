@@ -1,4 +1,4 @@
-# 03 — Tools
+# Tools
 
 A tool in Iris is a **versioned contract you own** — pinned into the image by
 digest and invoked across a transport boundary, never inline code — and every
@@ -52,7 +52,7 @@ Iris recognizes four transports, from closest to furthest:
 A tool's locality is part of the image's declared capabilities, and the deploy gate
 honors it — an edge host that supports only remote tools will **refuse** an image
 that demands local subprocess tools, loudly, rather than silently degrade it (see
-[05 — Deploy](./05-deploy.md)).
+[Deploy](./deploy.md)).
 
 ## The sandbox floor
 
@@ -127,6 +127,6 @@ Some tools are safe to retry (read-only); others are irreversible. Iris's defaul
 harness includes an **approval gate** tactic: an irreversible tool call parks the
 session for human approval before it runs, while read-only ("retry-safe") tools the
 project bundles are allow-listed so they don't nag. That gate — and the journaled
-audit trail it produces — is the subject of [07 — Governance & audit](./07-governance.md).
+audit trail it produces — is the subject of [Governance & audit](./governance.md).
 
-**Next → [04 — Channels](./04-channels.md)**
+**Next → [Channels](./channels.md)**

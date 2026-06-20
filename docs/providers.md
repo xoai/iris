@@ -1,4 +1,4 @@
-# 06 — Models & providers
+# Models & providers
 
 No model is baked into Iris. A provider is a **vendor-neutral adapter behind one
 tested model port** — swap Anthropic for OpenAI by changing a single config prefix,
@@ -140,4 +140,4 @@ outcome carrying a `{ role, content, stopReason, usage? }` result. Mirror
 
 That's the whole contract. Anything that satisfies it is a first-class Iris model.
 
-**Next → [07 — Governance & audit](./07-governance.md)**
+**Next → [Governance & audit](./governance.md)**

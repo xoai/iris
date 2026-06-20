@@ -1,4 +1,4 @@
-# 04 — Channels
+# Channels
 
 A channel puts a human in front of a **durable session** — one that survives a tab
 close, a process restart, even a host migration, and resumes mid-conversation from
@@ -15,7 +15,7 @@ iris serve ./image --port 8787 --web
 
 `iris serve` defaults to the **no-key echo model** so it streams immediately; pass
 `--model anthropic` (or `--model openai`) with the matching API key for the real
-provider. See [06 — Models & providers](./06-providers.md).
+provider. See [Models & providers](./providers.md).
 
 `--web` serves a minimal chat UI (from `@irisrun/channel-web`) at `GET /`. Open
 `http://127.0.0.1:8787/` in a browser and talk to the agent.
@@ -128,4 +128,4 @@ that demonstrates the moat (Slack, above) beats five that reach it. The
 [bridge pattern](./reference/bridge-pattern.md) is the normative contract, with a fetch-only
 reference bridge (`npm run demo:bridge`).
 
-**Next → [05 — Deploy](./05-deploy.md)**
+**Next → [Deploy](./deploy.md)**

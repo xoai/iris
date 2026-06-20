@@ -26,7 +26,7 @@ const client  = new IrisClient({ baseUrl });          // start a fresh session
 const resumed = new IrisClient({ baseUrl, handle });  // resume from a SessionHandle
 ```
 
-See **[docs/04 — Channels](../../docs/04-channels.md)**.
+See **[docs/Channels](../../docs/channels.md)**.
 
 ---
 Part of [Iris](../../README.md) — own, portable, verifiable state.

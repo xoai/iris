@@ -26,7 +26,7 @@ real MCP stdio client is an env-gated smoke test.
 A client calls the `start` tool to begin a session and `message` to continue it,
 presenting the issued `continuationToken` each turn.
 
-See **[docs/04 — Channels](../../docs/04-channels.md)** and the normative
+See **[docs/Channels](../../docs/channels.md)** and the normative
 **[channel-port spec](../../docs/reference/channel-port-spec.md)**.
 
 ---

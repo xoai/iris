@@ -22,7 +22,7 @@ against a `FakeDoStorage`, with the real isolate as an env-gated manual smoke. N
 iris deploy ./image --out ./iris-edge    # scaffold a Worker + Durable Object
 ```
 
-See **[docs/05 — Deploy](../../docs/05-deploy.md)**.
+See **[docs/Deploy](../../docs/deploy.md)**.
 
 ---
 Part of [Iris](../../README.md) — own, portable, verifiable state.

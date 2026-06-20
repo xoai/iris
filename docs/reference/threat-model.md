@@ -82,6 +82,6 @@ This is the important half.
 ---
 
 Back to the **[spec](./verifiable-journal-spec.md)** · the
-**[funnel chapter](../09-verifiable-journal.md)** · the sibling
+**[funnel chapter](../verifiable-journal.md)** · the sibling
 **[sandbox-egress threat model](./security-sandbox-threat-model.md)** · the
 **[project README](../../README.md)**.

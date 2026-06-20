@@ -265,7 +265,7 @@ iris deploy  ./image --out ./iris-edge                    # scaffold a Cloudflar
 
 `audit`, `eval`, and `schedule` round out the surface. Declare secrets/env in the
 Agentfile and pass them at run time with `--env-file` / `--env` (or `--secret-files`
-for file-mounted secrets) — see [Tools → Secrets & environment](docs/03-tools.md).
+for file-mounted secrets) — see [Tools → Secrets & environment](docs/tools.md).
 
 **Running from a clone** (no published package, no build step) — swap `iris` for the source bin:
 `node --conditions=iris-src packages/cli/src/cli-main.ts <cmd> …`
@@ -291,7 +291,7 @@ printf 'still there?\n/exit\n' \
 
 - **Real model** — drop `--fake`, set `ANTHROPIC_API_KEY`. A provider error surfaces as the reply, never poisons the session.
 - **Durability** — `--db :memory:` for throwaway, a file path to persist.
-- **Human-in-the-loop** — at an irreversible tool, chat parks and asks inline (`approve? [y/n]`), recorded as a journaled, replayable decision ([governance](docs/07-governance.md)).
+- **Human-in-the-loop** — at an irreversible tool, chat parks and asks inline (`approve? [y/n]`), recorded as a journaled, replayable decision ([governance](docs/governance.md)).
 
 ### Serve it over HTTP
 

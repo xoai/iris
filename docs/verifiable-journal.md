@@ -1,4 +1,4 @@
-# 09 — Verifiable portable journals
+# Verifiable portable journals
 
 Chapter 08 showed that a session **is** its journal, and that `iris audit` can
 replay-verify it. This chapter makes that guarantee **portable and externally

@@ -1,0 +1,31 @@
+# Iris
+
+> A portable runtime for durable AI agents. You declare an agent as a config file plus
+> a folder (instructions, tools, skills); `iris build` compiles it into an open,
+> content-addressed image you run anywhere. At runtime a session is an event-sourced
+> journal — so it is durable (a crash loses nothing) and portable (pause on one host,
+> resume on another, byte-for-byte identical), against any LLM, over any channel.
+
+## Getting started
+- [Introduction](docs/introduction.md): what Iris is, and the one idea — a session is a journal.
+- [Your first agent](docs/first-agent.md): init → build → chat with no API key, then a real model; resume across a restart.
+- [Tools](docs/tools.md): tools as versioned contracts referenced by address; the tool boundary; secrets & environment.
+- [Channels](docs/channels.md): durable, resumable sessions over HTTP (SSE/WebSocket), the web chat UI, the client SDK.
+- [Deploy](docs/deploy.md): resume the same session on a different host — one command to a Cloudflare Durable Object.
+
+## Concepts
+- [Models & providers](docs/providers.md): vendor-neutral, replay-safe model adapters; how to add one.
+- [Governance & approvals](docs/governance.md): the approval gate, the policy layer, the journaled approval trail.
+- [Audit & reproducible evals](docs/audit-and-evals.md): iris audit; reproducible evals; subagents & schedules.
+- [Verifiable portable journals](docs/verifiable-journal.md): content-addressed *.irisjournal export/verify/import.
+
+## Reference
+- [Channel-port spec](docs/reference/channel-port-spec.md): the contract every channel passes.
+- [Bridge pattern](docs/reference/bridge-pattern.md): Discord/Telegram/Teams as external bridges.
+- [Verifiable-journal format](docs/reference/verifiable-journal-spec.md): the export format, reproducible from the file alone.
+- [Journal threat model](docs/reference/threat-model.md): what journal verification detects, and what it does not claim.
+- [Sandbox-egress threat model](docs/reference/security-sandbox-threat-model.md): the egress firewall + credential broker.
+
+## Discovery
+- [agents.md](agents.md): how an AI agent or tool integrates with Iris — Agentfile schema, MCP server, REST API.
+- [README](README.md): the project manifesto (why Iris exists).

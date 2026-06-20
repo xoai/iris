@@ -18,7 +18,7 @@ host-side multi-session pump that discovers due sessions via the scheduler's
 iris schedule ./image --interval 10 --max-runs 3 --db /tmp/sched.sqlite    # recurring jobs on the journaled substrate
 ```
 
-See **[docs/08 — Audit & reproducible evals](../../docs/08-audit-and-evals.md)**.
+See **[docs/Audit & reproducible evals](../../docs/audit-and-evals.md)**.
 
 ---
 Part of [Iris](../../README.md) — own, portable, verifiable state.

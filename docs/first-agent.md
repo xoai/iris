@@ -1,4 +1,4 @@
-# 02 — Your first agent
+# Your first agent
 
 Goal: stand up a **durable session you own** — an agent whose whole conversation
 lives in a journal, not in process memory, so it survives a restart and resumes
@@ -21,7 +21,7 @@ This writes a **self-contained** project (not an empty folder):
 - `instructions.md` — the system prompt.
 - `tools/now.mjs` + `tools/now.tool.json` — a bundled `now` tool the agent can call
   immediately, with no external server to stand up. (More on tools in
-  [03 — Tools](./03-tools.md).)
+  [Tools](./tools.md).)
 
 ## 2. Build the image
 
@@ -64,7 +64,7 @@ export ANTHROPIC_API_KEY=sk-ant-...
 iris chat ./image --session s2 --db /tmp/s2.sqlite
 ```
 
-(To use OpenAI instead, see [06 — Models & providers](./06-providers.md).)
+(To use OpenAI instead, see [Models & providers](./providers.md).)
 
 ## 5. The payoff — resume across a restart
 
@@ -114,4 +114,4 @@ The `$schema` key is editor/CI metadata only — Iris ignores it, so it never
 changes the image digest. The same schema validates Agentfiles offline in CI
 (it is a standard draft 2020-12 document) with no Iris install.
 
-**Next → [03 — Tools](./03-tools.md)**
+**Next → [Tools](./tools.md)**

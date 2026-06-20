@@ -1,4 +1,4 @@
-# 07 — Governance & audit
+# Governance & audit
 
 The last stop is trust: who is allowed to do what, and how you prove what happened.
 This is where Iris's durability substrate pays off: the approval gate, principal
@@ -109,4 +109,4 @@ This page covered the *approval* trail. Chapter 08 turns the same substrate into
 product: a whole-session, replay-verified compliance audit (every effect, not just
 approvals) and provably reproducible evals — runnable with `iris audit`.
 
-**Next → [08 — Audit & reproducible evals](./08-audit-and-evals.md)**
+**Next → [Audit & reproducible evals](./audit-and-evals.md)**

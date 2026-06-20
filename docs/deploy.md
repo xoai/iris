@@ -1,4 +1,4 @@
-# 05 — Deploy
+# Deploy
 
 The payoff of owning your state as a portable journal: the **same image resumes
 the same session on a completely different host** — byte-identically, mid-task.
@@ -25,7 +25,7 @@ Cloudflare Worker project into `./iris-edge`:
 The generated worker selects the model provider from your image's model-id prefix
 and reads that provider's key from a secret (e.g. `ANTHROPIC_API_KEY` or
 `OPENAI_API_KEY`); with no key it falls back to an inline echo so the deploy is
-demoable. See [06 — Models & providers](./06-providers.md).
+demoable. See [Models & providers](./providers.md).
 
 ## The capability gate
 
@@ -63,4 +63,4 @@ node --conditions=iris-src tests/examples/portability-demo.ts   # prints the pro
 This is the north star: an agent a person talks to, that survives a host migration
 mid-conversation.
 
-**Next → [06 — Models & providers](./06-providers.md)**
+**Next → [Models & providers](./providers.md)**

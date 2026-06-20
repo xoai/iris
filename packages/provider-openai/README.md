@@ -34,7 +34,7 @@ Ollama, LM Studio, Azure OpenAI. Which are **replay-safe vs known-divergent** is
 conformance-tested matrix in
 **[`@irisrun/provider-compat`](../provider-compat/README.md)** (`iris providers --matrix`).
 
-See **[docs/06 — Models & providers](../../docs/06-providers.md)** for the shared port,
+See **[docs/Models & providers](../../docs/providers.md)** for the shared port,
 the conformance suite, and the compatibility matrix.
 
 ---

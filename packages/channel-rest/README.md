@@ -27,7 +27,7 @@ conformance suite (see the normative
 iris serve ./image --port 8787     # REST + SSE + WS; add --web for the chat UI
 ```
 
-See **[docs/04 — Channels](../../docs/04-channels.md)** for the wire protocol and
+See **[docs/Channels](../../docs/channels.md)** for the wire protocol and
 **[@irisrun/client-sdk](../client-sdk/README.md)** for a typed client.
 
 ---

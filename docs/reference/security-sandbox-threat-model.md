@@ -32,7 +32,7 @@ Agentfile-declared `secrets`/`environment` plus a fixed non-secret base (PATH/HO
 proxy/TLS), never the operator's whole shell, and an undeclared `--env`/`--env-file`
 key is refused. Secret VALUES still never enter the manifest, image, journal, or any
 error message — they are supplied at run time via `--env-file`/`--env`. See
-[Tools → Secrets & environment](../03-tools.md) for the user-facing model.
+[Tools → Secrets & environment](../tools.md) for the user-facing model.
 
 ## Assets
 
@@ -127,4 +127,4 @@ otherwise exact-match and **case-sensitive** (broker store keys).
 
 ---
 
-Back to the **[Tools chapter](../03-tools.md)** · the sibling **[journal threat model](./threat-model.md)** · the **[project README](../../README.md)**.
+Back to the **[Tools chapter](../tools.md)** · the sibling **[journal threat model](./threat-model.md)** · the **[project README](../../README.md)**.
