@@ -21,6 +21,7 @@
     "@irisrun/journal-export": "*",
     "@irisrun/provider-anthropic": "*",
     "@irisrun/provider-openai": "*",
+    "@irisrun/provider-compat": "*",
     "@irisrun/demo": "*",
     "@irisrun/tools": "*",
     "@irisrun/sandbox": "*",

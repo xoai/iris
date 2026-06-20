@@ -79,3 +79,26 @@ test("loadModelProvider('anthropic') loads the Anthropic package and routes to i
   assert.ok(out.ok);
   assert.match(cap.url ?? "", /\/v1\/messages$/, "routed to the Anthropic endpoint");
 });
+
+// §9: --base-url (deploy-time endpoint override) flows through the seam to the
+// performer, redirecting WHERE the protocol's request is sent — the mechanism behind
+// `iris run/serve/chat --base-url`. The model-id prefix still selects the protocol.
+test("loadModelProvider forwards baseUrl to the buffered performer (deploy-time endpoint override)", async () => {
+  const loaded = await loadModelProvider("openai");
+  const cap = { url: null as string | null };
+  const custom = "https://api.groq.com/openai/v1/chat/completions";
+  const perf = loaded.buffered({ apiKey: "k", fetchImpl: captureUrl(cap), model: "gpt-x", baseUrl: custom });
+  const out = await perf({ messages: [{ role: "user", content: "hi" }] } as Json);
+  assert.ok(out.ok);
+  assert.equal(cap.url, custom, "the OpenAI-protocol request was redirected to the custom endpoint");
+});
+
+test("loadModelProvider forwards baseUrl to the streaming performer too", async () => {
+  const loaded = await loadModelProvider("anthropic");
+  const cap = { url: null as string | null };
+  const custom = "https://my-proxy.example/v1/messages";
+  const perf = loaded.streaming({ apiKey: "k", fetchImpl: captureUrl(cap), model: "claude-x", baseUrl: custom });
+  const out = await perf({ messages: [{ role: "user", content: "hi" }] } as Json);
+  assert.ok(out.ok);
+  assert.equal(cap.url, custom, "the streaming Anthropic-protocol request was redirected");
+});
