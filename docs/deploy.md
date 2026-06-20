@@ -41,13 +41,22 @@ The scaffold is the default; the real network egress is **opt-in and env-gated**
 (it needs a Cloudflare account and `wrangler` on your PATH):
 
 ```sh
-cd ./iris-edge && wrangler deploy        # the printed next step
-# or, driven by the CLI:
+cd ./iris-edge
+wrangler secret put ANTHROPIC_API_KEY    # the model key (or OPENAI_API_KEY) — for a real model
+wrangler deploy
+# or, driven by the CLI (set the secret first):
 IRIS_DEPLOY=1 iris deploy ./image --out ./iris-edge --deploy
 ```
 
 Without `IRIS_DEPLOY=1`, `--deploy` refuses to run `wrangler` — the install-free,
 zero-runtime-dependency posture holds by default.
+
+**The provider key is a Worker secret, not part of the image.** The Worker reads
+`env.ANTHROPIC_API_KEY` (or `OPENAI_API_KEY`); `wrangler secret put` stores it
+**encrypted at rest** and injects it at runtime — it never enters the content-addressed
+image, your repo, or `wrangler.toml`. With no secret set, the Worker falls back to an
+inline echo, so a keyless deploy still runs (you just won't get a real model). The
+per-host secret model is in [secrets & environment](./guides/secrets.md#secrets-in-production).
 
 ## The headline — resume on a *different* host
 

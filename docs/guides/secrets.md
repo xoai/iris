@@ -63,7 +63,28 @@ in its environment to run. Both keep the value out of the image and the journal.
 Agentfile that declares neither keeps today's behavior — the tool inherits the host
 environment.
 
+## Secrets in production
+
+Everything above is the *local / host-side* path. The underlying rule is the same on
+every host: **the image is secret-free** — it declares names, never values, and its
+content-addressed `imageDigest` doesn't include them — so a secret is supplied at the
+*deploy boundary*, the way each host does it:
+
+- **Local / quick test** — a host env var, or `--env-file` / `--secret-files` (above).
+- **Cloudflare edge** (`iris deploy`) — a **Worker secret**:
+  `wrangler secret put ANTHROPIC_API_KEY`. Cloudflare stores it encrypted at rest and
+  injects it as `env.ANTHROPIC_API_KEY`; it never enters the image, your repo, or
+  `wrangler.toml`. See [Deploy](../deploy.md#actually-deploying).
+- **A VPS / container** running `iris serve` — the platform's secret store: a systemd
+  `EnvironmentFile`, a Docker/Kubernetes secret, or your cloud's secret manager, surfaced
+  as the process env var (or passed with `--env-file`). Never bake it into the image.
+
+The **model provider key** (`ANTHROPIC_API_KEY` / `OPENAI_API_KEY`) is read by the
+runtime directly from the environment — distinct from the Agentfile `secrets:` block
+above, which scopes **subprocess-tool** secrets. On the edge, subprocess tools don't run
+(remote-tools-only), so the provider key is the secret that matters there.
+
 ---
 
-Back to **[Tools](../tools.md)** · the
+Back to **[Tools](../tools.md)** · **[Deploy](../deploy.md)** · the
 **[sandbox threat model](../reference/security-sandbox-threat-model.md)**.
