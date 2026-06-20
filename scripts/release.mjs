@@ -17,6 +17,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { setTimeout as sleep } from "node:timers/promises";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const dryRun = process.argv.includes("--dry-run");
@@ -83,5 +84,73 @@ if (uncompiled.length > 0) {
   process.exit(1);
 }
 
-console.log("iris release: publishing the public workspaces to npm…");
-npm(["publish", "--workspaces", "--access", "public"]);
+// Publish per package, idempotently. `npm publish --workspaces` republishes the
+// whole set in one shot and ERRORS on any version that is already live — so a
+// single rate-limit (npm E429) mid-run leaves a PARTIAL release that no re-run
+// can finish (the first already-live package aborts the batch). Instead: skip
+// packages already on the registry at this version, publish only the missing
+// ones, and back off on the transient rate-limit. This makes a re-pushed tag
+// genuinely complete a partial release, which is the idempotency the workflow
+// has always advertised.
+const publishable = readdirSync(pkgsDir, { withFileTypes: true })
+  .filter((d) => d.isDirectory())
+  .map((d) => {
+    try {
+      const pj = JSON.parse(readFileSync(join(pkgsDir, d.name, "package.json"), "utf8"));
+      return pj.private === true ? null : { name: pj.name, version: pj.version };
+    } catch {
+      return null; // no/unreadable package.json → not a publishable workspace
+    }
+  })
+  .filter(Boolean)
+  .sort((a, b) => a.name.localeCompare(b.name));
+
+const isLive = (name, version) => {
+  const r = spawnSync("npm", ["view", `${name}@${version}`, "version"], { cwd: root, encoding: "utf8" });
+  return r.status === 0 && (r.stdout || "").trim() === version;
+};
+
+console.log(`iris release: publishing ${publishable.length} public workspaces to npm (per-package, idempotent)…`);
+let published = 0;
+let skipped = 0;
+for (const pkg of publishable) {
+  if (isLive(pkg.name, pkg.version)) {
+    console.log(`  = ${pkg.name}@${pkg.version} already live — skip`);
+    skipped++;
+    continue;
+  }
+  let ok = false;
+  for (let attempt = 1; attempt <= 6; attempt++) {
+    const r = spawnSync("npm", ["publish", "--workspace", pkg.name, "--access", "public"], {
+      cwd: root,
+      stdio: "inherit",
+    });
+    if (r.status === 0) {
+      ok = true;
+      break;
+    }
+    // A failure that nonetheless landed (a race / retried PUT) counts as done.
+    if (isLive(pkg.name, pkg.version)) {
+      ok = true;
+      break;
+    }
+    if (attempt === 6) break;
+    const backoffMs = Math.min(60_000, 5_000 * 2 ** (attempt - 1)); // 5s,10s,20s,40s,60s
+    console.error(
+      `  ! ${pkg.name} publish failed (attempt ${attempt}/6) — retrying in ${backoffMs / 1000}s ` +
+        `(npm rate-limit E429 is the usual cause).`,
+    );
+    await sleep(backoffMs);
+  }
+  if (!ok) {
+    console.error(
+      `iris release: FAILED to publish ${pkg.name}@${pkg.version} after retries.\n` +
+        "  Re-running is safe — already-published packages are skipped, so a re-push of the\n" +
+        "  version tag completes the remaining packages.",
+    );
+    process.exit(1);
+  }
+  published++;
+  await sleep(2_000); // gentle inter-publish spacing to stay under the burst limit
+}
+console.log(`iris release: done — ${published} published, ${skipped} already live (of ${publishable.length}).`);

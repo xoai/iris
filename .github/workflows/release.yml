@@ -44,16 +44,14 @@ jobs:
       - run: npm run typecheck
       - run: npm test
 
-      - name: Publish to npm (skip if this version is already live)
+      # Idempotent at the PACKAGE level: scripts/release.mjs skips every package
+      # already live at this version and publishes only the rest (with E429
+      # back-off). So re-pushing the tag safely COMPLETES a partial release — the
+      # case where npm rate-limited mid-batch and only some packages went out.
+      - name: Publish to npm (per-package idempotent — re-run completes a partial release)
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          VER="$(node -p "require('./packages/cli/package.json').version")"
-          if npm view "iris-runtime@$VER" version >/dev/null 2>&1; then
-            echo "iris-runtime@$VER is already published — skipping npm publish (idempotent re-tag)."
-          else
-            IRIS_PUBLISH=1 npm run release
-          fi
+        run: IRIS_PUBLISH=1 npm run release
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
