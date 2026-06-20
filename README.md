@@ -148,22 +148,40 @@ Both JSON and a strict YAML subset compile to the **same deterministic `imageDig
 
 ## Install
 
-Iris runs on **Node.js ≥ 24** with **zero runtime dependencies** — TypeScript executes directly via Node's native type-stripping, so there is **no build step**. `node:sqlite`, `node:fs`, `node:http(2)`, and `node:test` are all built in.
+**Requires [Node.js](https://nodejs.org) ≥ 24.** No build step, zero runtime dependencies.
 
 ```sh
-# from the repository root
-npm install            # links local workspaces (offline; nothing to fetch at runtime)
-npm test               # NODE_OPTIONS=--conditions=iris-src node --test 'tests/**/*.test.ts'  → 592/592
-npm run typecheck      # tsc --noEmit  (optional; passes clean)
+# run it without installing anything
+npx iris-runtime init my-agent
+
+# …or install the `iris` command globally
+npm i -g iris-runtime
+iris init my-agent
 ```
 
-The `iris` command is the bin of the **`iris-runtime`** package (`packages/cli`, published on npm) — `npx iris-runtime <cmd>` or `npm i -g iris-runtime` (which installs the `iris` command). Working from a clone instead, run it from the workspace with the dev resolution condition (no build step needed): `node --conditions=iris-src packages/cli/src/cli-main.ts <cmd>`. (Publishing compiles each package to JS — Node won't type-strip `.ts` under `node_modules`; see [`RELEASING.md`](RELEASING.md).) Set a model key for the real path (tests use a deterministic fake and need none):
+The npm package is **`iris-runtime`**; the installed binary is **`iris`**. For a real model call, set a key — omit it and Iris uses a built-in deterministic fake:
 
 ```sh
 export ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-> Use the **glob** form `node --test 'tests/**/*.test.ts'` (what `npm test` runs); a bare directory fails on Node 24. `node:sqlite` prints a cosmetic `ExperimentalWarning`.
+Then head to the **[Quick start](#quick-start)**.
+
+<details>
+<summary><b>Running from source (contributors)</b></summary>
+
+TypeScript runs directly via Node's native type-stripping — no build step. From a clone of the repo:
+
+```sh
+npm install        # links the local workspaces (offline)
+npm test           # 592/592
+npm run typecheck  # tsc --noEmit — clean
+# run the CLI straight from source, no install:
+node --conditions=iris-src packages/cli/src/cli-main.ts <cmd>
+```
+
+Use the glob form `node --test 'tests/**/*.test.ts'` (a bare directory fails on Node 24); `node:sqlite` prints a cosmetic `ExperimentalWarning`. The published packages are compiled to JS because Node won't type-strip `.ts` under `node_modules` (see [`RELEASING.md`](RELEASING.md)).
+</details>
 
 ## Quick start
 
