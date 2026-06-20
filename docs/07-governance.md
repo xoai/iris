@@ -1,8 +1,9 @@
 # 07 — Governance & audit
 
 The last stop is trust: who is allowed to do what, and how you prove what happened.
-This is where Iris's durability substrate pays off — and it's also where some of
-the story is still roadmap. This page is honest about both.
+This is where Iris's durability substrate pays off: the approval gate, principal
+identity & policy, and the journaled approval trail are all real today — reachable
+from the CLI (`iris serve --policy`) and resolvable inline in `iris chat`.
 
 ## What exists today: the approval gate
 

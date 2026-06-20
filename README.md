@@ -131,7 +131,7 @@ Every field, and what it controls:
 | `sandbox.network` | yes | e.g. `deny-all` | Network policy floor. |
 | `sandbox.workspace` | no | path | A workspace directory, embedded by hash. |
 
-`build` validates the manifest loudly: an unknown `apiVersion`/`kind`, an inline-behavior field (`code`/`script`/`source`), or a non-`mcp`/`grpc`/`subprocess` ref is rejected — and a `subprocess://` tool requires `local_subprocess: true` and is incompatible with `tool_locality: "remote"`.
+`build` validates the manifest loudly: an unknown `apiVersion`/`kind`, an inline-behavior field (`code`/`script`/`source`), or a non-`mcp`/`grpc`/`subprocess` ref is rejected — and a `subprocess://` tool requires `local_subprocess: true` and is incompatible with `tool_locality: "remote"`. That same contract is published as a JSON Schema (draft 2020-12) — `iris schema` emits it for editor/CI validation, kept drift-locked to the runtime validator by a shared conformance corpus.
 
 > Where Eve keeps tools as local TypeScript, Iris references them across a protocol boundary — *language-agnostic by exile*. The price is a serialize-and-transport hop; the payoff is that a tool can live in any language, in-process or across the network, while one stable contract pins it by digest.
 
@@ -167,12 +167,13 @@ export ANTHROPIC_API_KEY=sk-ant-...
 
 ## Quick start
 
-Build an image, look inside it, and run a session — the lifecycle is `init → build → inspect → verify → run → serve/chat → deploy`:
+Build an image, look inside it, and run a session — the lifecycle is `init → build → inspect → schema → verify → run → serve/chat → deploy`:
 
 ```sh
 iris init    ./my-agent                                   # scaffold a self-contained project: agent.json + instructions.md + a bundled `now` tool
 iris build   --file ./my-agent/agent.json --out ./image   # → {"imageDigest":"sha256:…"}
 iris inspect ./image                                      # the image at the intent level
+iris schema  > agentfile.schema.json                      # emit the published Agentfile JSON Schema (draft 2020-12) for editor/CI validation
 iris verify  ./image                                      # loud failure on any tamper or pin mismatch
 iris run     ./image --session s1 --db /tmp/s1.sqlite     # run a turn under the session's held pin
 iris serve   ./image --port 8787 --web                    # turnkey HTTP server: REST + SSE + WS streaming, + a web chat UI at /
@@ -228,8 +229,9 @@ Set `ANTHROPIC_API_KEY` (and drop `--fake`) for real model replies — the chat
 wraps the **streaming** model call with the image's model + instructions, and a
 provider error surfaces as the agent's reply rather than poisoning the session.
 `--db :memory:` works for a throwaway session; pass a file path to make it
-durable. `/exit`, `/quit`, or Ctrl-D leaves; the session stays put. (An
-in-terminal human-in-the-loop approval prompt is still on the roadmap.)
+durable. `/exit`, `/quit`, or Ctrl-D leaves; the session stays put. When the agent reaches an irreversible tool, `iris chat`
+parks and resolves the approval gate **inline** — `approve? [y/n]`, recorded as a
+journaled, replayable decision (see [governance](docs/07-governance.md)).
 
 ### Serve it over HTTP — SSE or WebSocket streaming
 
@@ -332,7 +334,7 @@ A monorepo (npm workspaces). The **pure core** imports nothing host/transport/No
 | `@iris/store-sqlite` · `@iris/store-fs` · `@iris/store-memory` · `@iris/store-do` | The four host adapters — long-running (sqlite), serverless (fs, O_EXCL), in-memory, and edge (Durable Objects). |
 | `@iris/host` | `HostAdapter` + `runTurnOn` + the capability-diff deploy gate. |
 | `@iris/agent` | The image toolchain — Agentfile parse/validate, resolve/embed/pin, deterministic `imageDigest`, OCI layout, loud `verify`, session pinning + definition migration. |
-| `iris` | The unscoped CLI package — the `iris` binary: `init / build / inspect / verify / push / pull / run / serve / chat / deploy / audit / eval / schedule`. `init` scaffolds a self-contained project with a bundled `now` tool; `serve` boots a turnkey HTTP server (buffered REST + streaming SSE + WebSocket; `--policy` turns on governance; `--web` mounts the chat UI); `chat` is the interactive durable chat client; `audit` prints a replay-verified compliance trail; `eval` runs a reproducible eval suite; `schedule` drives a recurring, replayable job. |
+| `iris` | The unscoped CLI package — the `iris` binary: `init / build / inspect / schema / verify / push / pull / run / serve / chat / deploy / audit / eval / schedule`. `init` scaffolds a self-contained project with a bundled `now` tool; `schema` prints the published Agentfile JSON Schema (draft 2020-12) for editor/CI validation; `serve` boots a turnkey HTTP server (buffered REST + streaming SSE + WebSocket; `--policy` turns on governance; `--web` mounts the chat UI); `chat` is the interactive durable chat client that resolves approval gates inline; `audit` prints a replay-verified compliance trail; `eval` runs a reproducible eval suite; `schedule` drives a recurring, replayable job. |
 | `@iris/tools` | The tool boundary — contract + digest, the uniform invoker, in-process/subprocess/MCP/gRPC transports, the retry-safe `tool_call` performer. |
 | `@iris/sandbox` | The security floor — deny-all network + credential brokering + a host-side sidecar egress proxy (real per-host allowlist egress, [ADR-0010](docs/adr-0010-sandbox-egress-proxy.md)). inmemory (unit) + docker (manual smoke). |
 | `@iris/channel-rest` · `@iris/channel-mcp` | The channels — REST over `node:http` with live **SSE** and hand-rolled zero-dep **WebSocket** streaming of a turn (records + model token deltas), and the agent exposed *as* an MCP server. |
@@ -365,7 +367,7 @@ Iris is early, but the foundation is deliberately overbuilt and the adoption sur
 
 **Packaging:** the workspace publishes as `iris` (the CLI) plus the `@iris/*` libraries at `0.1.0`, compiled to JavaScript for npm — while development still runs `.ts` directly with **no build step** (via the `iris-src` export condition). It is **publish-ready but not yet on npm**: the real `npm publish` is a gated step (`IRIS_PUBLISH=1 npm run release`; see [`RELEASING.md`](RELEASING.md)), as are the actual `wrangler deploy` (`IRIS_DEPLOY=1`) and OCI-registry pushes — the project's standing convention for real egress.
 
-**Landed since the core:** a second model provider (OpenAI) behind the provider-agnostic port (both pass one shared conformance suite); identity / authorization / governance via `@iris/auth` (a policy-checked approval gate + a journaled, replayable approval trail, wired into `iris serve --policy`); whole-session compliance audit (`@iris/audit` / `iris audit`); reproducible evals (`@iris/evals` / `iris eval`); subagents + schedules on the journaled substrate (`iris schedule`, `subagents.json` delegation); and the guided **[docs funnel](docs/README.md)**. **Still maturing:** the public API is subject to change, real egress stays env-gated, and an in-terminal human-in-the-loop approval prompt for `iris chat` is still on the roadmap (governance is reachable today through `iris serve`). Treat the architecture and the local/test path as production-minded, the breadth as still filling in.
+**Landed since the core:** a second model provider (OpenAI) behind the provider-agnostic port (both pass one shared conformance suite); identity / authorization / governance via `@iris/auth` (a policy-checked approval gate + a journaled, replayable approval trail, wired into `iris serve --policy`); whole-session compliance audit (`@iris/audit` / `iris audit`); reproducible evals (`@iris/evals` / `iris eval`); subagents + schedules on the journaled substrate (`iris schedule`, `subagents.json` delegation); in-chat human-in-the-loop approval — `iris chat` resolves the approval gate **inline** (`approve? [y/n]`, recorded as a journaled, replayable decision); the published **Agentfile JSON Schema** (`iris schema`, draft 2020-12, drift-locked to the runtime validator); and the guided **[docs funnel](docs/README.md)**. **Still maturing:** the public API is subject to change, and real egress stays env-gated. Treat the architecture and the local/test path as production-minded, the breadth as still filling in.
 
 ## Configuration
 
