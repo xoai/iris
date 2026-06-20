@@ -1,8 +1,10 @@
 # 04 — Channels
 
-`iris chat` is a terminal. To reach a human in a browser, serve the same image over
-HTTP — buffered REST plus live token streaming over SSE or WebSocket — and put a
-real chat UI in front of it.
+A channel puts a human in front of a **durable session** — one that survives a tab
+close, a process restart, even a host migration, and resumes mid-conversation from
+the same journal. `iris chat` is the terminal channel; to reach a human in a
+browser, serve the same image over HTTP — buffered REST plus live token streaming
+over SSE or WebSocket — with a real chat UI in front of it.
 
 ## Serve it
 

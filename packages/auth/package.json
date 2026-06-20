@@ -2,7 +2,7 @@
   "name": "@irisrun/auth",
   "version": "0.1.0",
   "type": "module",
-  "description": "Iris governance layer — identity + a declarative who-may-approve authorization policy on the existing HITL gate, plus a journaled, queryable approval audit trail. Pure: enriches the journaled signal_recv approval value (zero kernel change). Deps @irisrun/core + @irisrun/inspect only.",
+  "description": "Journaled, replayable approval audit you own — identity + a declarative who-may-approve policy on the existing HITL gate, where every approval decision is recorded in the same event log as model calls and tool effects (not a side log), so the approval trail replays and verifies from the journal. Pure: enriches the journaled signal_recv approval value (zero kernel change). Deps @irisrun/core + @irisrun/inspect only.",
   "exports": {
     ".": {
       "iris-src": "./src/index.ts",

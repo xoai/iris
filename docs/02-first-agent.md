@@ -1,8 +1,10 @@
 # 02 — Your first agent
 
-Goal: scaffold an agent, compile it, and have a real conversation with it — first
-with **no API key**, then with a real model. Then prove the conversation survives a
-process restart.
+Goal: stand up a **durable session you own** — an agent whose whole conversation
+lives in a journal, not in process memory, so it survives a restart and resumes
+byte-identically. You'll scaffold an agent, compile it, and talk to it — first
+with **no API key**, then with a real model — then kill the process and watch the
+same session pick up exactly where it stopped.
 
 You need **Node.js ≥ 24**. Nothing else — Iris has zero runtime dependencies.
 

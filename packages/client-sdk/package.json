@@ -2,7 +2,7 @@
   "name": "@irisrun/client-sdk",
   "version": "0.1.0",
   "type": "module",
-  "description": "Iris client SDK — a thin, isomorphic (browser + Node 24) client over the `iris serve` two-identifier protocol (sessionId minted by the channel; single-use continuationToken owned/rotated by the channel). Buffered + streaming (SSE). Zero runtime deps: uses only global fetch / TextDecoder / ReadableStream. Defines its OWN local StreamEvent wire union (no @irisrun/channel-rest import — that pulls node:http). WS transport is reserved (held-connection model; throws loudly until implemented).",
+  "description": "Portable client for durable, resumable sessions — a thin, isomorphic (browser + Node 24) client over the `iris serve` two-identifier protocol; holds only a {sessionId, continuationToken} handle, so a reload or a fresh process resumes the same session. Buffered + streaming over SSE. Zero runtime deps (global fetch / TextDecoder / ReadableStream); defines its OWN local StreamEvent wire union (no @irisrun/channel-rest import — that pulls node:http). The WS transport is reserved (held-connection model; throws loudly until implemented).",
   "exports": {
     ".": {
       "iris-src": "./src/index.ts",

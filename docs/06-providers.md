@@ -1,7 +1,12 @@
 # 06 — Models & providers
 
-"Bring your own model" is only real if more than one provider works. Iris ships two
-behind a single tested port: **Anthropic** and **OpenAI**.
+No model is baked into Iris. A provider is a **vendor-neutral adapter behind one
+tested model port** — swap Anthropic for OpenAI by changing a single config prefix,
+nothing else in the agent. And because each model reply is captured as a journaled
+effect, a recorded session **replays byte-identically from its journal regardless
+of which adapter produced it** — replay-safe by construction. (That is faithful
+record-replay of the captured reply, not a claim that two models return the same
+text.) Iris ships two behind that port: **Anthropic** and **OpenAI**.
 
 ## The model-id prefix selects the provider
 
