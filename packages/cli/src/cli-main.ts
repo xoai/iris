@@ -7,7 +7,7 @@
 import { createInterface } from "node:readline";
 import { dirname, join, resolve, isAbsolute } from "node:path";
 import { pathToFileURL } from "node:url";
-import { readOciLayout, governingDigest } from "@iris/agent";
+import { readOciLayout, governingDigest, agentfileSchemaJson } from "@iris/agent";
 import type { AgentImage } from "@iris/agent";
 import { defaultBundle, harnessProgram } from "@iris/core";
 import type { Performer, Json, StateStore, Scheduler } from "@iris/core";
@@ -601,6 +601,11 @@ async function main(argv: string[]): Promise<void> {
     case "inspect":
       console.log(JSON.stringify(await cmdInspect(argv[1]), null, 2));
       break;
+    case "schema":
+      // Print the published Agentfile JSON Schema (draft 2020-12). Pipe to a file
+      // for editor/CI validation: `iris schema > agentfile.schema.json`.
+      console.log(agentfileSchemaJson());
+      break;
     case "verify": {
       // verify re-resolves tool refs by ref — supply the same bundled resolver.
       const toolsDir = flag(argv, "--tools") ?? "tools";
@@ -639,7 +644,7 @@ async function main(argv: string[]): Promise<void> {
       await scheduleCommand(argv);
       break;
     default:
-      console.error("usage: iris <init|build|inspect|verify|push|pull|run|serve|chat|deploy|audit|eval|schedule>");
+      console.error("usage: iris <init|build|inspect|schema|verify|push|pull|run|serve|chat|deploy|audit|eval|schedule>");
       process.exit(2);
   }
 }

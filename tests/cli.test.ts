@@ -16,7 +16,7 @@ import {
   cmdRun,
   loadBundledTools,
 } from "iris";
-import { governingDigest } from "@iris/agent";
+import { governingDigest, checkAgainstSchema, validateAgentfile } from "@iris/agent";
 import { MemoryStateStore, MemoryScheduler } from "@iris/store-memory";
 import { TestClock } from "./lib/mem-store.ts";
 import { makeScriptedModel } from "./lib/fake-model.ts";
@@ -41,6 +41,11 @@ test("T9 (9a): init scaffolds a self-contained project (agent + instructions + b
   const desc = JSON.parse(await readFile(join(dir, "tools", "now.tool.json"), "utf8"));
   assert.equal(desc.ref, "subprocess://now");
   assert.equal(desc.exec, "now.mjs");
+  // The REAL emitted scaffold validates against BOTH the published JSON schema
+  // and the runtime validator (initiative 20260620-agentfile-schema) — this pins
+  // the actual `iris init` output, not a drift-prone copy of SCAFFOLD_AGENT.
+  assert.deepEqual(checkAgainstSchema(agent), [], "scaffolded agent.json passes the published schema");
+  assert.doesNotThrow(() => validateAgentfile(agent), "scaffolded agent.json passes the runtime validator");
 });
 
 test("T9 (9a): build → inspect → verify over a local OCI layout", async () => {

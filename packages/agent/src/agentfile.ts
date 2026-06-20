@@ -38,6 +38,13 @@ export interface AgentfileModel {
 const CONTRACT_SCHEMES = ["mcp", "grpc", "subprocess"] as const;
 const INLINE_BEHAVIOR_FIELDS = ["code", "script", "source"] as const;
 
+// `requires` (the capability profile) is strict-when-present so the runtime
+// validator agrees with the published JSON schema (schema.ts): a present
+// `tool_locality` must be one of these, and a present boolean cap must be a
+// boolean. (Initiative 20260620-agentfile-schema — these were untyped before.)
+const TOOL_LOCALITIES = ["in-process", "local", "remote"] as const;
+const BOOLEAN_CAPS = ["long_running", "local_subprocess", "filesystem", "websockets"] as const;
+
 /** Parse Agentfile JSON text into a validated model (throws loudly on bad JSON or shape). */
 export function parseAgentfileJson(text: string): AgentfileModel {
   let raw: unknown;
@@ -70,15 +77,25 @@ export function validateAgentfile(raw: unknown): AgentfileModel {
   const skills = requireStringArray(o, "skills");
   const tools = requireRefArray(o, "tools");
   const connections = requireRefArray(o, "connections");
-  const harness = asObject(o.harness ?? {}, "harness");
-  const requires = asObject(o.requires ?? {}, "requires") as CapabilityProfile;
+  // Default ONLY when ABSENT (undefined). An explicit JSON `null` is wrong-typed
+  // — the schema types harness/requires as `object`, so a present null must be
+  // rejected, not coerced to {} (which `?? {}` would do). sandbox needs no guard:
+  // it is required, so null/absent already throws via asObject below.
+  const harness = asObject(o.harness === undefined ? {} : o.harness, "harness");
+  const requires = asObject(o.requires === undefined ? {} : o.requires, "requires");
+  validateCapabilityProfile(requires);
   const sandbox = asObject(o.sandbox, "sandbox");
 
   // Build optional sub-objects WITHOUT undefined keys — canonicalize (used for
   // the imageDigest) rejects undefined values, and omission keeps the YAML/JSON
-  // models deep-equal.
+  // models deep-equal. A present-but-wrong-typed `bundle`/`workspace` now throws
+  // (was silently dropped) so the runtime agrees with the JSON schema; a
+  // well-typed value behaves exactly as before, so existing digests are unchanged.
   const harnessOut: AgentfileModel["harness"] = {};
-  if (typeof harness.bundle === "string") harnessOut.bundle = harness.bundle;
+  if (harness.bundle !== undefined) {
+    if (typeof harness.bundle !== "string") throw new Error("Agentfile: harness.bundle must be a string");
+    harnessOut.bundle = harness.bundle;
+  }
   if (harness.tactics !== undefined) {
     harnessOut.tactics = asObject(harness.tactics, "harness.tactics") as Record<string, string>;
   }
@@ -86,7 +103,10 @@ export function validateAgentfile(raw: unknown): AgentfileModel {
     backend: requireString(sandbox, "sandbox.backend", "backend"),
     network: requireString(sandbox, "sandbox.network", "network"),
   };
-  if (typeof sandbox.workspace === "string") sandboxOut.workspace = sandbox.workspace;
+  if (sandbox.workspace !== undefined) {
+    if (typeof sandbox.workspace !== "string") throw new Error("Agentfile: sandbox.workspace must be a string");
+    sandboxOut.workspace = sandbox.workspace;
+  }
 
   return {
     apiVersion: "iris/v1",
@@ -98,9 +118,26 @@ export function validateAgentfile(raw: unknown): AgentfileModel {
     tools,
     connections,
     harness: harnessOut,
-    requires,
+    requires: requires as CapabilityProfile,
     sandbox: sandboxOut,
   };
+}
+
+// Strict-when-present validation of the capability profile (`requires`), so the
+// runtime agrees with the published JSON schema. Unknown keys are still ignored
+// (retained in the model) — only the KNOWN fields are type-checked when present.
+function validateCapabilityProfile(o: { [k: string]: Json }): void {
+  for (const cap of BOOLEAN_CAPS) {
+    if (cap in o && typeof o[cap] !== "boolean") {
+      throw new Error(`Agentfile: requires.${cap} must be a boolean`);
+    }
+  }
+  const tl = o.tool_locality;
+  if (tl !== undefined && !(TOOL_LOCALITIES as readonly string[]).includes(tl as string)) {
+    throw new Error(
+      `Agentfile: requires.tool_locality must be one of ${TOOL_LOCALITIES.join("/")} (got ${JSON.stringify(tl)})`,
+    );
+  }
 }
 
 function asObject(v: unknown, what: string): { [k: string]: Json } {
