@@ -20,7 +20,8 @@ Follow these in order. Each page ends with a **Next →** link to the next stop.
 4. [04 — Channels](./04-channels.md) — **durable, resumable sessions** in the
    browser: serve over HTTP (SSE / WebSocket), the web chat UI, and the client
    SDK; survive a tab close. The [channel-port spec](./channel-port-spec.md) is the
-   normative contract every channel passes.
+   normative contract every channel passes; other platforms are
+   [bridges](./bridge-pattern.md), not packages.
 5. [05 — Deploy](./05-deploy.md) — the headline: **resume the same session on a
    *different* host** — one command to a Cloudflare Durable Object.
 6. [06 — Models & providers](./06-providers.md) — **vendor-neutral, replay-safe

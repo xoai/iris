@@ -119,4 +119,13 @@ the live workspace is configuration, not new code.
 > As everywhere, "resumes byte-identically" is faithful **record-replay** of the
 > session's journal — not a claim the model is deterministic.
 
+## Other platforms — bridges, not packages
+
+Discord, Telegram, Teams, and the rest are reached by a **bridge**: an external
+process that speaks the REST channel protocol, runnable in any language, needing **no
+Iris core changes**. Matching another framework's channel list is parity; one channel
+that demonstrates the moat (Slack, above) beats five that reach it. The
+[bridge pattern](./bridge-pattern.md) is the normative contract, with a fetch-only
+reference bridge (`npm run demo:bridge`).
+
 **Next → [05 — Deploy](./05-deploy.md)**
