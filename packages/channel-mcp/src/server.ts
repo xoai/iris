@@ -10,6 +10,7 @@ import { randomUUID } from "node:crypto";
 import type { Readable, Writable } from "node:stream";
 import { runTurnOn, type HostAdapter } from "@irisrun/host";
 import type { Program, PerformerRegistry, LogicalClock, Json, TurnOutcome } from "@irisrun/core";
+import { makeChannelSession, type ChannelRefusal } from "@irisrun/channel-core";
 
 export interface TurnInputs<S extends Json> {
   program: Program<S>;
@@ -72,11 +73,19 @@ const MESSAGE_TOOL = {
 };
 
 export function makeMcpChannel<S extends Json>(opts: McpChannelOptions<S>): McpChannel {
-  const mintSessionId = opts.mintSessionId ?? (() => randomUUID());
-  const mintToken = opts.mintToken ?? (() => randomUUID());
   const serverInfo = opts.serverInfo ?? { name: "iris", version: "0.0.0" };
-  const tokens = new Map<string, string>(); // the channel OWNS the current token per session
-  const inFlight = new Set<string>(); // single-use guard under concurrency (see channel-rest)
+
+  // The two-identifier protocol (mint sessionId, own/rotate a single-use token, atomic
+  // single-use, committed-only rotation) lives in the shared channel-core port — the
+  // SAME driver channel-rest uses. This MCP transport just maps refusals to JSON-RPC
+  // error codes. (Previously this file rotated the token on EVERY committed-or-not turn;
+  // channel-core corrects that to rotate only on finished/parked — see roadmap §10.)
+  const session = makeChannelSession<S>({
+    runTurn: async (sessionId, args) =>
+      runTurnOn(opts.adapter, { sessionId, ...opts.makeTurnInputs(sessionId, args) }),
+    mintSessionId: opts.mintSessionId ?? (() => randomUUID()),
+    mintToken: opts.mintToken ?? (() => randomUUID()),
+  });
 
   const ok = (id: number | string | null, result: Json): JsonRpcResponse => ({ jsonrpc: "2.0", id, result });
   const err = (id: number | string | null, code: number, message: string): JsonRpcResponse => ({
@@ -86,9 +95,6 @@ export function makeMcpChannel<S extends Json>(opts: McpChannelOptions<S>): McpC
   });
   const toolResult = (payload: Json): Json => ({ content: [{ type: "text", text: JSON.stringify(payload) }] });
 
-  const runOne = async (sessionId: string, args: Json): Promise<TurnOutcome<S>> =>
-    runTurnOn(opts.adapter, { sessionId, ...opts.makeTurnInputs(sessionId, args) });
-
   const turnPayload = (sessionId: string, token: string, outcome: TurnOutcome<S>): Json => {
     const base: Record<string, Json> = { sessionId, continuationToken: token, status: outcome.status };
     if (outcome.status === "finished" && outcome.output !== undefined) base.output = outcome.output;
@@ -97,32 +103,35 @@ export function makeMcpChannel<S extends Json>(opts: McpChannelOptions<S>): McpC
     return base;
   };
 
+  // Map a channel-core refusal to its LOUD JSON-RPC error (the impl-defined -32000 range).
+  const refusalError = (
+    id: number | string | null,
+    reason: ChannelRefusal,
+    sessionId: string,
+  ): JsonRpcResponse => {
+    switch (reason) {
+      case "unknown-session":
+        return err(id, UNKNOWN_SESSION, `unknown session '${sessionId}'`);
+      case "missing-token":
+        return err(id, MISSING_TOKEN, "missing continuationToken");
+      case "stale-token":
+        return err(id, STALE_TOKEN, "stale or invalid continuationToken");
+      case "in-flight":
+        return err(id, IN_FLIGHT, "a turn is already in flight for this session");
+    }
+  };
+
   const callStart = async (id: number | string | null, args: Json): Promise<JsonRpcResponse> => {
-    const sessionId = mintSessionId();
-    const outcome = await runOne(sessionId, args);
-    const token = mintToken();
-    tokens.set(sessionId, token);
-    return ok(id, toolResult(turnPayload(sessionId, token, outcome)));
+    const r = await session.start(args);
+    return ok(id, toolResult(turnPayload(r.sessionId, r.token, r.outcome)));
   };
 
   const callMessage = async (id: number | string | null, args: Record<string, Json>): Promise<JsonRpcResponse> => {
     const sessionId = typeof args.sessionId === "string" ? args.sessionId : "";
-    if (!sessionId || !tokens.has(sessionId)) return err(id, UNKNOWN_SESSION, `unknown session '${sessionId}'`);
     const presented = typeof args.continuationToken === "string" ? args.continuationToken : null;
-    if (presented === null || presented === "") return err(id, MISSING_TOKEN, "missing continuationToken");
-    if (presented !== tokens.get(sessionId)) return err(id, STALE_TOKEN, "stale or invalid continuationToken");
-    // ATOMIC single-use: the token check above and this claim run in ONE callback
-    // with no `await` between them; a concurrent second message is refused here.
-    if (inFlight.has(sessionId)) return err(id, IN_FLIGHT, "a turn is already in flight for this session");
-    inFlight.add(sessionId);
-    try {
-      const outcome = await runOne(sessionId, args);
-      const next = mintToken();
-      tokens.set(sessionId, next); // rotate ONLY after a committed turn → single-use
-      return ok(id, toolResult(turnPayload(sessionId, next, outcome)));
-    } finally {
-      inFlight.delete(sessionId);
-    }
+    const r = await session.continueTurn(sessionId, presented, args);
+    if (!r.ok) return refusalError(id, r.reason, sessionId);
+    return ok(id, toolResult(turnPayload(r.sessionId, r.token, r.outcome)));
   };
 
   const handle = async (raw: unknown): Promise<JsonRpcResponse> => {

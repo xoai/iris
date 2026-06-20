@@ -46,3 +46,37 @@ export function makeAbortOnAppendStore(inner: StateStore, currentFence: Version 
   };
   return { store, state };
 }
+
+// A store whose next turn can be FLIPPED to inject `contended` (cas fails on the lease
+// once) or `aborted` (the next append fails once with stale_fence), then auto-resets to
+// "ok". Lets one channel instance produce finished → contended → aborted across turns —
+// used by the channel-port conformance suite to pin the committed-only token-rotation
+// rule against the REAL transports.
+export function makeFlippableStore(inner: StateStore): {
+  store: StateStore;
+  setNext: (mode: "ok" | "contend" | "abort") => void;
+} {
+  let next: "ok" | "contend" | "abort" = "ok";
+  const store: StateStore = {
+    load: (key) => inner.load(key),
+    cas: async (key, expected, nextBytes): Promise<CasResult> => {
+      if (next === "contend" && key.startsWith("lease:")) {
+        next = "ok";
+        return { ok: false, current: 999 };
+      }
+      return inner.cas(key, expected, nextBytes);
+    },
+    append: async (sessionId, expectedSeq, records, fence): Promise<AppendResult> => {
+      if (next === "abort") {
+        next = "ok";
+        return { ok: false, reason: "stale_fence", currentFence: 7 };
+      }
+      return inner.append(sessionId, expectedSeq, records, fence);
+    },
+    readJournal: (sessionId, fromSeq) => inner.readJournal(sessionId, fromSeq),
+    writeSnapshot: (sessionId, upToSeq, bytes) => inner.writeSnapshot(sessionId, upToSeq, bytes),
+    readLatestSnapshot: (sessionId) => inner.readLatestSnapshot(sessionId),
+    truncateJournal: (sessionId, throughSeq) => inner.truncateJournal(sessionId, throughSeq),
+  };
+  return { store, setNext: (m) => { next = m; } };
+}

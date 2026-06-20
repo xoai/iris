@@ -14,6 +14,13 @@ and streams a turn live over **SSE** *and* a hand-rolled, zero-dependency
 `Accept: text/event-stream` header for one buffered JSON reply. ADR-0009; a real
 external HTTP deploy is an env-gated manual smoke.
 
+The two-identifier protocol itself — token rotation (only on a committed turn), the
+atomic single-use claim, and the loud refusal taxonomy — lives in
+**[`@irisrun/channel-core`](../channel-core/README.md)**, the shared channel **port**;
+this package is the HTTP/SSE/WS transport over it and passes the shared channel-port
+conformance suite (see the normative
+**[channel-port spec](../../docs/reference/channel-port-spec.md)**).
+
 ## Use it
 
 ```sh
