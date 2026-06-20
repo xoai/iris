@@ -3,3 +3,6 @@ export const PACKAGE = "@iris/evals";
 
 export { runEval, runSuite } from "./evals.ts";
 export type { EvalCase, Scorer, EvalResult, SuiteResult } from "./evals.ts";
+
+export { reproduce } from "./reproduce.ts";
+export type { ReproReport } from "./reproduce.ts";

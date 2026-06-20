@@ -12,6 +12,7 @@ import type { Performer } from "@iris/core";
 import { makeToolPerformer, makeToolRegistry, makeToolInvoker, makeSubprocessTransport } from "@iris/tools";
 import type { ToolContract } from "@iris/tools";
 import { cmdInit, cmdBuild, cmdInspect, cmdVerify, cmdPush, cmdPull, cmdRun, cmdServe, cmdDeploy } from "./iris.ts";
+import { cmdAudit } from "./audit-cmd.ts";
 import { loadBundledTools } from "./tools.ts";
 import { echoStreamingPerformer } from "./echo.ts";
 import { runChat, wrapModelForImage, makeChatStreamingFakeModel, makeStreamSink } from "./chat.ts";
@@ -317,6 +318,39 @@ async function deployCommand(argv: string[]): Promise<void> {
   console.log(result.plan);
 }
 
+// `iris audit <session> --db <path> [--interactive] [--json]` — print a whole-session,
+// compliance-grade audit (full retained journal + completeness) and a replay-verified
+// verdict (roadmap P2-8). Reads a session recorded by a prior run/serve/chat. Host-side.
+async function auditCommand(argv: string[]): Promise<void> {
+  const session = argv[1];
+  if (!session) {
+    throw new Error("usage: iris audit <session> --db <path> [--interactive] [--json]");
+  }
+  const db = flag(argv, "--db") ?? ":memory:";
+  if (db === ":memory:") {
+    console.warn(
+      "iris audit: --db :memory: — an in-memory store has no prior session; pass --db <path> from a previous run/serve/chat",
+    );
+  }
+  const json = argv.includes("--json");
+  const forceInteractive = argv.includes("--interactive"); // override journal auto-detection
+
+  const sqlite = await import("@iris/store-sqlite");
+  const handle = sqlite.openDatabase(db);
+  const store = new sqlite.SqliteStateStore(handle);
+  try {
+    const { audit, verify, text } = await cmdAudit({
+      store,
+      sessionId: session,
+      ...(forceInteractive ? { interactive: true } : {}),
+    });
+    if (json) console.log(JSON.stringify({ audit, verify }, null, 2));
+    else console.log(text);
+  } finally {
+    store.close();
+  }
+}
+
 async function main(argv: string[]): Promise<void> {
   const cmd = argv[0];
   switch (cmd) {
@@ -376,8 +410,11 @@ async function main(argv: string[]): Promise<void> {
     case "deploy":
       await deployCommand(argv);
       break;
+    case "audit":
+      await auditCommand(argv);
+      break;
     default:
-      console.error("usage: iris <init|build|inspect|verify|push|pull|run|serve|chat|deploy>");
+      console.error("usage: iris <init|build|inspect|verify|push|pull|run|serve|chat|deploy|audit>");
       process.exit(2);
   }
 }

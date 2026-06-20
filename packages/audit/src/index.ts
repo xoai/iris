@@ -1,0 +1,11 @@
+// @iris/audit — the audit & reproducible-eval product surface (roadmap P2-8).
+// Pure read-only projections over the existing journal; zero kernel change.
+export const PACKAGE = "@iris/audit";
+
+export { auditSession, renderAudit } from "./audit.ts";
+export type { AuditEntry, SessionAudit } from "./audit.ts";
+
+export { verifyReplay, verifySession } from "./verify.ts";
+export type { VerifyResult } from "./verify.ts";
+
+export { fnv1a32hex } from "./fnv.ts";

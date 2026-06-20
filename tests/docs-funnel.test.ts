@@ -1,5 +1,5 @@
 // Docs-funnel integrity (P1-7). Cheap regression guard so the guided path can't
-// silently rot: the eight pages exist, every relative link resolves, the "Next →"
+// silently rot: every page exists, every relative link resolves, the "Next →"
 // chain is correct, the index points at every page, and no page documents a CLI
 // command that doesn't exist. Uses the boundary.test.ts ROOT pattern.
 import { test } from "node:test";
@@ -19,6 +19,7 @@ const PAGES = [
   "05-deploy.md",
   "06-providers.md",
   "07-governance.md",
+  "08-audit-and-evals.md",
 ];
 const ALL = ["README.md", ...PAGES];
 

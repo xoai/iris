@@ -17,6 +17,7 @@
     "@iris/inspect": "*",
     "@iris/evals": "*",
     "@iris/observe": "*",
+    "@iris/audit": "*",
     "@iris/provider-anthropic": "*",
     "@iris/provider-openai": "*",
     "@iris/demo": "*",

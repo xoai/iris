@@ -30,25 +30,25 @@ approval trail is **replayable and ordered by construction**:
 That is the raw material for a compliance-grade, reproducible audit story — and
 it's a property a system without an event-sourced substrate can't easily retrofit.
 
-## What is NOT built yet (roadmap)
+## The governance layer (P1-5, landed)
 
-The **gate mechanism** exists; a full **governance layer** does not. Specifically,
-these are on the roadmap (item P1-5) and are *not* implemented today:
+The gate mechanism is now wrapped by a real **governance layer**, the `@iris/auth`
+package — opt-in, with zero change to the default behavior:
 
-- **Identity** — who an approver *is*.
-- **Authorization policy** — configurable "who may approve what."
-- A first-class, queryable **approval audit API** over the journal.
+- **Identity** — who an approver *is* (`Principal`: an id and roles).
+- **Authorization policy** — a declarative, configurable "who may approve what"
+  (`ApprovalPolicy`); an unauthorized approval is converted to a skip, not honored.
+- A first-class, queryable **approval audit** over the journal (`auditApprovals`),
+  reading the *full retained journal* so the trail stays complete across snapshots.
 
-Today, *that an approval happened* is journaled; *who was authorized to give it* is
-not yet policy-controlled. Don't represent Iris as having configurable approval
-governance until P1-5 lands. See the project roadmap
-(`.sage/docs/adoption-roadmap.md`) for the plan and sequencing.
+It's wired into `iris run`/`serve` as an opt-in `governance` option, so the default
+(ungoverned) path is byte-identical to before. For the whole-session compliance
+audit and reproducible evals built on top of this, continue to chapter 08.
 
-## You've reached the end of the funnel
+## Beyond approvals: the whole-session audit
 
-If you followed every page, you have: scaffolded an agent, given it a tool, served
-it to a browser, deployed it to a real edge host, swapped its model provider, and
-inspected its approval trail — the path from `npx iris init` to a deployed,
-talkable, audit-bearing agent.
+This page covered the *approval* trail. Chapter 08 turns the same substrate into a
+product: a whole-session, replay-verified compliance audit (every effect, not just
+approvals) and provably reproducible evals — runnable with `iris audit`.
 
-**Next → [Back to the funnel index](./README.md)**
+**Next → [08 — Audit & reproducible evals](./08-audit-and-evals.md)**
