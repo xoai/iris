@@ -26,6 +26,7 @@
 - [Observability](docs/guides/observability.md): OTel-shaped spans derived from the journal (@irisrun/observe), injected Sink, env-gated OTLP export; derived so replay is unaffected.
 - [Inspecting a session](docs/guides/inspect.md): inspectSession renders the deterministic decision/effect/marker timeline of a recorded session (a library API, not an iris subcommand; iris inspect is image-only).
 - [Frontend & the client SDK](docs/guides/frontend.md): the web chat UI (iris serve --web) and the isomorphic @irisrun/client-sdk over the serve SSE two-identifier protocol.
+- [Secrets & environment](docs/guides/secrets.md): declare secret names in the Agentfile, supply values at run time (--env-file / --secret-files); least-privilege tool env.
 
 ## Reference
 - [Agentfile reference](docs/reference/agentfile.md): every Agentfile field, the JSON form, and the build-time validation rules.

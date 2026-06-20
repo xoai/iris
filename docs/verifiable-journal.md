@@ -14,7 +14,7 @@ canonical-JSON file that carries its own **SHA-256 content address** and a
 tamper-evident hash chain:
 
 ```sh
-iris journal export s1 --store s1.sqlite --out s1.irisjournal
+iris journal export s1 --store s1.sqlite --out s1.irisjournal   # --store also accepts the --db spelling used elsewhere
 ```
 
 ```

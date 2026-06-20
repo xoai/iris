@@ -8,6 +8,10 @@ same session pick up exactly where it stopped.
 
 You need **Node.js ≥ 24**. Nothing else — Iris has zero runtime dependencies.
 
+> Every `iris <cmd>` below is `npx iris-runtime <cmd>` (or `npm i -g iris-runtime`) — or,
+> from a clone, `node --conditions=iris-src packages/cli/src/cli-main.ts <cmd>`. See
+> [running the commands](./README.md#running-the-commands-first).
+
 ## 1. Scaffold
 
 ```sh

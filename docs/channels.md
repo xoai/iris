@@ -67,7 +67,7 @@ next chapter is for.)
 REST, MCP, and Slack are different wires in front of the **same** durable session.
 What they share — mint the `sessionId`, own and **rotate a single-use continuation
 token**, refuse a stale/missing/unknown/in-flight turn **loudly** — is factored into
-one port, `@irisrun/channel-core`, the way `StateStore` is the store port. A channel
+one port, `@irisrun/channel-core`, the way `StateStore` (a host's durable byte store) is the store port. A channel
 is then just: normalize the platform's inbound event → drive the shared session →
 emit the platform's reply.
 
@@ -79,7 +79,7 @@ in-flight claim is atomic, so a concurrent replay of a token is refused, never
 double-applied.
 
 Because the contract is one shared driver, it is verified by **one conformance suite
-any channel must pass** — `channel-rest` and `channel-mcp` both run it. A new channel
+any channel must pass** — `channel-rest`, `channel-mcp`, and `channel-slack` all run it. A new channel
 that passes the suite is durable and replay-safe by construction. The normative
 contract is [the channel-port spec](./reference/channel-port-spec.md).
 
@@ -95,8 +95,8 @@ for human approval, the channel posts **Approve / Deny** buttons; a click submit
 decision and resumes the session. What makes it survive a redeploy is *where* the
 state lives:
 
-- the **durable session** is the `StateStore` journal — the parked `signal_recv` is
-  journaled, so any instance can resume it from the store;
+- the **durable session** is the `StateStore` journal — the parked wait for the approval
+  signal (a journaled `signal_recv`) means any instance can resume it from the store;
 - the **approval context** (`{sessionId, callId, name}`) rides the **signed Slack
   button value**, not server memory, so a fresh instance with an empty map can still
   reconstruct the click;

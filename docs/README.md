@@ -44,7 +44,7 @@ How the runtime works, page by page.
   losing deterministic replay.
 - [Models & providers](./providers.md) — **vendor-neutral, replay-safe** model adapters:
   Anthropic and OpenAI behind one tested port; swap without touching the agent.
-- [Governance & audit](./governance.md) — the approval gate, the `@irisrun/auth`
+- [Governance & approvals](./governance.md) — the approval gate, the `@irisrun/auth`
   policy layer, and the journaled approval trail (`iris serve --policy`).
 - [Audit & reproducible evals](./audit-and-evals.md) — `iris audit` for a replay-verified
   session trail, and provably reproducible evals (`iris eval`).
@@ -66,6 +66,8 @@ Add a capability when you need it.
   the deterministic decision/effect/marker timeline (`inspectSession`).
 - [Frontend & the client SDK](./guides/frontend.md) — put an agent in front of users: the
   web chat UI (`iris serve --web`) and the isomorphic `@irisrun/client-sdk`.
+- [Secrets & environment](./guides/secrets.md) — declare secret *names* in the Agentfile,
+  supply *values* at run time (`--env-file` / `--secret-files`); least-privilege tool env.
 
 ## Reference
 
@@ -100,7 +102,5 @@ Start with **[CONTRIBUTING](../CONTRIBUTING.md)** — the dev loop (install-free
   [add a channel](./contributing/adding-a-channel.md) ·
   [add a store](./contributing/adding-a-store.md) ·
   [add a tactic](./contributing/adding-a-tactic.md).
-
-<!-- Growing next: Guides → secrets & env. -->
 
 **Next → [Introduction](./introduction.md)**

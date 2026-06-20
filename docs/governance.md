@@ -1,4 +1,4 @@
-# Governance & audit
+# Governance & approvals
 
 The last stop is trust: who is allowed to do what, and how you prove what happened.
 This is where Iris's durability substrate pays off: the approval gate, principal

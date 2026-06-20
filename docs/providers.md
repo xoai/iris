@@ -140,4 +140,4 @@ outcome carrying a `{ role, content, stopReason, usage? }` result. Mirror
 
 That's the whole contract. Anything that satisfies it is a first-class Iris model.
 
-**Next → [Governance & audit](./governance.md)**
+**Next → [Governance & approvals](./governance.md)**
