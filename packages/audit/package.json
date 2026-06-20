@@ -1,0 +1,33 @@
+{
+  "name": "@iris/audit",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Iris audit & reproducible-eval product surface — whole-session, compliance-grade audit over the FULL retained journal (every effect/marker/approval, with completeness) plus offline replay-verification (structural integrity + in-process replay-determinism + totality). Pure: a read-only projection over the existing journal, zero kernel change. Deps @iris/core + @iris/auth only.",
+  "exports": {
+    ".": {
+      "iris-src": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@iris/core": "^0.1.0",
+    "@iris/auth": "^0.1.0"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xoai/iris.git",
+    "directory": "packages/audit"
+  },
+  "homepage": "https://github.com/xoai/iris#readme",
+  "files": [
+    "dist"
+  ]
+}

@@ -22,7 +22,10 @@ Follow these in order. Each page ends with a **Next →** link to the next stop.
 6. [06 — Models & providers](./06-providers.md) — bring your own model. Anthropic
    and OpenAI behind one tested port; how to add a third.
 7. [07 — Governance & audit](./07-governance.md) — the approval gate, the
-   journaled audit trail, and what is still on the roadmap.
+   `@iris/auth` governance layer, and the journaled approval trail.
+8. [08 — Audit & reproducible evals](./08-audit-and-evals.md) — the headline:
+   `iris audit` for a replay-verified, compliance-grade session trail, and
+   provably reproducible evals. Determinism → reproducible evals → audit.
 
 ## How to run the commands
 

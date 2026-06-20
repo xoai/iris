@@ -21,6 +21,8 @@ export type {
   CliDeployOptions,
   DeployResult,
 } from "./iris.ts";
+export { cmdAudit } from "./audit-cmd.ts";
+export type { CliAuditOptions } from "./audit-cmd.ts";
 export { echoStreamingPerformer } from "./echo.ts";
 export {
   wrapModelForImage,
