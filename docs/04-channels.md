@@ -83,4 +83,40 @@ any channel must pass** — `channel-rest` and `channel-mcp` both run it. A new 
 that passes the suite is durable and replay-safe by construction. The normative
 contract is [the channel-port spec](./channel-port-spec.md).
 
+## Slack — durable human-in-the-loop
+
+Chat is where durable, approval-gated sessions matter most. `@irisrun/channel-slack`
+is built on the port to demonstrate the one thing only Iris does: **a Slack approval
+that pauses for hours, survives a redeploy, and resumes the same session
+byte-identically.**
+
+The flow: a slash command starts a durable session; when the agent gates an action
+for human approval, the channel posts **Approve / Deny** buttons; a click submits the
+decision and resumes the session. What makes it survive a redeploy is *where* the
+state lives:
+
+- the **durable session** is the `StateStore` journal — the parked `signal_recv` is
+  journaled, so any instance can resume it from the store;
+- the **approval context** (`{sessionId, callId, name}`) rides the **signed Slack
+  button value**, not server memory, so a fresh instance with an empty map can still
+  reconstruct the click;
+- the **identity** comes from the click's authenticated Slack user.
+
+So an approval can sit for days, the service can redeploy, and the Approve still
+resumes the exact same session. This guarantee is proven in-env against a real store
+across a simulated redeploy (`tests/channel-slack-durable.test.ts`), including a
+byte-identical comparison to a no-redeploy control.
+
+Every request is verified first (HMAC-SHA256, constant-time, 5-minute replay window);
+an unverified body is never processed. Zero runtime deps — `node:crypto` plus built-in
+`fetch` for outbound.
+
+**Operator setup** (the public-workspace step): create a Slack app, set its signing
+secret and bot token as env, and point the slash command + interactivity request URLs
+at your `iris`-served endpoint. The durability *guarantee* is the in-env test above;
+the live workspace is configuration, not new code.
+
+> As everywhere, "resumes byte-identically" is faithful **record-replay** of the
+> session's journal — not a claim the model is deterministic.
+
 **Next → [05 — Deploy](./05-deploy.md)**
