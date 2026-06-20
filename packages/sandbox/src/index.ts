@@ -1,7 +1,7 @@
 // @irisrun/sandbox — public surface (host-side; zero external deps).
 export const PACKAGE = "@irisrun/sandbox";
 
-export { makeCredentialBroker, networkAllows } from "./backend.ts";
+export { makeCredentialBroker, networkAllows, normalizeHost } from "./backend.ts";
 export type {
   NetworkPolicy,
   RunResult,

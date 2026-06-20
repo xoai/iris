@@ -8,7 +8,7 @@
 import http from "node:http";
 import net from "node:net";
 import type { CredentialBroker, NetworkPolicy, OutboundRequest } from "./backend.ts";
-import { networkAllows } from "./backend.ts";
+import { networkAllows, normalizeHost } from "./backend.ts";
 
 // Sandbox code names a secret BY THIS header; the proxy strips it and brokers the
 // named credential. node lowercases inbound header keys, so this is the exact
@@ -50,7 +50,7 @@ function parseTarget(req: http.IncomingMessage): { host: string; port: number; p
   if (/^https?:\/\//i.test(rawUrl)) {
     const u = new URL(rawUrl);
     return {
-      host: u.hostname,
+      host: normalizeHost(u.hostname),
       port: u.port ? Number(u.port) : u.protocol === "https:" ? 443 : 80,
       path: `${u.pathname}${u.search}` || "/",
     };
@@ -61,9 +61,32 @@ function parseTarget(req: http.IncomingMessage): { host: string; port: number; p
   const hostHeader = String(req.headers.host ?? "");
   try {
     const u = new URL(`http://${hostHeader}`);
-    return { host: u.hostname, port: u.port ? Number(u.port) : 80, path: rawUrl || "/" };
+    return { host: normalizeHost(u.hostname), port: u.port ? Number(u.port) : 80, path: rawUrl || "/" };
   } catch {
-    return { host: hostHeader, port: 80, path: rawUrl || "/" };
+    return { host: normalizeHost(hostHeader), port: 80, path: rawUrl || "/" };
+  }
+}
+
+// Parse a CONNECT authority ("host:port", "[::1]:port", or a bare "host") the
+// SAME way `parseTarget` resolves an HTTP host — via URL, so IPv6 brackets are
+// handled uniformly (a bare `split(":")` mangles IPv6 to `"["`). The returned
+// host is `normalizeHost`-canonical, so HTTP and CONNECT enforce the allowlist
+// IDENTICALLY and feed a connectable bare host to `net.connect`. The port is
+// read from the authority's trailing `:<digits>` (defaulting to 443) — NOT from
+// `URL.port`, which drops a default-for-HTTP port like 80. Defensive textual
+// fallback if URL parsing rejects the authority. (See
+// docs/security-sandbox-threat-model.md.)
+function parseAuthority(authority: string): { host: string; port: number } {
+  const portMatch = authority.match(/:(\d{1,5})$/); // trailing :port (after a `]` for IPv6)
+  const port = portMatch ? Number(portMatch[1]) : 443;
+  try {
+    return { host: normalizeHost(new URL(`http://${authority}`).hostname), port };
+  } catch {
+    const i = authority.lastIndexOf(":");
+    if (i > authority.indexOf("]")) {
+      return { host: normalizeHost(authority.slice(0, i)), port };
+    }
+    return { host: normalizeHost(authority), port };
   }
 }
 
@@ -128,9 +151,7 @@ export function startEgressProxy(opts: EgressProxyOptions): Promise<EgressProxyH
   // ALLOWLIST ONLY and cannot broker a credential here (documented; not faked).
   server.on("connect", (req, clientSocket: net.Socket, head: Buffer) => {
     const authority = req.url ?? "";
-    const [h, p] = authority.split(":");
-    const host = h ?? "";
-    const port = p ? Number(p) : 443;
+    const { host, port } = parseAuthority(authority);
     if (!networkAllows(policy, host)) {
       clientSocket.write("HTTP/1.1 403 Forbidden\r\n\r\n");
       clientSocket.destroy();

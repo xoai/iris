@@ -76,9 +76,36 @@ export function makeCredentialBroker(
   };
 }
 
-/** True iff `host` may be reached under `policy`. */
+/**
+ * Canonicalize a hostname for allowlist comparison so the allowlist enforces
+ * IDENTICALLY regardless of case/format and across every enforcement path
+ * (proxy HTTP, proxy CONNECT, inmemory firewall). It folds only DNS-EQUIVALENT
+ * forms — lowercase (DNS is case-insensitive); strip ONE surrounding pair of
+ * IPv6 brackets (`[::1]` === `::1`); strip a single trailing dot (`a.com.` ===
+ * `a.com`, the FQDN root label). It NEVER broadens an entry to a genuinely
+ * different host, so the allowlist stays fail-closed. Deliberately NOT
+ * IDNA/punycode: allowlist entries are expected to be pre-normalized ASCII, and
+ * the proxy applies request-side IDNA folding (`URL.hostname`) as an additional
+ * one-way hardening before this. Pure, total, never throws. (Strips ANY single
+ * surrounding bracket pair; in practice only an IPv6 literal reaches here. See
+ * docs/security-sandbox-threat-model.md.)
+ */
+export function normalizeHost(raw: string): string {
+  let h = raw.toLowerCase();
+  if (h.length > 2 && h.startsWith("[") && h.endsWith("]")) {
+    h = h.slice(1, -1); // non-empty IPv6 literal: [::1] → ::1
+  }
+  if (h.length > 1 && h.endsWith(".")) {
+    h = h.slice(0, -1); // single trailing FQDN dot
+  }
+  return h;
+}
+
+/** True iff `host` may be reached under `policy` (host-normalized; see
+ * docs/security-sandbox-threat-model.md). */
 export function networkAllows(policy: NetworkPolicy, host: string): boolean {
   if (policy === "deny-all") return false;
   if (policy === "allow-all") return true;
-  return policy.allow.includes(host);
+  const h = normalizeHost(host);
+  return policy.allow.some((entry) => normalizeHost(entry) === h);
 }

@@ -30,6 +30,13 @@ Follow these in order. Each page ends with a **Next →** link to the next stop.
    audit. Plus subagent delegation (`subagents.json`) and recurring schedules
    (`iris schedule`) on the same journaled substrate.
 
+## Security
+
+- [Sandbox egress threat model](./security-sandbox-threat-model.md) — the
+  adversarial review of the egress firewall + credential broker: what the
+  deny-all floor, the host allowlist, and credential brokering guarantee, how
+  each is proven, and the honest limits.
+
 ## How to run the commands
 
 The `iris` command is `npx iris-runtime <cmd>` (or `npm i -g iris-runtime`).
