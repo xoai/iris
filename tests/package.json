@@ -18,6 +18,7 @@
     "@irisrun/evals": "*",
     "@irisrun/observe": "*",
     "@irisrun/audit": "*",
+    "@irisrun/journal-export": "*",
     "@irisrun/provider-anthropic": "*",
     "@irisrun/provider-openai": "*",
     "@irisrun/demo": "*",

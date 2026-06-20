@@ -26,6 +26,7 @@
     "@irisrun/provider-openai": "^0.1.0",
     "@irisrun/auth": "^0.1.0",
     "@irisrun/audit": "^0.1.0",
+    "@irisrun/journal-export": "^0.1.0",
     "@irisrun/evals": "^0.1.0",
     "@irisrun/subagents": "^0.1.0",
     "@irisrun/schedule": "^0.1.0"

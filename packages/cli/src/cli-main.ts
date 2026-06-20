@@ -16,6 +16,8 @@ import type { ToolContract } from "@irisrun/tools";
 import { readFile } from "node:fs/promises";
 import { cmdInit, cmdBuild, cmdInspect, cmdVerify, cmdPush, cmdPull, cmdRun, cmdServe, cmdDeploy, loadApprovalPolicy, type CliSubagents } from "./iris.ts";
 import { cmdAudit } from "./audit-cmd.ts";
+import { cmdJournalExport, cmdJournalVerify, cmdJournalImport } from "./journal-cmd.ts";
+import { writeFile } from "node:fs/promises";
 import { cmdEval, loadEvalSuite } from "./eval-cmd.ts";
 import { cmdSchedule } from "./schedule-cmd.ts";
 import { loadSubagents } from "./subagents-cfg.ts";
@@ -570,6 +572,73 @@ async function scheduleCommand(argv: string[]): Promise<void> {
   }
 }
 
+// `iris journal <export|verify|import>` — the verifiable portable journal
+// (roadmap-v0.2 P0). A `journal` subcommand group because `iris verify` already
+// means OCI image verification. export/import open a SQLite store; verify is
+// file-only (Tier 1) with an optional `--replay` (Tier 2) and `--image` pin.
+// Wires real fs/sqlite IO; the cmdJournal* logic is unit-tested with injected deps.
+async function journalCommand(argv: string[]): Promise<void> {
+  const sub = argv[1];
+  if (sub === "export") {
+    const session = argv[2];
+    const db = flag(argv, "--store") ?? flag(argv, "--db");
+    const out = flag(argv, "--out");
+    if (!session || !db || !out) {
+      throw new Error("usage: iris journal export <session> --store <db> --out <file>");
+    }
+    const sqlite = await import("@irisrun/store-sqlite");
+    const handle = sqlite.openDatabase(db);
+    const store = new sqlite.SqliteStateStore(handle);
+    try {
+      const { bytes, text } = await cmdJournalExport({ store, sessionId: session });
+      await writeFile(out, bytes);
+      console.log(text);
+      console.log(`written ${out}`);
+    } finally {
+      store.close();
+    }
+    return;
+  }
+  if (sub === "verify") {
+    const file = argv[2];
+    if (!file || file.startsWith("--")) {
+      throw new Error("usage: iris journal verify <file> [--replay] [--image <layoutdir>] [--json]");
+    }
+    const bytes = new Uint8Array(await readFile(file));
+    const imageDir = flag(argv, "--image");
+    let expectDefDigest: string | undefined;
+    if (imageDir) expectDefDigest = (await readOciLayout(imageDir)).lock.imageDigest;
+    const { exitCode, result, text } = cmdJournalVerify({
+      bytes,
+      replay: argv.includes("--replay"),
+      ...(expectDefDigest !== undefined ? { expectDefDigest } : {}),
+    });
+    if (argv.includes("--json")) console.log(JSON.stringify(result, null, 2));
+    else console.log(text);
+    process.exit(exitCode);
+  }
+  if (sub === "import") {
+    const file = flag(argv, "--in");
+    const db = flag(argv, "--store") ?? flag(argv, "--db");
+    if (!file || !db) {
+      throw new Error("usage: iris journal import --in <file> --store <db>");
+    }
+    const bytes = new Uint8Array(await readFile(file));
+    const sqlite = await import("@irisrun/store-sqlite");
+    const handle = sqlite.openDatabase(db);
+    const store = new sqlite.SqliteStateStore(handle);
+    try {
+      const { text } = await cmdJournalImport({ store, bytes });
+      console.log(text);
+    } finally {
+      store.close();
+    }
+    return;
+  }
+  console.error("usage: iris journal <export|verify|import>");
+  process.exit(2);
+}
+
 async function main(argv: string[]): Promise<void> {
   const cmd = argv[0];
   switch (cmd) {
@@ -643,8 +712,11 @@ async function main(argv: string[]): Promise<void> {
     case "schedule":
       await scheduleCommand(argv);
       break;
+    case "journal":
+      await journalCommand(argv);
+      break;
     default:
-      console.error("usage: iris <init|build|inspect|schema|verify|push|pull|run|serve|chat|deploy|audit|eval|schedule>");
+      console.error("usage: iris <init|build|inspect|schema|verify|push|pull|run|serve|chat|deploy|audit|eval|schedule|journal>");
       process.exit(2);
   }
 }

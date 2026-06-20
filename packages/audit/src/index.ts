@@ -5,7 +5,7 @@ export const PACKAGE = "@irisrun/audit";
 export { auditSession, renderAudit } from "./audit.ts";
 export type { AuditEntry, SessionAudit } from "./audit.ts";
 
-export { verifyReplay, verifySession } from "./verify.ts";
+export { verifyReplay, verifySession, verifyStructure } from "./verify.ts";
 export type { VerifyResult } from "./verify.ts";
 
 export { fnv1a32hex } from "./fnv.ts";

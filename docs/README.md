@@ -29,6 +29,11 @@ Follow these in order. Each page ends with a **Next →** link to the next stop.
    provably reproducible evals (`iris eval`). Determinism → reproducible evals →
    audit. Plus subagent delegation (`subagents.json`) and recurring schedules
    (`iris schedule`) on the same journaled substrate.
+9. [09 — Verifiable portable journals](./09-verifiable-journal.md) — the proof:
+   export a session to a content-addressed `*.irisjournal` file, verify it with
+   nothing but the file (`iris journal verify`), and migrate it across hosts.
+   The [format spec](./verifiable-journal-spec.md) and
+   [threat model](./threat-model.md) make the moat externally legible.
 
 ## How to run the commands
 
