@@ -32,6 +32,7 @@ import {
   stripModelPrefix,
   loadModelProvider,
 } from "./providers.ts";
+import { COMPAT_MATRIX, entriesByProtocol, renderCompatMatrix } from "@irisrun/provider-compat";
 
 function flag(argv: string[], name: string): string | undefined {
   const i = argv.indexOf(name);
@@ -152,6 +153,11 @@ async function runCommand(argv: string[]): Promise<void> {
   if (!layout) throw new Error("usage: iris run <layoutdir> --session <id> [--db <path>] [--tools <dir>] [--subagents <file>]");
   const session = flag(argv, "--session") ?? "default";
   const db = flag(argv, "--db") ?? ":memory:";
+  // §9: a deploy-time endpoint override. The model-id prefix still selects the
+  // protocol; --base-url (or IRIS_MODEL_BASE_URL) only redirects WHERE that protocol's
+  // request is sent — point a portable image at any compatible endpoint. Undefined →
+  // the provider's default URL.
+  const baseUrl = flag(argv, "--base-url") ?? process.env.IRIS_MODEL_BASE_URL;
   // Real path (manual): SQLite store + the provider selected from the image's
   // model-id prefix (needs that provider's API key, e.g. ANTHROPIC_API_KEY /
   // OPENAI_API_KEY). The bare (prefix-stripped) model id is baked into the
@@ -169,7 +175,7 @@ async function runCommand(argv: string[]): Promise<void> {
     store,
     scheduler,
     clock: { now: () => 0 },
-    modelPerformer: provider.buffered({ model: stripModelPrefix(image.lock.model.id) }),
+    modelPerformer: provider.buffered({ model: stripModelPrefix(image.lock.model.id), baseUrl }),
     toolInvoker,
     safeTools,
     ...(subagents ? { subagents } : {}),
@@ -191,6 +197,8 @@ async function serveCommand(argv: string[]): Promise<void> {
   const db = flag(argv, "--db") ?? "./iris-serve.sqlite"; // a server wants durability (cf. run's :memory:)
   const modelOpt = flag(argv, "--model") ?? "auto";
   const web = argv.includes("--web"); // serve the web chat UI at GET /
+  // §9: deploy-time endpoint override (see runCommand). The echo branch ignores it.
+  const baseUrl = flag(argv, "--base-url") ?? process.env.IRIS_MODEL_BASE_URL;
 
   // Opt-in governance (roadmap P1-5): --policy loads a who-may-approve policy + an
   // approval inbox. A client submits a decision via the message body's `approve:{…}`
@@ -230,7 +238,7 @@ async function serveCommand(argv: string[]): Promise<void> {
     const provider = await loadModelProvider(resolved);
     // cmdServe passes the PREFIXED image model id — strip it before the API call.
     makeModelPerformer = (model, onDelta): Performer =>
-      provider.streaming({ model: stripModelPrefix(model), onDelta });
+      provider.streaming({ model: stripModelPrefix(model), onDelta, baseUrl });
   }
 
   const { toolInvoker, safeTools } = await bundledToolWiring(argv, layout);
@@ -340,6 +348,8 @@ async function chatCommand(argv: string[]): Promise<void> {
   // Select the provider from the image's model-id prefix; use that provider's key.
   const providerName = providerNameForModel(image.lock.model.id);
   const providerEnvKey = providerDescriptor(providerName).envKey;
+  // §9: deploy-time endpoint override (see runCommand). Ignored on the fake path.
+  const baseUrl = flag(argv, "--base-url") ?? process.env.IRIS_MODEL_BASE_URL;
   const hasKey =
     typeof process.env[providerEnvKey] === "string" && process.env[providerEnvKey] !== "";
   const useFake = forceFake || !hasKey;
@@ -361,7 +371,7 @@ async function chatCommand(argv: string[]): Promise<void> {
     // (model prefix-stripped; request.model wins) and absorbs a provider error into
     // a synthetic reply (Finding B) so a failed model_call never poisons the journal.
     modelPerformer = wrapModelForImage(
-      provider.streaming({ onDelta: sink.onDelta }),
+      provider.streaming({ onDelta: sink.onDelta, baseUrl }),
       image,
     );
   }
@@ -639,6 +649,30 @@ async function journalCommand(argv: string[]): Promise<void> {
   process.exit(2);
 }
 
+// `iris providers [--matrix]` — read-only. Lists the two protocols + how to point a
+// portable image at any compatible endpoint; `--matrix` prints the conformance-verified
+// compatibility matrix (§9). Pure print over @irisrun/provider-compat — no I/O, no key.
+function providersCommand(argv: string[]): void {
+  if (argv.includes("--matrix")) {
+    console.log(renderCompatMatrix());
+    return;
+  }
+  console.log("iris providers — vendor-neutral model adapters behind one replay-safe model port.");
+  console.log("");
+  console.log("The model-id prefix selects the PROTOCOL (the wire shape):");
+  console.log("  anthropic/<model>  → Anthropic Messages   (key ANTHROPIC_API_KEY)");
+  console.log("  openai/<model>     → OpenAI Chat Completions (key OPENAI_API_KEY)");
+  console.log("");
+  console.log("Point a portable image at any compatible endpoint at deploy time:");
+  console.log("  iris serve ./image --model openai --base-url <endpoint-url>   (or IRIS_MODEL_BASE_URL)");
+  console.log("");
+  console.log(
+    `Compatibility matrix: ${COMPAT_MATRIX.length} endpoints ` +
+      `(${entriesByProtocol("openai").length} OpenAI-protocol, ${entriesByProtocol("anthropic").length} Anthropic-protocol). ` +
+      `Run 'iris providers --matrix' for the replay-safe vs known-divergent table.`,
+  );
+}
+
 async function main(argv: string[]): Promise<void> {
   const cmd = argv[0];
   switch (cmd) {
@@ -674,6 +708,10 @@ async function main(argv: string[]): Promise<void> {
       // Print the published Agentfile JSON Schema (draft 2020-12). Pipe to a file
       // for editor/CI validation: `iris schema > agentfile.schema.json`.
       console.log(agentfileSchemaJson());
+      break;
+    case "providers":
+      // List model protocols + config; `--matrix` prints the compatibility matrix (§9).
+      providersCommand(argv);
       break;
     case "verify": {
       // verify re-resolves tool refs by ref — supply the same bundled resolver.
@@ -716,7 +754,7 @@ async function main(argv: string[]): Promise<void> {
       await journalCommand(argv);
       break;
     default:
-      console.error("usage: iris <init|build|inspect|schema|verify|push|pull|run|serve|chat|deploy|audit|eval|schedule|journal>");
+      console.error("usage: iris <init|build|inspect|schema|providers|verify|push|pull|run|serve|chat|deploy|audit|eval|schedule|journal>");
       process.exit(2);
   }
 }

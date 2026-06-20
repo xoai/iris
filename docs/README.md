@@ -19,7 +19,9 @@ Follow these in order. Each page ends with a **Next →** link to the next stop.
    (in-process → subprocess → MCP → gRPC).
 4. [04 — Channels](./04-channels.md) — **durable, resumable sessions** in the
    browser: serve over HTTP (SSE / WebSocket), the web chat UI, and the client
-   SDK; survive a tab close.
+   SDK; survive a tab close. The [channel-port spec](./channel-port-spec.md) is the
+   normative contract every channel passes; other platforms are
+   [bridges](./bridge-pattern.md), not packages.
 5. [05 — Deploy](./05-deploy.md) — the headline: **resume the same session on a
    *different* host** — one command to a Cloudflare Durable Object.
 6. [06 — Models & providers](./06-providers.md) — **vendor-neutral, replay-safe
@@ -39,12 +41,25 @@ Follow these in order. Each page ends with a **Next →** link to the next stop.
    The [format spec](./verifiable-journal-spec.md) and
    [threat model](./threat-model.md) make the moat externally legible.
 
+## Reference specs
+
+Normative contracts referenced from the funnel above, collected for quick access:
+
+- [Channel-port spec](./channel-port-spec.md) — the contract every channel passes
+  (the two-identifier protocol, token rotation, refusal taxonomy, conformance).
+- [Bridge pattern](./bridge-pattern.md) — reaching Discord/Telegram/Teams/etc. as
+  external bridges (not first-party packages), with worked examples.
+- [Verifiable-journal spec](./verifiable-journal-spec.md) — the content-addressed
+  journal-export format, reproducible in any language.
+
 ## Security
 
 - [Sandbox egress threat model](./security-sandbox-threat-model.md) — the
   adversarial review of the egress firewall + credential broker: what the
   deny-all floor, the host allowlist, and credential brokering guarantee, how
   each is proven, and the honest limits.
+- [Verifiable-journal threat model](./threat-model.md) — what journal verification
+  detects (tamper / reorder / truncate) and what it deliberately does not claim.
 
 ## How to run the commands
 

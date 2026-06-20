@@ -1,0 +1,29 @@
+{
+  "name": "@irisrun/provider-compat",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Iris provider compatibility matrix — a conformance-verified registry of OpenAI- and Anthropic-protocol endpoints (Groq, Together, Fireworks, OpenRouter, DeepSeek, Mistral, xAI, vLLM, Ollama, LM Studio, Azure, Bedrock, Vertex), each classified replay-safe vs known-divergent and pinned by a CI conformance test. Because a model reply is a recorded journal effect that must replay byte-identically, the canonicalization layer is where 'OpenAI-compatible' breaks — this matrix turns the loose claim into a tested, replay-safe guarantee only Iris can make. Zero dependencies; pure data + a deterministic render.",
+  "exports": {
+    ".": {
+      "iris-src": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xoai/iris.git",
+    "directory": "packages/provider-compat"
+  },
+  "homepage": "https://github.com/xoai/iris#readme",
+  "files": [
+    "dist"
+  ]
+}

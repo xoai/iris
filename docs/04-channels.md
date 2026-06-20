@@ -62,4 +62,70 @@ tab can close and reopen, rebuild the client from the saved handle, and resume t
 the token in memory; surviving a *server* restart is what the edge deploy in the
 next chapter is for.)
 
+## The channel port
+
+REST, MCP, and Slack are different wires in front of the **same** durable session.
+What they share — mint the `sessionId`, own and **rotate a single-use continuation
+token**, refuse a stale/missing/unknown/in-flight turn **loudly** — is factored into
+one port, `@irisrun/channel-core`, the way `StateStore` is the store port. A channel
+is then just: normalize the platform's inbound event → drive the shared session →
+emit the platform's reply.
+
+The rule that makes this replay-safe by construction: the token rotates **only on a
+committed turn** (`finished`/`parked`). A turn that journaled nothing — `contended`
+(the lease was held elsewhere) or `aborted` (the lease was lost mid-flight) — **keeps
+the prior token**, so the client safely retries the same single-use credential. The
+in-flight claim is atomic, so a concurrent replay of a token is refused, never
+double-applied.
+
+Because the contract is one shared driver, it is verified by **one conformance suite
+any channel must pass** — `channel-rest` and `channel-mcp` both run it. A new channel
+that passes the suite is durable and replay-safe by construction. The normative
+contract is [the channel-port spec](./channel-port-spec.md).
+
+## Slack — durable human-in-the-loop
+
+Chat is where durable, approval-gated sessions matter most. `@irisrun/channel-slack`
+is built on the port to demonstrate the one thing only Iris does: **a Slack approval
+that pauses for hours, survives a redeploy, and resumes the same session
+byte-identically.**
+
+The flow: a slash command starts a durable session; when the agent gates an action
+for human approval, the channel posts **Approve / Deny** buttons; a click submits the
+decision and resumes the session. What makes it survive a redeploy is *where* the
+state lives:
+
+- the **durable session** is the `StateStore` journal — the parked `signal_recv` is
+  journaled, so any instance can resume it from the store;
+- the **approval context** (`{sessionId, callId, name}`) rides the **signed Slack
+  button value**, not server memory, so a fresh instance with an empty map can still
+  reconstruct the click;
+- the **identity** comes from the click's authenticated Slack user.
+
+So an approval can sit for days, the service can redeploy, and the Approve still
+resumes the exact same session. This guarantee is proven in-env against a real store
+across a simulated redeploy (`tests/channel-slack-durable.test.ts`), including a
+byte-identical comparison to a no-redeploy control.
+
+Every request is verified first (HMAC-SHA256, constant-time, 5-minute replay window);
+an unverified body is never processed. Zero runtime deps — `node:crypto` plus built-in
+`fetch` for outbound.
+
+**Operator setup** (the public-workspace step): create a Slack app, set its signing
+secret and bot token as env, and point the slash command + interactivity request URLs
+at your `iris`-served endpoint. The durability *guarantee* is the in-env test above;
+the live workspace is configuration, not new code.
+
+> As everywhere, "resumes byte-identically" is faithful **record-replay** of the
+> session's journal — not a claim the model is deterministic.
+
+## Other platforms — bridges, not packages
+
+Discord, Telegram, Teams, and the rest are reached by a **bridge**: an external
+process that speaks the REST channel protocol, runnable in any language, needing **no
+Iris core changes**. Matching another framework's channel list is parity; one channel
+that demonstrates the moat (Slack, above) beats five that reach it. The
+[bridge pattern](./bridge-pattern.md) is the normative contract, with a fetch-only
+reference bridge (`npm run demo:bridge`).
+
 **Next → [05 — Deploy](./05-deploy.md)**

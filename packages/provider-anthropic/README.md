@@ -27,8 +27,15 @@ the prefix once and `iris run` / `chat` / `serve` / `deploy` all follow it:
 { "model": "anthropic/claude-x" }
 ```
 
+This adapter speaks the **Anthropic Messages protocol**, not just Anthropic itself:
+point it at any compatible endpoint with `--base-url` (or `IRIS_MODEL_BASE_URL`) on
+`iris run` / `serve` / `chat` — Bedrock and Vertex Claude among them. Which endpoints
+are **replay-safe vs known-divergent** is a conformance-tested matrix in
+**[`@irisrun/provider-compat`](../provider-compat/README.md)** (`iris providers --matrix`).
+
 See **[docs/06 — Models & providers](../../docs/06-providers.md)** for the model
-port, the shared conformance suite, and how to add a third provider.
+port, the shared conformance suite, the compatibility matrix, and how to add a third
+provider.
 
 ---
 Part of [Iris](../../README.md) — own, portable, verifiable state.

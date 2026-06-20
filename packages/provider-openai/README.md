@@ -24,8 +24,17 @@ Selected automatically from an `openai/…` model prefix in your Agentfile:
 { "model": "openai/gpt-x" }
 ```
 
-…or serve it explicitly with `iris serve --model openai`. See **[docs/06 — Models
-& providers](../../docs/06-providers.md)** for the shared port and conformance suite.
+…or serve it explicitly with `iris serve --model openai`.
+
+This adapter speaks the **OpenAI Chat Completions protocol**, so `--base-url` (or
+`IRIS_MODEL_BASE_URL`) on `iris run` / `serve` / `chat` points it at any compatible
+endpoint — Groq, Together, Fireworks, OpenRouter, DeepSeek, Mistral, xAI, vLLM,
+Ollama, LM Studio, Azure OpenAI. Which are **replay-safe vs known-divergent** is a
+conformance-tested matrix in
+**[`@irisrun/provider-compat`](../provider-compat/README.md)** (`iris providers --matrix`).
+
+See **[docs/06 — Models & providers](../../docs/06-providers.md)** for the shared port,
+the conformance suite, and the compatibility matrix.
 
 ---
 Part of [Iris](../../README.md) — own, portable, verifiable state.

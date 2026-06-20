@@ -24,6 +24,7 @@
     "@irisrun/store-sqlite": "^0.1.0",
     "@irisrun/provider-anthropic": "^0.1.0",
     "@irisrun/provider-openai": "^0.1.0",
+    "@irisrun/provider-compat": "^0.1.0",
     "@irisrun/auth": "^0.1.0",
     "@irisrun/audit": "^0.1.0",
     "@irisrun/journal-export": "^0.1.0",
