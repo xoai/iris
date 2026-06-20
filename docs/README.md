@@ -22,10 +22,13 @@ Follow these in order. Each page ends with a **Next →** link to the next stop.
 6. [06 — Models & providers](./06-providers.md) — bring your own model. Anthropic
    and OpenAI behind one tested port; how to add a third.
 7. [07 — Governance & audit](./07-governance.md) — the approval gate, the
-   `@iris/auth` governance layer, and the journaled approval trail.
+   `@iris/auth` governance layer, and the journaled approval trail — turned on
+   from the CLI with `iris serve --policy`.
 8. [08 — Audit & reproducible evals](./08-audit-and-evals.md) — the headline:
    `iris audit` for a replay-verified, compliance-grade session trail, and
-   provably reproducible evals. Determinism → reproducible evals → audit.
+   provably reproducible evals (`iris eval`). Determinism → reproducible evals →
+   audit. Plus subagent delegation (`subagents.json`) and recurring schedules
+   (`iris schedule`) on the same journaled substrate.
 
 ## How to run the commands
 

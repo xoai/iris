@@ -23,8 +23,12 @@
     "@iris/store-do": "^0.1.0",
     "@iris/store-sqlite": "^0.1.0",
     "@iris/provider-anthropic": "^0.1.0",
+    "@iris/provider-openai": "^0.1.0",
     "@iris/auth": "^0.1.0",
-    "@iris/audit": "^0.1.0"
+    "@iris/audit": "^0.1.0",
+    "@iris/evals": "^0.1.0",
+    "@iris/subagents": "^0.1.0",
+    "@iris/schedule": "^0.1.0"
   },
   "license": "MIT",
   "engines": {

@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "type": "module",
   "private": true,
+  "license": "MIT",
   "description": "Iris no-model demo — 2-step counter machine that parks and resumes across a restart. In-repo example; consumed from source, never published.",
   "exports": "./src/index.ts",
   "dependencies": {

@@ -5,17 +5,24 @@
 // uses the SQLite store + the Anthropic provider (needs a key) — the real path,
 // exercised manually. Host-side.
 import { createInterface } from "node:readline";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve, isAbsolute } from "node:path";
+import { pathToFileURL } from "node:url";
 import { readOciLayout, governingDigest } from "@iris/agent";
-import { defaultBundle } from "@iris/core";
-import type { Performer } from "@iris/core";
+import type { AgentImage } from "@iris/agent";
+import { defaultBundle, harnessProgram } from "@iris/core";
+import type { Performer, Json, StateStore, Scheduler } from "@iris/core";
 import { makeToolPerformer, makeToolRegistry, makeToolInvoker, makeSubprocessTransport } from "@iris/tools";
 import type { ToolContract } from "@iris/tools";
-import { cmdInit, cmdBuild, cmdInspect, cmdVerify, cmdPush, cmdPull, cmdRun, cmdServe, cmdDeploy } from "./iris.ts";
+import { readFile } from "node:fs/promises";
+import { cmdInit, cmdBuild, cmdInspect, cmdVerify, cmdPush, cmdPull, cmdRun, cmdServe, cmdDeploy, loadApprovalPolicy, type CliSubagents } from "./iris.ts";
 import { cmdAudit } from "./audit-cmd.ts";
+import { cmdEval, loadEvalSuite } from "./eval-cmd.ts";
+import { cmdSchedule } from "./schedule-cmd.ts";
+import { loadSubagents } from "./subagents-cfg.ts";
+import { createApprovalInbox } from "@iris/auth";
 import { loadBundledTools } from "./tools.ts";
 import { echoStreamingPerformer } from "./echo.ts";
-import { runChat, wrapModelForImage, makeChatStreamingFakeModel, makeStreamSink } from "./chat.ts";
+import { runChat, wrapModelForImage, makeChatFakeModel, makeChatStreamingFakeModel, makeStreamSink } from "./chat.ts";
 import {
   providerNameForModel,
   providerDescriptor,
@@ -45,9 +52,91 @@ async function bundledToolWiring(
   };
 }
 
+// The delegated task for a child: a `task` string in the call args, else the args JSON.
+function taskFromArgs(args: Json): string {
+  if (args !== null && typeof args === "object" && !Array.isArray(args)) {
+    const t = (args as { task?: Json }).task;
+    if (typeof t === "string" && t.length > 0) return t;
+  }
+  return JSON.stringify(args ?? {});
+}
+
+// Build the subagent wiring (P2-9) from the project's optional `subagents.json`
+// (default beside the layout; `--subagents <file>` overrides). Each entry maps a
+// delegate tool name → a child agent layout. Children are PRE-LOADED here (async) so
+// the per-call `resolveChild` can be synchronous (makeSubagentPerformer calls it sync).
+// The child shares the parent's store/scheduler family (its own derived sessionId), uses
+// the child image's provider when its key is present, else the keyless fake echo. Returns
+// undefined when no subagents are declared (byte-identical: no `subagent` effect).
+async function buildSubagents(
+  argv: string[],
+  layout: string,
+  store: StateStore,
+  scheduler: Scheduler,
+): Promise<CliSubagents | undefined> {
+  const file = flag(argv, "--subagents") ?? join(dirname(layout), "subagents.json");
+  const cfg = await loadSubagents(file);
+  if (cfg.names.length === 0) return undefined;
+
+  const baseDir = dirname(file);
+  interface Child {
+    image: AgentImage;
+    model: Performer;
+    toolInvoker: ReturnType<typeof makeToolInvoker>;
+    safeTools: string[];
+  }
+  const children = new Map<string, Child>();
+  for (const entry of cfg.entries) {
+    // `image` is operator-authored (same trust as the Agentfile) and only READ via
+    // readOciLayout (never executed), so a relative `..` is allowed here — unlike a
+    // tool `exec` in tools.ts, which becomes an auto-spawned subprocess and is restricted.
+    const childLayout = isAbsolute(entry.image) ? entry.image : join(baseDir, entry.image);
+    const image = await readOciLayout(childLayout);
+    const providerName = providerNameForModel(image.lock.model.id);
+    const envKey = providerDescriptor(providerName).envKey;
+    const hasKey = typeof process.env[envKey] === "string" && process.env[envKey] !== "";
+    const model = hasKey
+      ? (await loadModelProvider(providerName)).buffered({ model: stripModelPrefix(image.lock.model.id) })
+      : makeChatFakeModel(); // keyless: a delegation still runs, echoing the task
+    const bundled = await loadBundledTools(join(dirname(childLayout), "tools"));
+    children.set(entry.name, {
+      image,
+      model,
+      toolInvoker: makeToolInvoker({ subprocess: makeSubprocessTransport(bundled.subprocessSpecs) }),
+      safeTools: bundled.safeToolNames,
+    });
+  }
+
+  const makeResolveChild = (_parentSessionId: string) =>
+    (call: { name: string; args: Json; childSessionId: string }) => {
+      const c = children.get(call.name);
+      if (!c) return null;
+      const bundle = defaultBundle({ safeTools: c.safeTools });
+      const contracts: ToolContract[] = c.image.lock.tools.map((t) => ({
+        name: t.name,
+        description: "",
+        inputSchema: {},
+        transport: t.transport,
+        location: t.location,
+        retrySafe: t.retrySafe,
+      }));
+      const toolPerformer = makeToolPerformer(makeToolRegistry(contracts), c.toolInvoker);
+      return {
+        host: { name: "iris-subagent", capabilities: { long_running: true, filesystem: true }, store, scheduler },
+        defDigest: c.image.lock.imageDigest,
+        program: harnessProgram({ messages: [{ role: "user", content: taskFromArgs(call.args) }] }),
+        performers: { tactic: bundle.tacticPerformer, model_call: c.model, tool_call: toolPerformer },
+        clock: { now: (): number => 0 },
+        assertReplay: true,
+      };
+    };
+
+  return { names: cfg.names, makeResolveChild };
+}
+
 async function runCommand(argv: string[]): Promise<void> {
   const layout = argv[1];
-  if (!layout) throw new Error("usage: iris run <layoutdir> --session <id> [--db <path>] [--tools <dir>]");
+  if (!layout) throw new Error("usage: iris run <layoutdir> --session <id> [--db <path>] [--tools <dir>] [--subagents <file>]");
   const session = flag(argv, "--session") ?? "default";
   const db = flag(argv, "--db") ?? ":memory:";
   // Real path (manual): SQLite store + the provider selected from the image's
@@ -61,6 +150,7 @@ async function runCommand(argv: string[]): Promise<void> {
   const store = new sqlite.SqliteStateStore(handle);
   const scheduler = new sqlite.SqliteScheduler(handle);
   const { toolInvoker, safeTools } = await bundledToolWiring(argv, layout);
+  const subagents = await buildSubagents(argv, layout, store, scheduler);
   const outcome = await cmdRun(layout, {
     sessionId: session,
     store,
@@ -69,6 +159,7 @@ async function runCommand(argv: string[]): Promise<void> {
     modelPerformer: provider.buffered({ model: stripModelPrefix(image.lock.model.id) }),
     toolInvoker,
     safeTools,
+    ...(subagents ? { subagents } : {}),
   });
   console.log(JSON.stringify({ status: outcome.status }));
 }
@@ -80,13 +171,22 @@ async function serveCommand(argv: string[]): Promise<void> {
   const layout = argv[1];
   if (!layout)
     throw new Error(
-      "usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--model auto|anthropic|openai|echo] [--web]",
+      "usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--model auto|anthropic|openai|echo] [--web] [--policy <file.json>] [--subagents <file>]",
     );
   const port = Number(flag(argv, "--port") ?? 8787);
   const host = flag(argv, "--host") ?? "127.0.0.1";
   const db = flag(argv, "--db") ?? "./iris-serve.sqlite"; // a server wants durability (cf. run's :memory:)
   const modelOpt = flag(argv, "--model") ?? "auto";
   const web = argv.includes("--web"); // serve the web chat UI at GET /
+
+  // Opt-in governance (roadmap P1-5): --policy loads a who-may-approve policy + an
+  // approval inbox. A client submits a decision via the message body's `approve:{…}`
+  // field; the governed signal_recv performer reads it on the HITL resume, and every
+  // approval is journaled (queryable with `iris audit`). Absent → ungoverned.
+  const policyFile = flag(argv, "--policy");
+  const governance = policyFile
+    ? { policy: loadApprovalPolicy(await readFile(policyFile, "utf8"), `--policy ${policyFile}`), inbox: createApprovalInbox() }
+    : undefined;
 
   const sqlite = await import("@iris/store-sqlite");
   const handle = sqlite.openDatabase(db);
@@ -121,6 +221,7 @@ async function serveCommand(argv: string[]): Promise<void> {
   }
 
   const { toolInvoker, safeTools } = await bundledToolWiring(argv, layout);
+  const subagents = await buildSubagents(argv, layout, store, scheduler);
   const serve = await cmdServe(layout, {
     store,
     scheduler,
@@ -131,8 +232,16 @@ async function serveCommand(argv: string[]): Promise<void> {
     web,
     toolInvoker,
     safeTools,
+    ...(governance ? { governance } : {}),
+    ...(subagents ? { subagents } : {}),
   });
-  console.log(`iris serve: listening on ${serve.url} (model=${resolved}${web ? ", web=on" : ""})`);
+  console.log(
+    `iris serve: listening on ${serve.url} (model=${resolved}${web ? ", web=on" : ""}${governance ? ", governance=on" : ""})`,
+  );
+  if (governance)
+    console.log(
+      "  governance: submit an approval as a message body field — {\"approve\":{\"callId\":\"…\",\"name\":\"…\",\"principal\":{\"id\":\"…\",\"roles\":[…]},\"intent\":\"approve\"}}",
+    );
   if (web) console.log("  GET  /                       — web chat UI (open in a browser)");
   console.log("  POST /v1/session            — start (buffered; add Accept: text/event-stream for SSE)");
   console.log("  POST /v1/session/<id>/message — continue");
@@ -152,7 +261,7 @@ async function serveCommand(argv: string[]): Promise<void> {
 async function chatCommand(argv: string[]): Promise<void> {
   const layout = argv[1];
   if (!layout) {
-    throw new Error("usage: iris chat <layoutdir> --session <id> [--db <path>] [--tools <dir>] [--fake]");
+    throw new Error("usage: iris chat <layoutdir> --session <id> [--db <path>] [--tools <dir>] [--subagents <file>] [--fake]");
   }
   const session = flag(argv, "--session") ?? "default";
   const db = flag(argv, "--db") ?? ":memory:";
@@ -185,7 +294,10 @@ async function chatCommand(argv: string[]): Promise<void> {
   // approval), a lock-derived tool performer over the project's subprocess tools,
   // and a model performer (wrapped Anthropic, or the deterministic fake).
   const { toolInvoker, safeTools } = await bundledToolWiring(argv, layout);
-  const bundle = defaultBundle({ safeTools });
+  const subagents = await buildSubagents(argv, layout, store, scheduler);
+  // Fold any delegate names into the SAME bundle the gate consults, so a delegation
+  // auto-allows (not parks) — the kernel reads this one bundle's safeTools.
+  const bundle = defaultBundle({ safeTools: [...safeTools, ...(subagents?.names ?? [])] });
   const contracts: ToolContract[] = image.lock.tools.map((t) => ({
     name: t.name,
     description: "",
@@ -256,6 +368,7 @@ async function chatCommand(argv: string[]): Promise<void> {
       isInteractive,
       banner,
       streamSink: sink,
+      ...(subagents ? { subagents } : {}),
     });
   } finally {
     process.off("SIGINT", onSigint);
@@ -351,6 +464,81 @@ async function auditCommand(argv: string[]): Promise<void> {
   }
 }
 
+// `iris eval <suite.mjs> [--reproduce <N>] [--json]` — run a reproducible eval suite
+// (roadmap P2-8). The suite is a user MODULE exporting `cases` + `scorer`; we resolve
+// its path to a file:// URL and import it (the loadBundledTools precedent for code the
+// CLI must consume). `--reproduce N` proves each case byte-identical over N runs.
+async function evalCommand(argv: string[]): Promise<void> {
+  const suitePath = argv[1];
+  if (!suitePath) {
+    throw new Error("usage: iris eval <suite.mjs> [--reproduce <N>] [--json]");
+  }
+  const json = argv.includes("--json");
+  const reproStr = flag(argv, "--reproduce");
+  const reproduce = reproStr !== undefined ? Number(reproStr) : undefined;
+  const moduleUrl = pathToFileURL(resolve(suitePath)).href;
+  const suite = await loadEvalSuite(moduleUrl);
+  const { results, reports, text } = await cmdEval(suite, {
+    ...(reproduce !== undefined ? { reproduce } : {}),
+    ...(json ? { json: true } : {}),
+  });
+  if (json) console.log(JSON.stringify(reports ?? results, null, 2));
+  else console.log(text);
+}
+
+// `iris schedule <layout> --interval <ticks> --max-runs <n> [--ticks <n>] [--db <path>]
+// [--session <id>]` — run a recurring, durably-replayable job (roadmap P2-9). The job is a
+// keyless `echo` heartbeat (one effect per cycle) pinned to the agent image; it parks on a
+// durable SQLite timer between cycles and the host-side pump resumes each due cycle. Prints
+// one JSON line per committed cycle. Host-side.
+async function scheduleCommand(argv: string[]): Promise<void> {
+  const layout = argv[1];
+  if (!layout) {
+    throw new Error(
+      "usage: iris schedule <layoutdir> --interval <ticks> --max-runs <n> [--ticks <n>] [--db <path>] [--session <id>]",
+    );
+  }
+  const intervalTicks = Number(flag(argv, "--interval") ?? 10);
+  const maxRuns = Number(flag(argv, "--max-runs") ?? 3);
+  const ticks = Number(flag(argv, "--ticks") ?? maxRuns); // enough pump steps to complete
+  if (Number.isInteger(ticks) && Number.isInteger(maxRuns) && ticks < maxRuns - 1) {
+    console.warn(
+      `iris schedule: --ticks ${ticks} < max-runs-1 (${maxRuns - 1}) — the schedule will not reach 'finished' this run (it parks for a later resume)`,
+    );
+  }
+  const session = flag(argv, "--session") ?? "schedule";
+  const db = flag(argv, "--db") ?? ":memory:";
+  if (db === ":memory:") {
+    console.warn("iris schedule: --db :memory: — the schedule won't persist; pass --db <path> for a durable, resumable job");
+  }
+
+  const sqlite = await import("@iris/store-sqlite");
+  const handle = sqlite.openDatabase(db);
+  const store = new sqlite.SqliteStateStore(handle);
+  const scheduler = new sqlite.SqliteScheduler(handle);
+  const image = await readOciLayout(layout); // pin the schedule's def to the agent image
+
+  try {
+    const result = await cmdSchedule({
+      host: { name: "iris-schedule", capabilities: { long_running: true }, store, scheduler },
+      source: scheduler,
+      sessionId: session,
+      intervalTicks,
+      maxRuns,
+      ticks,
+      job: { effectKind: "echo", request: { tick: true } },
+      cyclePerformers: (now: number): Record<string, Performer> => ({
+        clock: async () => ({ ok: true, value: now }),
+        echo: async (r: Json) => ({ ok: true, value: r }),
+      }),
+      defDigest: image.lock.imageDigest,
+    });
+    console.log(result.text);
+  } finally {
+    store.close();
+  }
+}
+
 async function main(argv: string[]): Promise<void> {
   const cmd = argv[0];
   switch (cmd) {
@@ -413,8 +601,14 @@ async function main(argv: string[]): Promise<void> {
     case "audit":
       await auditCommand(argv);
       break;
+    case "eval":
+      await evalCommand(argv);
+      break;
+    case "schedule":
+      await scheduleCommand(argv);
+      break;
     default:
-      console.error("usage: iris <init|build|inspect|verify|push|pull|run|serve|chat|deploy|audit>");
+      console.error("usage: iris <init|build|inspect|verify|push|pull|run|serve|chat|deploy|audit|eval|schedule>");
       process.exit(2);
   }
 }

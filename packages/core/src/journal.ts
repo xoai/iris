@@ -14,7 +14,8 @@ export type RecordKind =
 // `clock`, `echo`, and `model_call` have wired performers; `tactic` is the M2
 // harness seam consultation (ADR-0007) — performed host-side via the existing
 // PerformerRegistry exactly like model_call, so replay never re-invokes it. The
-// rest remain type-only placeholders for later milestones.
+// rest are reserved entry types (each wired by the package that owns its effect,
+// e.g. `subagent` by @iris/subagents).
 export type EffectKind =
   | "clock"
   | "random"

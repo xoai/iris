@@ -63,6 +63,7 @@ Packages compile independently (cross-package types resolve to `src` via the
 - **`@iris/*`** — the libraries: `core`, `tools`, `agent`, `host`,
   `channel-rest`, `channel-web`, `channel-mcp`, `client-sdk`, `store-do`,
   `store-fs`, `store-memory`, `store-sqlite`, `provider-anthropic`,
+  `provider-openai`, `auth`, `audit`, `subagents`, `schedule`,
   `bundle-coding`, `inspect`, `observe`, `evals`, `sandbox`.
 
 All publishable packages share one lockstep version (currently `0.1.0`) and
