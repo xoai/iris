@@ -11,16 +11,19 @@ import { dirname, join, resolve } from "node:path";
 const ROOT = dirname(dirname(fileURLToPath(import.meta.url)));
 const DOCS = join(ROOT, "docs");
 
+// The funnel pages in Next → order (Getting started + Concepts). Flat, descriptive
+// names (the 0N- numbering was dropped in the categorized restructure).
 const PAGES = [
-  "01-introduction.md",
-  "02-first-agent.md",
-  "03-tools.md",
-  "04-channels.md",
-  "05-deploy.md",
-  "06-providers.md",
-  "07-governance.md",
-  "08-audit-and-evals.md",
-  "09-verifiable-journal.md",
+  "introduction.md",
+  "first-agent.md",
+  "tools.md",
+  "channels.md",
+  "deploy.md",
+  "harness.md",
+  "providers.md",
+  "governance.md",
+  "audit-and-evals.md",
+  "verifiable-journal.md",
 ];
 const ALL = ["README.md", ...PAGES];
 
@@ -42,7 +45,7 @@ test("docs-funnel: every relative markdown link resolves to a real file", () => 
   }
 });
 
-test("docs-funnel: numbered pages form a correct Next → chain", () => {
+test("docs-funnel: pages form a correct Next → chain", () => {
   for (let i = 0; i < PAGES.length; i++) {
     const text = readFileSync(join(DOCS, PAGES[i]), "utf8");
     const next = i < PAGES.length - 1 ? `./${PAGES[i + 1]}` : "./README.md";
