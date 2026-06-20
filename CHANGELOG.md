@@ -47,8 +47,7 @@ The CLI publishes as **`iris-runtime`** (binary `iris`); the libraries as
 - **Deploy** — one-command Cloudflare Durable Objects scaffold (`iris deploy`)
   with a capability-diff gate.
 - **Sandbox** — deny-all network + credential brokering, with real per-host
-  allowlist egress for the docker backend via a host-side sidecar egress proxy
-  (ADR-0010).
+  allowlist egress for the docker backend via a host-side sidecar egress proxy.
 - **Subagents & schedules** on the journaled substrate (`subagents.json`,
   `iris schedule`).
 - **CLI surface** — `init · build · inspect · schema · verify · push · pull · run

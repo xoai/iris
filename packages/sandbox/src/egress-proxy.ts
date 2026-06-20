@@ -1,4 +1,4 @@
-// The sidecar egress proxy (spec §3.6, ADR-0010) — a REAL host-side node:http
+// The sidecar egress proxy (spec §3.6) — a REAL host-side node:http
 // forward proxy that un-gates the docker backend's per-host {allow:[...]} egress
 // and credential brokering. It is the real-network counterpart of the inmemory
 // firewall (inmemory.ts:132-152): it enforces the allowlist, brokers a named

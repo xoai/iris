@@ -1,6 +1,6 @@
-// MANUAL smoke — NOT in the unit suite, NOT typechecked (manual/ is outside the
+// MANUAL smoke — NOT in the unit suite, NOT typechecked (tests/manual/ is outside the
 // tsconfig include and the tests/**/*.test.ts runner glob). Run with Docker:
-//   IRIS_DOCKER_SMOKE=1 node manual/docker-smoke.ts
+//   IRIS_DOCKER_SMOKE=1 node tests/manual/docker-smoke.ts
 // Proves the REAL docker backend: a /workspace volume round-trip, deny-all egress
 // blocking, that a secret never leaks into the container (env / args / volume),
 // AND — the un-gated path — real brokered egress through the sidecar EgressProxy:

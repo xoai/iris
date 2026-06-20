@@ -1,6 +1,6 @@
-// MANUAL smoke — NOT in the unit suite, NOT typechecked (manual/ is outside the
+// MANUAL smoke — NOT in the unit suite, NOT typechecked (tests/manual/ is outside the
 // tsconfig include and the tests/**/*.test.ts runner glob).
-//   IRIS_WEB_SMOKE=1 node manual/web-channel-smoke.ts
+//   IRIS_WEB_SMOKE=1 node tests/manual/web-channel-smoke.ts
 //
 // Proves the `iris serve --web` web channel end-to-end at the PROTOCOL level (what
 // the browser shell does): GET / serves the chat page, then a start + a resume with

@@ -3,7 +3,7 @@
 // The per-host {allow:[...]} egress is now UN-GATED — but only CONDITIONALLY:
 // accepted iff an egress proxy is wired, and STILL refused loudly without one
 // (the secure floor — a caller who asked for restriction never silently gets open
-// egress). The real container path is the manual smoke. (spec §3/§4.2, ADR-0010.)
+// egress). The real container path is the manual smoke. (spec §3/§4.2.)
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createDockerSession, startEgressProxy } from "@irisrun/sandbox";

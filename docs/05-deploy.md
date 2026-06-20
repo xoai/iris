@@ -55,7 +55,7 @@ byte-identical output. That cross-host resume is regression-locked in the test
 suite, and the install-free proof runs locally:
 
 ```sh
-node manual/portability-demo.ts        # prints the proof, exits 0 on PASS
+node tests/manual/portability-demo.ts        # prints the proof, exits 0 on PASS
 ```
 
 This is the north star: an agent a person talks to, that survives a host migration

@@ -1,11 +1,11 @@
-// MANUAL smoke — NOT in the unit suite, NOT typechecked (manual/ is outside the
+// MANUAL smoke — NOT in the unit suite, NOT typechecked (tests/manual/ is outside the
 // tsconfig include and the tests/**/*.test.ts runner glob). Pushes a built local
 // OCI layout to a REAL registry and pulls it back (and, where available, signs it
 // with cosign). The install-free path is the local OCI layout (tests/cli.test.ts);
 // this is the real-registry path.
 //
 //   IRIS_OCI_SMOKE=1 IRIS_OCI_LAYOUT=./image IRIS_OCI_REF=ghcr.io/you/agent:latest \
-//     node manual/oci-registry-smoke.ts
+//     node tests/manual/oci-registry-smoke.ts
 //
 // Requires an OCI client (`oras` or `docker`) on PATH and registry auth already
 // configured. cosign signing runs only if `cosign` is present and IRIS_COSIGN=1.

@@ -1,6 +1,6 @@
-// MANUAL smoke — NOT in the unit suite, NOT typechecked (manual/ is outside the
+// MANUAL smoke — NOT in the unit suite, NOT typechecked (tests/manual/ is outside the
 // tsconfig include and the tests/**/*.test.ts runner glob).
-//   IRIS_REST_SMOKE=1 node manual/rest-smoke.ts
+//   IRIS_REST_SMOKE=1 node tests/manual/rest-smoke.ts
 //
 // Proves the @irisrun/channel-rest two-identifier protocol (ADR-0009) over a REAL
 // external HTTP socket (the install-free suite uses 127.0.0.1; here we bind a

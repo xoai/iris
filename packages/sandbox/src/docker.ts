@@ -1,7 +1,7 @@
-// The docker sandbox backend (spec §3.6, ADR-0010) — REAL isolation via the
+// The docker sandbox backend (spec §3.6) — REAL isolation via the
 // `docker` CLI: `docker run --network none` by default with a /workspace volume.
 // Host-side (node:child_process + node:fs). Docker is unavailable in the install-
-// free unit env, so this backend is exercised by `manual/docker-smoke.ts` only;
+// free unit env, so this backend is exercised by `tests/manual/docker-smoke.ts` only;
 // it is still typechecked here. Real per-host {allow} egress + credential
 // brokering are UN-GATED via the sidecar `EgressProxy`: pass `egress` and the
 // container is routed through it (HTTP(S)_PROXY). Secrets are NEVER passed as
@@ -110,7 +110,7 @@ export async function createDockerSession(
       // COOPERATIVE — a tool that ignores the proxy env can still reach the bridge.
       // Hard enforcement (the proxy as the sole egress) is a deployment concern
       // (internal network / firewall); the secure FLOOR (no-proxy {allow} refused,
-      // deny-all = no network) is unchanged. See ADR-0010.
+      // deny-all = no network) is unchanged.
       const routing: Record<string, string> = {};
       const extraArgs: string[] = [];
       if (typeof policy === "object" && proxy) {

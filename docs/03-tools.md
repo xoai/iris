@@ -54,8 +54,7 @@ that demands local subprocess tools, loudly, rather than silently degrade it (se
 
 Tools don't inherit the host's privileges. The sandbox denies network by default and
 brokers credentials so secrets never enter the tool's environment; the docker backend
-gets real per-host **allowlist egress** through a host-side sidecar egress proxy
-([ADR-0010](./adr-0010-sandbox-egress-proxy.md)).
+gets real per-host **allowlist egress** through a host-side sidecar egress proxy.
 
 ## Approvals: tools that touch reality
 
