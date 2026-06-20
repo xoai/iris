@@ -92,7 +92,8 @@ the same property holds for a bundle you write yourself.
 ## Going deeper
 
 - The normative seam contract — signatures, composition, the journaled effect shape —
-  is the *harness seams* reference *(coming)*.
-- Writing your own tactic or bundle — the *adding a tactic* guide *(coming)*.
+  is the [harness seams reference](./reference/harness-seams.md).
+- Writing your own tactic or bundle — the
+  [adding a tactic guide](./contributing/adding-a-tactic.md).
 
 **Next → [Models & providers](./providers.md)**

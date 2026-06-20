@@ -20,12 +20,24 @@
 - [Audit & reproducible evals](docs/audit-and-evals.md): iris audit; reproducible evals; subagents & schedules.
 - [Verifiable portable journals](docs/verifiable-journal.md): content-addressed *.irisjournal export/verify/import.
 
+## Guides
+- [Subagents](docs/guides/subagents.md): durable delegation to a child agent (own session); the child's output is journaled in the parent, which replays without re-running it. Configure via subagents.json.
+- [Schedules](docs/guides/schedules.md): recurring jobs as durable replayable agents; each cycle parks on a timer; a host-side pump resumes due ones (iris schedule).
+- [Observability](docs/guides/observability.md): OTel-shaped spans derived from the journal (@irisrun/observe), injected Sink, env-gated OTLP export; derived so replay is unaffected.
+- [Inspecting a session](docs/guides/inspect.md): inspectSession renders the deterministic decision/effect/marker timeline of a recorded session (a library API, not an iris subcommand; iris inspect is image-only).
+- [Frontend & the client SDK](docs/guides/frontend.md): the web chat UI (iris serve --web) and the isomorphic @irisrun/client-sdk over the serve SSE two-identifier protocol.
+
 ## Reference
+- [CLI](docs/reference/cli.md): every iris command and its flags.
+- [Harness seams](docs/reference/harness-seams.md): the normative tactic/bundle contract — seam signatures, composition, the journaled effect, invariant caps.
 - [Channel-port spec](docs/reference/channel-port-spec.md): the contract every channel passes.
 - [Bridge pattern](docs/reference/bridge-pattern.md): Discord/Telegram/Teams as external bridges.
 - [Verifiable-journal format](docs/reference/verifiable-journal-spec.md): the export format, reproducible from the file alone.
 - [Journal threat model](docs/reference/threat-model.md): what journal verification detects, and what it does not claim.
 - [Sandbox-egress threat model](docs/reference/security-sandbox-threat-model.md): the egress firewall + credential broker.
+
+## Contributing
+- [Adding a tactic](docs/contributing/adding-a-tactic.md): write a seam tactic and compose a bundle (coding bundle as the worked example).
 
 ## Discovery
 - [agents.md](agents.md): how an AI agent or tool integrates with Iris — Agentfile schema, MCP server, REST API.

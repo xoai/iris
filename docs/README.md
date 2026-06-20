@@ -51,10 +51,29 @@ How the runtime works, page by page.
 - [Verifiable portable journals](./verifiable-journal.md) — export a session to a
   content-addressed `*.irisjournal`, verify it with nothing but the file, migrate it.
 
+## Guides
+
+Add a capability when you need it.
+
+- [Subagents](./guides/subagents.md) — durable **delegation**: a parent agent hands a
+  sub-task to a child agent with its own session; the child's output is journaled in the
+  parent, so the parent replays without re-running it.
+- [Schedules](./guides/schedules.md) — **recurring jobs** as durable, replayable agents:
+  each cycle parks on a timer; a host-side pump resumes the due ones (`iris schedule`).
+- [Observability](./guides/observability.md) — OTel-shaped **spans derived from the
+  journal** (`@irisrun/observe`); add tracing without touching replay.
+- [Inspecting a session](./guides/inspect.md) — read back **what an agent actually did**:
+  the deterministic decision/effect/marker timeline (`inspectSession`).
+- [Frontend & the client SDK](./guides/frontend.md) — put an agent in front of users: the
+  web chat UI (`iris serve --web`) and the isomorphic `@irisrun/client-sdk`.
+
 ## Reference
 
 Normative specs and lookups, in [`reference/`](./reference/):
 
+- [CLI](./reference/cli.md) — every `iris <cmd>` with its flags, in one place.
+- [Harness seams](./reference/harness-seams.md) — the normative tactic/bundle contract:
+  the five seam signatures, composition rules, and the journaled `{seam, tacticId, choice}`.
 - [Channel-port spec](./reference/channel-port-spec.md) — the contract every channel
   passes (two-identifier protocol, token rotation, refusal taxonomy, conformance).
 - [Bridge pattern](./reference/bridge-pattern.md) — reaching Discord / Telegram / Teams
@@ -66,9 +85,12 @@ Normative specs and lookups, in [`reference/`](./reference/):
 - [Sandbox-egress threat model](./reference/security-sandbox-threat-model.md) — the
   egress firewall + credential broker: the deny-all floor, the host allowlist, the limits.
 
-<!-- Growing next: Guides → observability,
-subagents, schedules, frontend & the client SDK, inspecting a session, secrets & env;
-Reference → CLI, Agentfile schema, architecture, harness seams; Contributing → setup,
-conventions, and adding a provider / channel / store / tactic. -->
+## Contributing
+
+- [Adding a tactic](./contributing/adding-a-tactic.md) — write a seam tactic and compose
+  a bundle (the coding bundle as the worked example).
+
+<!-- Growing next: Guides → secrets & env; Reference → Agentfile schema, architecture;
+Contributing → CONTRIBUTING/setup, conventions, adding a provider / channel / store. -->
 
 **Next → [Introduction](./introduction.md)**
