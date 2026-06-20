@@ -1,4 +1,4 @@
-// Slack request authenticity (roadmap v0.2 §11). Slack signs every request:
+// Slack request authenticity. Slack signs every request:
 //   signature = "v0=" + HMAC_SHA256(signingSecret, `v0:${timestamp}:${rawBody}`)
 // We verify it in CONSTANT time and reject stale timestamps (replay window). An
 // unverified body is NEVER processed — the durable-HITL guarantee rests on the fact

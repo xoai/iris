@@ -11,7 +11,7 @@ import type { RegistryResolver } from "./resolver.ts";
 // lock transport — an Agentfile cannot author it (§3.3). `ref` is the STABLE
 // Agentfile registry handle (e.g. `mcp://registry/x@^2`) — the key to re-resolve
 // the contract at verify time; `location` is the CURRENT deploy and FLOATS
-// independently (ADR-0004), so verify must re-resolve by `ref`, never `location`.
+// independently, so verify must re-resolve by `ref`, never `location`.
 export interface LockTool {
   name: string;
   ref: string;

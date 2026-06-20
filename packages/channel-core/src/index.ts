@@ -1,4 +1,4 @@
-// @irisrun/channel-core — the narrow, replay-safe channel PORT (roadmap v0.2 §10).
+// @irisrun/channel-core — the narrow, replay-safe channel PORT.
 // The two-identifier protocol (mint sessionId, own/rotate a single-use continuation
 // token, atomic single-use, loud refusals) in one place, behind which channel-rest,
 // channel-mcp, and channel-slack are interchangeable — proven by a shared conformance

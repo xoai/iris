@@ -1,4 +1,4 @@
-// P2-9 (C1 / A-6) — the load-bearing byte-identity guard for the gated `subagentTools`
+// The load-bearing byte-identity guard for the gated `subagentTools`
 // kernel branch. The harness kernel is golden-pinned and edited concurrently across many
 // worktrees, so the subagent flag MUST be zero-value-off: with the set absent/empty — or
 // non-empty but NOT containing the emitted tool's name — the committed journal must be

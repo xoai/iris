@@ -49,7 +49,7 @@ test("T1: content vs contract classification", () => {
   );
 });
 
-test("T1: a tool entry with an inline-behavior field is rejected (ADR-0005)", () => {
+test("T1: a tool entry with an inline-behavior field is rejected", () => {
   const bad = { ...VALID, tools: [{ ref: "subprocess://x", code: "print(1)" }] };
   assert.throws(() => validateAgentfile(bad), /inline|behavior/i);
 });

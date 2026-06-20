@@ -1,4 +1,4 @@
-// Deterministic markdown render of the compatibility matrix (roadmap v0.2 §9).
+// Deterministic markdown render of the compatibility matrix.
 // Mirrors @irisrun/agent's `agentfileSchemaJson()`: a pure, stable string used in
 // two places — the `iris providers --matrix` CLI output AND the table embedded in
 // docs/06-providers.md, which a drift guard (tests/provider-compat-render.test.ts)

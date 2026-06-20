@@ -1,4 +1,4 @@
-// The provider compatibility matrix (roadmap v0.2 §9). A conformance-VERIFIED
+// The provider compatibility matrix. A conformance-VERIFIED
 // registry of endpoints that speak one of the two protocols Iris already supports —
 // OpenAI Chat Completions or Anthropic Messages — classified by whether they are
 // replay-safe out of the box or need auth/URL/transport adaptation first.
@@ -13,7 +13,7 @@
 // specific divergence. The matrix is conformance-tested data, never a static doc that
 // rots into a false promise.
 //
-// "replay-safe" is a claim about FAITHFUL CAPTURE + CANONICALIZATION (roadmap §8) —
+// "replay-safe" is a claim about FAITHFUL CAPTURE + CANONICALIZATION —
 // NOT that the endpoint is deterministic. Point Iris's --base-url at a replay-safe
 // endpoint with its key and the recorded session replays byte-identically.
 

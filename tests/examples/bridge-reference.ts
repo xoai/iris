@@ -1,4 +1,4 @@
-// Reference bridge DEMO (roadmap v0.2 §12) — `npm run demo:bridge`. Stands up an
+// Reference bridge DEMO — `npm run demo:bridge`. Stands up an
 // in-process Iris REST channel and drives a two-turn conversation through the
 // fetch-only webhook bridge (webhook-bridge.ts), showing that a platform bridge needs
 // only the wire protocol and ZERO core changes. The bridge is the external process;

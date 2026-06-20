@@ -1,4 +1,4 @@
-// Interactive (chat) harness mode (ADR-0007). A GATED `interactive` flag turns the
+// Interactive (chat) harness mode. A GATED `interactive` flag turns the
 // one-shot harness into a durable multi-turn conversation: each user message is
 // ingested via a `user_recv` effect (its value supplied per-turn by a performer,
 // so it is journaled and replay-deterministic), the conversation accumulates in

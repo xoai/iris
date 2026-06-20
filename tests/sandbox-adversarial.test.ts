@@ -1,4 +1,4 @@
-// Adversarial review of the sandbox security spine (roadmap v0.2 P2 #8; see
+// Adversarial review of the sandbox security spine (see
 // docs/reference/security-sandbox-threat-model.md). Proves the egress firewall is
 // FAIL-CLOSED against bypass attempts
 // and that a brokered secret never escapes to any sandbox-visible surface, the

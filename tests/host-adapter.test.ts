@@ -2,7 +2,7 @@
 // runTurnOn runs the SAME image+program on host A (sqlite, long-running) and host
 // B (serverless-fs) with EQUIVALENT results — the engine's deterministic replay
 // makes "same image, different host" hold. checkHostCapabilities REFUSES LOUDLY
-// when the image requires a capability the host does not provide (ADR-0008).
+// when the image requires a capability the host does not provide.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { mkdtempSync } from "node:fs";
@@ -75,7 +75,7 @@ test("T5 capability check: refuses LOUDLY when the host lacks a required capabil
   // image requires long_running; the serverless host says false → refuse
   assert.throws(
     () => checkHostCapabilities({ long_running: true }, serverlessHost, "serverless-fs"),
-    /long_running.*ADR-0008|ADR-0008.*long_running/s,
+    /cannot satisfy required capabilities.*long_running/s,
   );
   // host that simply OMITS the cap (undefined) is also unsatisfied — not silently widened
   assert.throws(

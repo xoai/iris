@@ -1,6 +1,6 @@
 # Threat model — the sandbox egress firewall & credential broker
 
-*Roadmap v0.2 P2 #8 — the adversarial review of the security spine before it is
+*The adversarial review of the security spine before it is
 load-bearing for real users. Companion to the sidecar egress proxy in
 `@irisrun/sandbox` (`packages/sandbox/src/egress-proxy.ts`). Every guarantee
 below maps to a test in `tests/sandbox-adversarial.test.ts` (plus the existing

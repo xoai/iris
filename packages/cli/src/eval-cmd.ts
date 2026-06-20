@@ -1,4 +1,4 @@
-// `iris eval` command logic (roadmap P2-8) — the testable unit. Makes reproducible
+// `iris eval` command logic — the testable unit. Makes reproducible
 // evals REACHABLE from the CLI: load a user eval-suite module, run it (or prove it
 // reproducible), and render. cli-main.ts wires the real argv → file:// import; the
 // logic lives here so it is unit-tested with an in-test suite module.

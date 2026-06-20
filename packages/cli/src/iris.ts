@@ -43,7 +43,7 @@ import type { ApprovalPolicy, ApprovalInbox, Principal, RawApproval } from "@iri
 import { makeSubagentPerformer } from "@irisrun/subagents";
 import type { SubagentPerformerDeps } from "@irisrun/subagents";
 
-// Opt-in governance (roadmap P1-5): when a policy + inbox are configured, register the
+// Opt-in governance: when a policy + inbox are configured, register the
 // governed `signal_recv` performer so the HITL gate becomes policy-checked and
 // identity-stamped, and every approval is journaled for audit. Zero-value-off: absent
 // governance → {} → the performer registry is BYTE-IDENTICAL to the ungoverned default
@@ -54,7 +54,7 @@ export function governancePerformers(
   return governance ? { signal_recv: makeGovernedApprovalPerformer(governance) } : {};
 }
 
-// Opt-in subagent delegation (roadmap P2-9). `names` are the delegate tool names the
+// Opt-in subagent delegation. `names` are the delegate tool names the
 // kernel routes as `subagent` effects (passed to harnessProgram as subagentTools AND
 // gate-allowed via safeTools); `makeResolveChild` builds the per-(parent-session)
 // resolver the host runs the child agent with. Absent → no `subagent` effect, no
@@ -141,10 +141,10 @@ function submitApprovalFromBody(
 
 // --- 9a: init / build / inspect / verify -------------------------------------
 
-// The scaffold is a SELF-CONTAINED project, not an empty folder (P0 #2 — the
+// The scaffold is a SELF-CONTAINED project, not an empty folder (the
 // "exile cliff" fix): it ships a bundled `now` tool the agent can call with no
-// external server. An Agentfile cannot author an in-process tool (ADR-0005 +
-// CONTRACT_SCHEMES = mcp|grpc|subprocess), so the bundled tool is a SUBPROCESS
+// external server. An Agentfile cannot author an in-process tool (CONTRACT_SCHEMES
+// = mcp|grpc|subprocess), so the bundled tool is a SUBPROCESS
 // tool — a small script beside the Agentfile, discovered by loadBundledTools.
 const SCAFFOLD_AGENT = {
   apiVersion: "iris/v1",
@@ -366,7 +366,7 @@ export interface CliRunOptions {
   // Opt-in governance: a who-may-approve policy + the approval inbox the channel/UI
   // submits decisions to. Absent → ungoverned (existing behavior, byte-identical).
   governance?: { policy: ApprovalPolicy; inbox: ApprovalInbox };
-  // Opt-in subagent delegation (P2-9). Absent → no `subagent` effect (byte-identical).
+  // Opt-in subagent delegation. Absent → no `subagent` effect (byte-identical).
   subagents?: CliSubagents;
   // Retain the full journal (no truncation after a snapshot) so the governance audit
   // trail (auditApprovals) stays COMPLETE across long sessions. Default undefined →
@@ -460,7 +460,7 @@ export interface CliServeOptions {
   safeTools?: string[]; // tools allowed without an approval gate (bundled retrySafe)
   // Opt-in governance (same shape as cmdRun): policy + inbox. Absent → ungoverned.
   governance?: { policy: ApprovalPolicy; inbox: ApprovalInbox };
-  // Opt-in subagent delegation (P2-9). Absent → no `subagent` effect (byte-identical).
+  // Opt-in subagent delegation. Absent → no `subagent` effect (byte-identical).
   subagents?: CliSubagents;
 }
 
@@ -476,7 +476,7 @@ export interface ServeHandle {
 export async function cmdServe(layoutdir: string, opts: CliServeOptions): Promise<ServeHandle> {
   const image = await readOciLayout(layoutdir);
   const modelId = image.lock.model.id; // the harness model_call request has no model
-  const subNames = opts.subagents?.names ?? []; // delegate tool names (P2-9)
+  const subNames = opts.subagents?.names ?? []; // delegate tool names
   const bundle = defaultBundle({ safeTools: [...(opts.safeTools ?? []), ...subNames] });
   const onWarn = opts.onWarn ?? ((m: string) => console.warn(m));
   const clock = opts.clock ?? { now: (): number => 0 };
@@ -548,7 +548,7 @@ export async function cmdServe(layoutdir: string, opts: CliServeOptions): Promis
 // Promotes the edge target from a hand-edited manual smoke
 // (tests/smoke/cloudflare-workers-smoke.ts) to a turnkey, TESTED command: read the image,
 // run the M6 capability-diff gate (assertDeployable) and refuse an over-capable image
-// LOUDLY (ADR-0008) BEFORE writing anything, then scaffold a self-contained Worker
+// LOUDLY BEFORE writing anything, then scaffold a self-contained Worker
 // project (wrangler.toml + worker.mjs generalizing the smoke's inline DO class).
 // The terminal `wrangler deploy` network egress stays ENV-GATED (operator-installed
 // wrangler + a real Cloudflare account) — like push/pull's "real registry = manual" —
@@ -705,7 +705,7 @@ export async function cmdDeploy(layoutdir: string, opts: CliDeployOptions): Prom
   const image = await readOciLayout(layoutdir);
   const host = opts.host ?? edgeHost(noopDoStorage());
 
-  // GATE (ADR-0008): refuse an over-capable image LOUDLY, BEFORE writing anything.
+  // GATE: refuse an over-capable image LOUDLY, BEFORE writing anything.
   assertDeployable(image.lock.capabilities, host);
 
   const name = sanitizeName(opts.name ?? image.agentfile.name ?? "iris-agent");

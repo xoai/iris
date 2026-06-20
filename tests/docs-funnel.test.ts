@@ -1,4 +1,4 @@
-// Docs-funnel integrity (P1-7). Cheap regression guard so the guided path can't
+// Docs-funnel integrity. Cheap regression guard so the guided path can't
 // silently rot: every page exists, every relative link resolves, the "Next →"
 // chain is correct, the index points at every page, and no page documents a CLI
 // command that doesn't exist. Uses the boundary.test.ts ROOT pattern.

@@ -1,4 +1,4 @@
-// P2-9 (A-5) — composition: a SCHEDULE whose per-tick job is a `subagent` spawn. This wires
+// Composition: a SCHEDULE whose per-tick job is a `subagent` spawn. This wires
 // both features together: the schedule program parks/wakes on durable timers (driven by the
 // pump), and each cycle's job is a delegation performed by the subagent performer. Every
 // delegation is journaled in the schedule's journal, the child agent runs on the durable

@@ -1,4 +1,4 @@
-// Shared recorder for P2-8 audit/verify/cli tests: drives a full
+// Shared recorder for audit/verify/cli tests: drives a full
 // park→approve→resume GOVERNED harness session (a real journal with tactic/model/
 // tool effects, a governed signal_recv approval, and markers) onto a fresh store.
 // Mirrors the proven deps() in auth-governance-integration.test.ts.

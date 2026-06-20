@@ -2,7 +2,7 @@
 // Today buildImage pins `Lock.tactics.bundle = {id, digest: sha256Hex(id)}` — a
 // placeholder over the id string only — and verifyImage never touches the bundle.
 // M6 introduces a resolved BundleDefinition + bundleDigest(def) = sha256 over the
-// canonical BEHAVIOR surface (stable across a floating `location`, ADR-0004), pins
+// canonical BEHAVIOR surface (stable across a floating `location`), pins
 // the real digest WHEN a resolveBundle resolver is injected, and EXTENDS verifyImage
 // to re-resolve the bundle by its STABLE id/ref and recompute+compare the digest.
 //
@@ -59,7 +59,7 @@ test("T7: bundleDigest is sha256(canonical behavior surface) and is STABLE acros
   const d1 = bundleDigest(CODING_DEF);
   const d2 = bundleDigest({ ...CODING_DEF, location: "registry://other/place@sha-zzz" });
   assert.match(d1, /^[0-9a-f]{64}$/);
-  assert.equal(d1, d2, "a floating location must NOT change the digest (ADR-0004)");
+  assert.equal(d1, d2, "a floating location must NOT change the digest");
   // a real content change (the behavior surface) DOES change the digest
   const d3 = bundleDigest({ ...CODING_DEF, seams: [...CODING_DEF.seams, "spawnPolicy"] });
   assert.notEqual(d1, d3, "a behavior-surface change DOES change the digest");

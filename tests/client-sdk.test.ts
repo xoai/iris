@@ -1,4 +1,4 @@
-// Phase A (P0 items 3+4) — @irisrun/client-sdk over the `iris serve` two-identifier
+// @irisrun/client-sdk over the `iris serve` two-identifier
 // protocol. Buffered start/send round-trip + token rotation; a stale token is a
 // LOUD IrisError(409); send() with no session refuses loudly; a SECOND client built
 // from a stored handle resumes the SAME session AGAINST THE SAME RUNNING CHANNEL

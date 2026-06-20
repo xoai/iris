@@ -1,4 +1,4 @@
-// P2-9 runnable demo (install-free): proves both features on the durable substrate.
+// Runnable demo (install-free): proves both features on the durable substrate.
 //   node --conditions=iris-src packages/schedule/src/demo.ts
 // Prints one JSON line per event. No network, no key, no external deps — a scripted model.
 //

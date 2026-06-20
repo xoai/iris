@@ -1,4 +1,4 @@
-// Telegram reference bridge (roadmap v0.2 §12). A thin adapter over the generic
+// Telegram reference bridge. A thin adapter over the generic
 // REST-protocol bridge — a Telegram Update in, a webhook-response method out. Auth is
 // the `X-Telegram-Bot-Api-Secret-Token` header (set when you call setWebhook with
 // secret_token), compared constant-time. Zero @irisrun imports.

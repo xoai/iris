@@ -1,4 +1,4 @@
-// P2-9 (C5) — scheduleProgram is a PURE Program: deterministic cadence from journaled
+// scheduleProgram is a PURE Program: deterministic cadence from journaled
 // clock reads, maxRuns termination, job-failure folds without throwing, and replay identity
 // (folding the same records twice yields the same state). No engine, no I/O.
 import { test } from "node:test";

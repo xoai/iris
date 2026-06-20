@@ -116,7 +116,7 @@ With `--reproduce N` each line reports `reproducible=<bool>` and the journal dig
 and locates the first divergence (`divergence@<run>:<field>`) when a case isn't
 reproducible. Add `--json` for structured output.
 
-## Subagents & schedules (P2-9)
+## Subagents & schedules
 
 Two more capabilities fall out of the same journaled substrate — both durably
 replayable.
@@ -152,7 +152,7 @@ they're three views of one property: the journal is the source of truth and repl
 is deterministic. A system that logs *alongside* execution can always drift from
 what really ran. Here, the record **is** the execution. That's the moat.
 
-For the full positioning and status, see the [project README](../README.md)
-(this is roadmap item P2-8 — auditability + reproducible evals as the product).
+For the full positioning and status, see the [project README](../README.md).
+Auditability and reproducible evals are the product.
 
 **Next → [09 — Verifiable portable journals](./09-verifiable-journal.md)**

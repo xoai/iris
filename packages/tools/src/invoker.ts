@@ -64,7 +64,7 @@ export function locationHandle(location: string, scheme: string): string {
   return location.startsWith(prefix) ? location.slice(prefix.length) : location;
 }
 
-// --- tool_locality resolution (spec §3.4, Spec 05 A4, ADR-0008) ---------------
+// --- tool_locality resolution ------------------------------------------------
 // Locality selects the PHYSICAL realization without changing the model-perceived
 // surface, so the same logical tool keeps one contractDigest across localities.
 

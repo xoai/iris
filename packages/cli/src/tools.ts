@@ -1,11 +1,11 @@
-// Bundled-tool discovery (P0 #2): scan an agent project's `tools/` directory for
+// Bundled-tool discovery: scan an agent project's `tools/` directory for
 // `*.tool.json` descriptors and produce (a) a RegistryResolver so `iris build`
 // resolves the scaffolded `subprocess://<id>` refs, and (b) the subprocess spawn
 // specs so `iris run/chat/serve` can actually INVOKE the tool. This is the seam
 // that turns the scaffold's batteries-included tool into something the agent can
 // call with no external server. Host-side; node: builtins + workspace pkgs only.
 //
-// An Agentfile cannot author an in-process tool (ADR-0005 + CONTRACT_SCHEMES =
+// An Agentfile cannot author an in-process tool (CONTRACT_SCHEMES =
 // mcp|grpc|subprocess), so a bundled, server-free tool is a SUBPROCESS tool: a
 // small script shipped beside the Agentfile, ref scheme = transport.
 import { readdir, readFile } from "node:fs/promises";

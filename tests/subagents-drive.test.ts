@@ -1,4 +1,4 @@
-// P2-9 (C3) — driveToCompletion: runs a CHILD harness session to a terminal state and
+// driveToCompletion: runs a CHILD harness session to a terminal state and
 // maps the engine's TurnOutcome to a ChildOutcome. Covers finished, parked (not
 // force-driven), exhausted (perpetually contended), aborted (lease lost), and lazy child
 // creation (a fresh sessionId is created from program.initial by its first turn).

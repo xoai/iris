@@ -1,4 +1,4 @@
-// The journaled approval audit trail (roadmap P1-5, done-when #2). Pure read over a
+// The journaled approval audit trail. Pure read over a
 // recorded session: every governed (or legacy) approval is already a journaled
 // `signal_recv` effect result, so the audit is a projection of the journal — nothing
 // new is stored.

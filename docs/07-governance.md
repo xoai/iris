@@ -31,7 +31,7 @@ approval trail is **replayable and ordered by construction**:
 That is the raw material for a compliance-grade, reproducible audit story — and
 it's a property a system without an event-sourced substrate can't easily retrofit.
 
-## The governance layer (P1-5, landed)
+## The governance layer
 
 The gate mechanism is now wrapped by a real **governance layer**, the `@irisrun/auth`
 package — opt-in, with zero change to the default behavior:

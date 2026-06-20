@@ -1,4 +1,4 @@
-// makeScheduleRunner (P2-9, spec §5.3): the host-side PUMP that drives durable timers
+// makeScheduleRunner: the host-side PUMP that drives durable timers
 // locally. `tick(now)` discovers sessions whose timer/signal is due (the scheduler's
 // peek API), resumes each at most once, and confirms the wakeup ONLY after a committed
 // (non-aborted) turn — so an aborted resume re-fires next tick (at-least-once). It

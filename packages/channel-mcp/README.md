@@ -18,8 +18,8 @@ JSON-RPC error range (`-32001` unknown session · `-32002` missing token · `-32
 stale token · `-32004` in-flight). It passes the same channel-port conformance suite
 `@irisrun/channel-rest` does — "channels behind one port" is an executed guarantee.
 
-Host-side (`node:crypto`); the pure core stays unchanged. ADR-0009 (MCP is dual-use); a
-real MCP stdio client is an env-gated manual smoke.
+Host-side (`node:crypto`); the pure core stays unchanged. MCP is dual-use; a
+real MCP stdio client is an env-gated smoke test.
 
 ## Use it
 

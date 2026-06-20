@@ -138,7 +138,7 @@ test("T4(b) cold-isolate park/resume ON THE DO ALARM: a timer-wait tactic parks,
   // durable on the storage). The tactic's decideCount + the scripted model index
   // therefore advance correctly: the FIRST live decideNext parks on the timer; the
   // SECOND (after the replay folds the journaled park) finishes. Replay never
-  // re-invokes the tactic (the ADR-0007 quarantine), so the cold-isolate resume is
+  // re-invokes the tactic (the replay quarantine), so the cold-isolate resume is
   // deterministic regardless.
   const timerPerformers: PerformerRegistry = {
     tactic: timerWaitTactic(),

@@ -7,7 +7,7 @@
 // the §3 capability gate refuses an over-capable image against. The default
 // name "Cloudflare" is BOTH the stable per-host writer identity AND the target
 // label the §3 refusal message interpolates — so the rendered refusal is
-// byte-identical to ADR-0008's example.
+// byte-identical to the example.
 //
 // The package deps only @irisrun/core, so the HostAdapter SHAPE is declared
 // structurally here (HostAdapter from @irisrun/host is structurally identical); the

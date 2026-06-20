@@ -78,8 +78,8 @@ response is run through the matching adapter in CI and must canonicalize to the
 stable result, or be flagged. Run `iris providers --matrix` to print it.
 
 > **Replay-safe** means faithful **capture + canonicalization** of the model's
-> reply — *not* a claim that the endpoint is deterministic (see the roadmap's
-> determinism appendix). **Known-divergent** endpoints canonicalize once reached, but
+> reply — *not* a claim that the endpoint is deterministic.
+> **Known-divergent** endpoints canonicalize once reached, but
 > need auth/URL/transport adaptation (a signing proxy, a templated URL, a non-Bearer
 > header) the plain adapter does not provide.
 

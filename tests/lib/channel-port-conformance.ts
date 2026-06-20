@@ -1,4 +1,4 @@
-// Shared channel-PORT conformance suite (roadmap v0.2 §10, plan T10.2). The literal
+// Shared channel-PORT conformance suite. The literal
 // realization of the §10 done-when: "a documented channel-port spec with a conformance
 // test ANY channel must pass." channel-rest and channel-mcp both run this exact set of
 // behavioral assertions through their REAL transport surface; only the wire mapping

@@ -1,4 +1,4 @@
-// Shared platform-bridge harness (roadmap v0.2 §12 extension). A platform bridge =
+// Shared platform-bridge harness (extension). A platform bridge =
 // a thin ADAPTER (verify auth + parse the platform's inbound + format the platform's
 // outbound) over the generic, fetch-only `makeWebhookBridge` (which speaks the Iris REST
 // channel protocol and imports nothing from @irisrun). This file — and every adapter —

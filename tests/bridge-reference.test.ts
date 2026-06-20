@@ -1,4 +1,4 @@
-// Reference bridge e2e (roadmap v0.2 §12, plan T12.2) — the §12 done-when: "a
+// Reference bridge e2e — the §12 done-when: "a
 // documented bridge pattern + one reference bridge; additional platforms need no core
 // changes." Drives a TWO-turn conversation through the fetch-only webhook bridge
 // against an in-process Iris REST channel, proving token adoption/rotation across turns

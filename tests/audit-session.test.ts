@@ -1,4 +1,4 @@
-// P2-8 M1 — auditSession()/renderAudit(): whole-session, compliance-grade audit
+// auditSession()/renderAudit(): whole-session, compliance-grade audit
 // over the FULL retained journal (seq 0), with completeness detection. The headline
 // regression is the snapshot+truncate boundary (LRN:gotcha d8ddf8a1): a complete
 // trail requires keepHistory; a truncated session must report complete:false LOUDLY

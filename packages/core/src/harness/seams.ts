@@ -1,4 +1,4 @@
-// Harness seams (ADR-0007, spec §3.4–3.5): the named, narrowly-typed extension
+// Harness seams: the named, narrowly-typed extension
 // points where a tactic advises the kernel. Each seam is a pure `decide(input)
 // -> output`; the narrow signatures are the REMIT ISOLATION guarantee — a tactic
 // physically cannot reach another seam's concern (a shouldCompact tactic's type

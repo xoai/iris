@@ -1,7 +1,7 @@
 // MANUAL smoke — NOT in the unit suite, NOT typechecked (tests/smoke/).
 //   IRIS_GRPC_SMOKE=1 node tests/smoke/grpc-channel-smoke.ts
 //
-// A gRPC server-streaming channel (ADR-0009; the natural fit for token/event
+// A gRPC server-streaming channel (the natural fit for token/event
 // streaming) is a REAL external target needing @grpc/grpc-js — kept OUT of the
 // install-free suite (per the zero-runtime-dependency invariant). The in-suite
 // reachability proofs are REST (M-Proof) + the MCP-server channel. When enabled,
@@ -16,7 +16,7 @@ async function main() {
   try {
     grpc = await import("@grpc/grpc-js");
   } catch {
-    console.error("grpc-channel-smoke: @grpc/grpc-js is not installed. This is a FUTURE target — install it to run a real gRPC server-streaming channel that wraps runTurnOn with the two-identifier protocol (ADR-0009). Refusing loudly rather than faking a pass.");
+    console.error("grpc-channel-smoke: @grpc/grpc-js is not installed. This is a FUTURE target — install it to run a real gRPC server-streaming channel that wraps runTurnOn with the two-identifier protocol. Refusing loudly rather than faking a pass.");
     process.exit(1);
   }
   console.log("grpc-channel-smoke: @grpc/grpc-js present (" + typeof grpc + "). A real server-streaming channel over runTurnOn is the future deliverable here.");

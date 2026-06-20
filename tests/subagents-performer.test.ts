@@ -1,4 +1,4 @@
-// P2-9 (C2) — makeSubagentPerformer: maps a delegating ToolCall to the parent's effect
+// makeSubagentPerformer: maps a delegating ToolCall to the parent's effect
 // result. Asserts the journal-poison-safe split: finished/parked/exhausted → {ok:true,...};
 // aborted/unknown/malformed → {ok:false, code}.
 import { test } from "node:test";

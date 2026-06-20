@@ -1,6 +1,6 @@
 // The interactive chat client — `iris chat`. A zero-dependency terminal REPL that
 // lets a user converse turn-by-turn with a DURABLE Iris agent session ("like eve
-// dev"), built on the harness kernel's gated interactive mode (ADR-0007): each
+// dev"), built on the harness kernel's gated interactive mode: each
 // user message is delivered via a `user_recv` performer, the session parks on a
 // `{kind:"user"}` wait between messages, and the whole conversation is the
 // session journal — so it survives process exit and resumes byte-identically.
@@ -329,7 +329,7 @@ export interface ChatDeps {
   // `renderOutcome` the reply already streamed, so it is not printed twice.
   // Absent → buffered behavior (reply printed once after the turn parks).
   streamSink?: StreamSink;
-  // Opt-in subagent delegation (P2-9). Absent → no `subagent` effect, no subagentTools
+  // Opt-in subagent delegation. Absent → no `subagent` effect, no subagentTools
   // (byte-identical chat registry). The delegate names must ALSO be in the safeTools of
   // the injected tacticPerformer's bundle (built by cli-main) so a delegation doesn't
   // park on the gate.

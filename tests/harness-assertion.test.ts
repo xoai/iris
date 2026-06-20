@@ -2,7 +2,7 @@
 // default-bundle turns. With assertReplay ON the engine re-runs replay and asserts
 // byte-equality after EVERY committed step, throwing ReplayDivergenceError on any
 // divergence — so a turn that finishes/parks is itself the proof the harness never
-// broke determinism (the ADR-0007 guarantee).
+// broke determinism.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { runTurn, harnessProgram, defaultBundle } from "@irisrun/core";

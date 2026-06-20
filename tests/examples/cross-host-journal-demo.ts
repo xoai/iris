@@ -1,4 +1,4 @@
-// T6 (roadmap-v0.2 P0 item 1) — the one-command, install-free, DETERMINISTIC
+// The one-command, install-free, DETERMINISTIC
 // cross-host resume demo. The SAME governed agent session migrates
 // laptop(fs) → VPS(sqlite) → edge(Durable Objects code path) as a portable,
 // content-addressed *.irisjournal file, resumes byte-identically on the edge,

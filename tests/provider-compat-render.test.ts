@@ -1,8 +1,8 @@
-// Drift guard (roadmap v0.2 §9, plan T9.6) — the agentfile/docs-funnel drift-guard
+// Drift guard — the agentfile/docs-funnel drift-guard
 // pattern applied to the compatibility matrix. The table embedded in
 // docs/06-providers.md between the COMPAT-MATRIX markers MUST equal
 // renderCompatMatrix() byte-for-byte, so the published matrix can NEVER silently
-// diverge from the registry (a rotted matrix is a false promise — roadmap §7 risk).
+// diverge from the registry (a rotted matrix is a false promise).
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

@@ -1,4 +1,4 @@
-// The harness kernel (ADR-0007, spec §3.1–3.3): a Program<HarnessState> over the
+// The harness kernel: a Program<HarnessState> over the
 // EXISTING runTurn — ZERO engine change. The loop is encoded entirely in
 // HarnessState.phase (journaled → replays identically): each `step` emits ONE
 // Action (a tactic/model effect, a wait, or finish) and the pure `reducer` folds
@@ -63,18 +63,18 @@ export interface HarnessInput {
 
 export interface HarnessConfig {
   budget?: Budget;
-  // Interactive (chat) mode (ADR-0007). When true the loop ingests each user
+  // Interactive (chat) mode. When true the loop ingests each user
   // message via a `user_recv` effect, threads the conversation into `ctx`, appends
   // the assistant reply, and PARKS on a `{kind:"user"}` wait instead of finishing —
   // so the next message resumes the same durable session. Zero-value-off: absent/
   // false → the kernel is byte-identical to the non-interactive default path.
   interactive?: boolean;
   invariants?: Invariants; // when set, the kernel enforces caps via a reducer override
-  // Per-tool idempotency posture (ADR-0003). The AUTHORITATIVE source for the
+  // Per-tool idempotency posture. The AUTHORITATIVE source for the
   // tool_call effect's retry posture (the ToolContract's own `retrySafe` is
   // descriptive metadata only). Absent name → retrySafe:false (the safe default).
   tools?: Record<string, { retrySafe: boolean }>;
-  // Subagent delegation (P2-9). Tool NAMES in this set are dispatched as a `subagent`
+  // Subagent delegation. Tool NAMES in this set are dispatched as a `subagent`
   // effect (a child agent run) at the tool_exec step, instead of a `tool_call`, reusing
   // the gate/cursor/error machinery. Zero-value-off: absent/empty → every tool_exec still
   // emits `tool_call`, so the kernel is byte-identical to before (the gateAction approval
@@ -420,7 +420,7 @@ export function harnessProgram(
         case "tool_exec": {
           const call = effectiveToolCall(state);
           if (call === null) throw new Error("harness: tool_exec with no current tool call");
-          // P2-9: a tool NAME listed in `subagentTools` delegates to a child agent — emit
+          // A tool NAME listed in `subagentTools` delegates to a child agent — emit
           // a `subagent` effect instead of `tool_call`. Zero-value-off: with the set
           // absent/empty the `includes` is false and the emitted action is byte-identical
           // to the tool_call path below. Retry-safe with the journaled callId as the key:
@@ -440,7 +440,7 @@ export function harnessProgram(
           // Set retrySafe EXPLICITLY (absent config → false). The engine derives
           // `retrySafe ?? (idempotencyKey !== undefined)` — leaving retrySafe
           // undefined while attaching a key would flip a non-idempotent tool to
-          // retry-safe and break the ADR-0003 safe default. Attach the (journaled,
+          // retry-safe and break the safe default. Attach the (journaled,
           // deterministic) callId as the idempotencyKey ONLY when retry-safe, so a
           // recovery re-perform can dedupe; a retry-unsafe tool gets no key and
           // triggers the engine's retry-unsafe warning on recovery.

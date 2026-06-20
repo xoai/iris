@@ -3,7 +3,7 @@
 // makes "the SAME image, a DIFFERENT host" explicit. It REPLACES the framework's
 // enterTurn(sessionId,event) member (there is nothing to replace — no core type);
 // it is a thin call into the engine's runTurn with the adapter's ports injected.
-// `checkHostCapabilities` is the tool/host-level ADR-0008 refusal (the FULL host
+// `checkHostCapabilities` is the tool/host-level capability refusal (the FULL host
 // capability-diff gate stays deferred to M6). Host-side; core stays pure.
 import { runTurn } from "@irisrun/core";
 import type {
@@ -79,7 +79,7 @@ const BOOLEAN_CAPS = [
 ] as const;
 
 /**
- * Tool/host-level capability check (ADR-0008): for every capability the image
+ * Tool/host-level capability check: for every capability the image
  * REQUIRES (`requires[k] === true`), the host must PROVIDE it (`capabilities[k]
  * === true`). `undefined`/`false` on the host means NOT satisfied — never silently
  * widened (cf. the secure-floor posture). Refuses LOUDLY, naming the gaps; the
@@ -98,7 +98,7 @@ export function checkHostCapabilities(
   }
   if (unmet.length > 0) {
     throw new Error(
-      `checkHostCapabilities: '${hostName}' cannot satisfy required capabilities (ADR-0008): ${unmet.join("; ")}`,
+      `checkHostCapabilities: '${hostName}' cannot satisfy required capabilities: ${unmet.join("; ")}`,
     );
   }
 }

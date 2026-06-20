@@ -1,4 +1,4 @@
-// P2-8 M2 — verifyReplay()/verifySession(): offline, compliance-grade verification.
+// verifyReplay()/verifySession(): offline, compliance-grade verification.
 // Three SOUND guarantees: (1) structural integrity (dense seq, self-seq vs row
 // position, ≤1 result/effectId, result→prior-intent join when complete); (2)
 // in-process replay-determinism (fold the retained records twice → canonicalEqual —

@@ -1,4 +1,4 @@
-// THE §11 HEADLINE (roadmap v0.2 §11, plan T11.3): a Slack approval that PARKS, then —
+// THE §11 HEADLINE: a Slack approval that PARKS, then —
 // after the engine/channel/inbox are discarded and the store reopened (a simulated
 // redeploy) — RESUMES the SAME session byte-identically when the Approve arrives. The
 // durable session lives in the StateStore journal; the approval context rides the

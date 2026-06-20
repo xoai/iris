@@ -20,7 +20,7 @@ export function refBase(ref: string): string {
 /**
  * A resolver over an in-memory `refBase → ToolContract` map (install-free). Both
  * `mcp://r/x@^2` and `mcp://r/x@^3` resolve via the shared base `mcp://r/x`,
- * modelling "pin the contract, float the implementation" (ADR-0004).
+ * modelling "pin the contract, float the implementation".
  */
 export function makeLocalResolver(
   map: Record<string, ToolContract>,

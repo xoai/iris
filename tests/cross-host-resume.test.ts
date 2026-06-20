@@ -47,7 +47,7 @@ const program = harnessProgram(INPUT, { invariants: bundle.invariants });
 // Build a REAL M4 image and use its imageDigest as the governing defDigest on BOTH
 // hosts and the control — that is what makes it "the same image" (no checked-in
 // digest constant). The image's tool list is irrelevant to the runtime gate above;
-// it is used here only for its content-addressed digest (ADR-0002/0004 pin).
+// it is used here only for its content-addressed digest pin.
 async function buildDemoImageDigest(): Promise<string> {
   const rm: ToolContract = {
     name: "rm", description: "remove", inputSchema: { type: "object" },
@@ -174,7 +174,7 @@ test("T3 DoD: same M4 image — start+park on host A (sqlite), migrate A→B, re
     "cross-host resumed state must byte-equal the single-host control state",
   );
 
-  // the pin held across the move (ADR-0002/0004): the governing digest is unchanged
+  // the pin held across the move: the governing digest is unchanged
   assert.equal(await governingDigest(hostB.store, sid), digest, "host B is pinned to the same image");
   assert.equal(await governingDigest(ctlStore, "ctl"), digest, "the control is pinned to the same image");
 });

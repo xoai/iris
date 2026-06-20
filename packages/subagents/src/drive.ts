@@ -1,4 +1,4 @@
-// driveToCompletion (P2-9, spec §4.2): run a CHILD agent session to a terminal state by
+// driveToCompletion: run a CHILD agent session to a terminal state by
 // repeatedly running turns on the child's host. A child that PARKS (HITL/timer/user/signal)
 // is reported as parked — NOT force-driven — because parking is a legitimate durable state
 // the child chose; the caller decides what to do with the returned sessionId. Host-side

@@ -1,4 +1,4 @@
-// T7 — tool-call recovery / idempotency (ADR-0003), proving the §3.5 derivation
+// T7 — tool-call recovery / idempotency, proving the derivation
 // end-to-end with NO engine change. The kernel sets retrySafe EXPLICITLY and
 // attaches idempotencyKey=callId ONLY when retry-safe; the engine's existing
 // danglingIntent recovery re-performs a dangling tool_call once, warns on a

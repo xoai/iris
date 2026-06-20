@@ -1,4 +1,4 @@
-// inspectSession (ADR-0009 inspect surface) — render a recorded session's
+// inspectSession (inspect surface) — render a recorded session's
 // decision/effect/marker timeline from a StateStore, keyed by the stable
 // sessionId. READ-ONLY: it reads snapshot + journal, decodes, and summarizes; it
 // never writes and nothing it derives re-enters replayed state (determinism). The

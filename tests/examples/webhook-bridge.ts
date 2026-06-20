@@ -1,4 +1,4 @@
-// Reference protocol BRIDGE (roadmap v0.2 §12). The whole point of a bridge: a
+// Reference protocol BRIDGE. The whole point of a bridge: a
 // platform (Discord, Telegram, a generic webhook) is reached by an EXTERNAL process
 // that speaks the existing Iris REST channel protocol — NOT a first-party Iris package.
 // This file deliberately imports NOTHING from @irisrun/*: a bridge needs only the wire

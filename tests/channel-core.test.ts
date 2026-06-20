@@ -1,4 +1,4 @@
-// makeChannelSession unit pins (roadmap v0.2 §10, plan T10.1). runTurn is injected
+// makeChannelSession unit pins. runTurn is injected
 // directly here, so the token-rotation rule and the refusal taxonomy are tested in
 // isolation — including the §10 correction: a non-committed outcome (contended/aborted)
 // KEEPS the prior token, a committed outcome (finished/parked) rotates it.

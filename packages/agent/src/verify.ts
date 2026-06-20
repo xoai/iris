@@ -1,4 +1,4 @@
-// Integrity verification (spec §3.6, ADR-0006 §4) — throws LOUDLY on any failure
+// Integrity verification — throws LOUDLY on any failure
 // (no silent corruption, [[lrn-no-silent-policy-widening]]). Checks, in order:
 // (1) every embedded content hash matches its bytes; (2) every tool contractDigest
 // is still resolvable + unchanged; (3) the recomputed imageDigest equals the
@@ -33,7 +33,7 @@ export async function verifyImage(
     }
   }
   // 2. every tool contract is still resolvable (BY ITS STABLE ref — not location,
-  //    which floats per ADR-0004) and its digest unchanged
+  //    which floats) and its digest unchanged
   for (const tool of image.lock.tools) {
     const contract = await opts.resolver.resolve(tool.ref);
     if (contract === null) {
@@ -57,7 +57,7 @@ export async function verifyImage(
     );
   }
   // 4. (M6, NET-NEW) re-resolve the pinned tactic bundle by its STABLE id/ref (NOT
-  //    a floating location, ADR-0004), recompute bundleDigest, and assert it equals
+  //    a floating location), recompute bundleDigest, and assert it equals
   //    the pinned digest. This catches a CONTENT-tampered bundle whose pinned lock
   //    digest is left unchanged — invisible to the imageDigest check above. Skipped
   //    entirely when no resolveBundle is injected (M4 back-compat).

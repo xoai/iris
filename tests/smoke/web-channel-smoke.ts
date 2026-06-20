@@ -5,7 +5,7 @@
 // Proves the `iris serve --web` web channel end-to-end at the PROTOCOL level (what
 // the browser shell does): GET / serves the chat page, then a start + a resume with
 // the stored handle continues the SAME session WHILE THE SERVER IS UP — the
-// tab-close/reload durability (P0 item 4 / brief A4). The actual browser render
+// tab-close/reload durability. The actual browser render
 // (open http://127.0.0.1:8799 in a browser, chat, reload, watch it resume) is the
 // human step this smoke stands in for. NOTE: a serve RESTART does NOT resume via the
 // REST token (the channel's in-memory tokens Map is empty on a fresh channel) — that

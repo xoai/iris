@@ -1,4 +1,4 @@
-// Phase A — @irisrun/client-sdk streaming (SSE). A streamed turn surfaces ordered
+// @irisrun/client-sdk streaming (SSE). A streamed turn surfaces ordered
 // `delta` text whose concatenation equals the final reply (RECONCILE invariant) and
 // the committed `record` timeline; a turn that throws AFTER the stream opens emits a
 // mid-stream `error` event that the SDK turns into onError() AND a rejected promise

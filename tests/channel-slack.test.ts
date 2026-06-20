@@ -1,4 +1,4 @@
-// channel-slack unit + port conformance (roadmap v0.2 §11, plan T11.1/T11.2).
+// channel-slack unit + port conformance.
 // Signature verification (constant-time, replay-windowed), the url_verification
 // handshake, unverified-body refusal, slash→approval-buttons, and Approve→resume —
 // all with an injected fetch/clock (no real Slack). The Slack channel's session is the

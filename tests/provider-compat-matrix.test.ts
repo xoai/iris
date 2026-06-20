@@ -4,7 +4,7 @@
 // baseUrl and an injected fetch returning that protocol's representative response; the
 // result MUST canonicalize to the stable ModelCallResult and the POST MUST go to the
 // entry's baseUrl verbatim. This is the same canonicalization proven in
-// tests/provider-canonicalization.test.ts (P2 §7), now pinned per endpoint so the
+// tests/provider-canonicalization.test.ts, now pinned per endpoint so the
 // matrix cannot rot into a false promise. No live keys — crafted bodies via fetch.
 import { test } from "node:test";
 import assert from "node:assert/strict";

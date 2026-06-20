@@ -1,4 +1,4 @@
-// verifyReplay/verifySession (roadmap P2-8): offline, compliance-grade verification
+// verifyReplay/verifySession: offline, compliance-grade verification
 // of a recorded session. THREE SOUND GUARANTEES (and no more — honesty matters):
 //  1. structural integrity (reducer-free, the strongest claim): dense monotonic seq;
 //     each record's self-reported seq matches its store row position (corruption/

@@ -1,4 +1,4 @@
-// makeChannelSession (roadmap v0.2 §10) — the transport-agnostic driver behind every
+// makeChannelSession — the transport-agnostic driver behind every
 // Iris channel. It owns the two-identifier protocol in ONE place: mint the sessionId,
 // own + rotate a single-use continuationToken, an atomic per-session in-flight claim,
 // and the loud refusal taxonomy. channel-rest, channel-mcp, and channel-slack all

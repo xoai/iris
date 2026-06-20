@@ -1,5 +1,4 @@
-// channel-mcp runs the shared channel-port conformance suite (roadmap v0.2 §10, plan
-// T10.4) — "two channels pass the same port conformance suite", MCP half. Drives the
+// channel-mcp runs the shared channel-port conformance suite — "two channels pass the same port conformance suite", MCP half. Drives the
 // REAL handle() JSON-RPC surface; a makeFlippableStore lets the suite force
 // contended/aborted. Until §10's refactor, MCP rotates on contended/aborted — those
 // two assertions are the load-bearing red→green proof of the unified rule.

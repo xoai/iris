@@ -1,4 +1,4 @@
-// Reference platform bridges (roadmap v0.2 §12 extension): Discord, Telegram, Teams as
+// Reference platform bridges: Discord, Telegram, Teams as
 // thin adapters over the generic REST-protocol bridge — proving "additional platforms
 // need no core changes" three times, with REAL per-platform auth (Ed25519 / secret
 // token / Outgoing-Webhook HMAC) and end-to-end turns against an in-process REST channel.

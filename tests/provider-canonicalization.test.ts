@@ -1,5 +1,5 @@
-// Provider canonicalization under DIVERGENT "compatible" responses (roadmap
-// v0.2 P2 #7; the §9 provider-compat-matrix foundation). The recorded model_call
+// Provider canonicalization under DIVERGENT "compatible" responses —
+// the provider-compat-matrix foundation. The recorded model_call
 // effect must replay byte-identically, so every adapter must canonicalize the
 // shapes that "OpenAI-compatible" / Anthropic-compatible endpoints quietly differ
 // on — missing finish_reason/stop_reason, missing usage, empty content/choices,

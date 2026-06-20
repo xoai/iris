@@ -1,4 +1,4 @@
-// Discord reference bridge (roadmap v0.2 §12). A thin adapter over the generic
+// Discord reference bridge. A thin adapter over the generic
 // REST-protocol bridge — Discord Interactions in, an interaction response out. Auth is
 // Ed25519 over `timestamp + rawBody` against the app's public key (Discord's required
 // scheme). Zero @irisrun imports — only node:crypto + the shared harness.

@@ -1,4 +1,4 @@
-// Chaos & concurrency helpers (roadmap v0.2 P2 #6). Exercises the durability
+// Chaos & concurrency helpers. Exercises the durability
 // spine (CAS, fencing, dense journal, snapshot+tail recovery, migration) against
 // the REAL persistence backends — @irisrun/store-fs (a real temp dir on disk) and
 // @irisrun/store-sqlite (a real temp .sqlite file) — which are production code,

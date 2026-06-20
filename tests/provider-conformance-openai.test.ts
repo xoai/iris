@@ -1,4 +1,4 @@
-// OpenAI fixture for the shared model-provider conformance suite (P1-6 done-when:
+// OpenAI fixture for the shared model-provider conformance suite (done-when:
 // two providers pass the SAME tests behind the model port). See the Anthropic twin
 // in provider-conformance-anthropic.test.ts.
 import assert from "node:assert/strict";

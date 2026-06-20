@@ -1,5 +1,5 @@
-// Shared building blocks for model_call record-replay FIDELITY tests (roadmap
-// v0.2 P2 #7). Used keyless (model-call-replay-fidelity.test.ts) and by the
+// Shared building blocks for model_call record-replay FIDELITY tests.
+// Used keyless (model-call-replay-fidelity.test.ts) and by the
 // env-gated live tier (provider-live-conformance.test.ts).
 import type {
   Program,

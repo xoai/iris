@@ -1,4 +1,4 @@
-// P2-9 (C6, A-3, A-4) — the schedule PUMP drives a recurring job end-to-end over durable
+// The schedule PUMP drives a recurring job end-to-end over durable
 // timers. A-3: N cycles fire, the session parks between cycles, the whole session replays
 // identically. A-4: an aborted resume does NOT consume its wakeup (at-least-once) — it
 // re-fires on the next tick. Plus the T3.2 compile-time guard that concrete schedulers

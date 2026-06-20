@@ -1,4 +1,4 @@
-// C4 (roadmap P2-9) — `iris schedule`: a recurring, durably-replayable job reachable
+// C4 — `iris schedule`: a recurring, durably-replayable job reachable
 // from the CLI. cmdSchedule drives scheduleProgram + makeScheduleRunner over an injected
 // host (the demo.ts shape, but as the testable command). Proves: the job runs exactly
 // `maxRuns` cycles and completes; a second run over a FRESH store replays byte-identically

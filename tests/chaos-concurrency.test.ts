@@ -1,4 +1,4 @@
-// Chaos & concurrency suite (roadmap v0.2 P2 #6): stress the durability spine
+// Chaos & concurrency suite: stress the durability spine
 // under CONTENTION, a simulated PARTITION (windowed append faults), a simulated
 // REDEPLOY (discard the engine + store handle, reopen over the same on-disk
 // data), and CROSS-HOST resume UNDER concurrency — all against the REAL

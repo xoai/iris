@@ -1,4 +1,4 @@
-// Microsoft Teams reference bridge (roadmap v0.2 §12), Outgoing-Webhook model. A thin
+// Microsoft Teams reference bridge, Outgoing-Webhook model. A thin
 // adapter over the generic REST-protocol bridge — a Bot-Framework Activity in, a message
 // Activity out. Auth is HMAC-SHA256 over the raw body with a base64 shared secret, sent
 // as `Authorization: HMAC <base64sig>` (Teams' Outgoing-Webhook signing). Zero @irisrun

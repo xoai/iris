@@ -1,5 +1,5 @@
-// @irisrun/channel-slack — a first-party Slack channel for DURABLE HITL (roadmap
-// v0.2 §11). Built on the channel port, it showcases the moat where a buyer feels it:
+// @irisrun/channel-slack — a first-party Slack channel for DURABLE HITL. Built on
+// the channel port, it showcases the moat where a buyer feels it:
 // a Slack approval that pauses for hours, survives a redeploy, and resumes the SAME
 // session byte-identically. Zero runtime deps (node:crypto signature verify + fetch).
 export const PACKAGE = "@irisrun/channel-slack";

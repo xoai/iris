@@ -1,4 +1,4 @@
-// makeRestChannel (ADR-0009, Spec 05 B3): an in-process node:http server speaking
+// makeRestChannel: an in-process node:http server speaking
 // the TWO-IDENTIFIER protocol. The channel MINTS the sessionId and OWNS/ISSUES the
 // continuationToken — the client presents it on the next call. Every turn ROTATES
 // the token; a missing/stale/malformed token is refused with a LOUD 4xx, never a
@@ -52,7 +52,7 @@ export interface RestChannelOptions<S extends Json> {
   ) => TurnInputs<S> | Promise<TurnInputs<S>>;
   mintSessionId?: () => string; // default: a random UUID
   mintToken?: () => string; // default: a random UUID (the channel owns this)
-  // Optional PRE-POST GET hook (the web channel mounts here, ADR-0009 / spec §2.1).
+  // Optional PRE-POST GET hook (the web channel mounts here).
   // It is consulted BEFORE the POST-only guard; it owns only GET asset routes and
   // MUST return false for anything it does not serve, so the `/v1/*` POST routes and
   // the WebSocket upgrade path (a separate `upgrade` listener) are untouched. When
@@ -343,7 +343,7 @@ export function makeRestChannel<S extends Json>(opts: RestChannelOptions<S>): Re
     });
   });
 
-  // WebSocket upgrade (ADR-0008 capability gate): a host that does not advertise
+  // WebSocket upgrade (capability gate): a host that does not advertise
   // `websockets` is refused LOUDLY (426, no 101) — never silently downgraded.
   server.on("upgrade", (req, socket, head) => {
     if (opts.adapter.capabilities.websockets !== true) {

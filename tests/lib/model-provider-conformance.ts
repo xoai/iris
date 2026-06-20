@@ -1,4 +1,4 @@
-// Shared model-provider CONFORMANCE suite — the literal realization of the P1-6
+// Shared model-provider CONFORMANCE suite — the literal realization of the
 // "done when": "two providers pass the SAME conformance tests behind the model
 // port." Both @irisrun/provider-anthropic and @irisrun/provider-openai run this exact set
 // of behavioral assertions; only provider-specific surface (URL, auth header, body
