@@ -74,6 +74,13 @@ export interface HarnessConfig {
   // tool_call effect's retry posture (the ToolContract's own `retrySafe` is
   // descriptive metadata only). Absent name → retrySafe:false (the safe default).
   tools?: Record<string, { retrySafe: boolean }>;
+  // Subagent delegation (P2-9). Tool NAMES in this set are dispatched as a `subagent`
+  // effect (a child agent run) at the tool_exec step, instead of a `tool_call`, reusing
+  // the gate/cursor/error machinery. Zero-value-off: absent/empty → every tool_exec still
+  // emits `tool_call`, so the kernel is byte-identical to before (the gateAction approval
+  // still runs upstream, so a delegate call can be allowed/denied/HITL-gated like any tool).
+  // The host registers a `subagent` performer (see @iris/subagents).
+  subagentTools?: string[];
 }
 
 function view(state: HarnessState): ReadonlyHarnessView {
@@ -413,6 +420,23 @@ export function harnessProgram(
         case "tool_exec": {
           const call = effectiveToolCall(state);
           if (call === null) throw new Error("harness: tool_exec with no current tool call");
+          // P2-9: a tool NAME listed in `subagentTools` delegates to a child agent — emit
+          // a `subagent` effect instead of `tool_call`. Zero-value-off: with the set
+          // absent/empty the `includes` is false and the emitted action is byte-identical
+          // to the tool_call path below. Retry-safe with the journaled callId as the key:
+          // the child sessionId is deterministic + durable, so a recovery re-perform
+          // replays the same child and returns the same output (idempotent). The result
+          // folds via the existing tool_exec path (foldToolResult on success; a {ok:false}
+          // routes to the handled tool_error phase — no journal-poison).
+          if ((config.subagentTools ?? []).includes(call.name)) {
+            return {
+              type: "effect",
+              effectKind: "subagent",
+              request: call,
+              retrySafe: true,
+              idempotencyKey: call.callId,
+            };
+          }
           // Set retrySafe EXPLICITLY (absent config → false). The engine derives
           // `retrySafe ?? (idempotencyKey !== undefined)` — leaving retrySafe
           // undefined while attaching a key would flip a non-idempotent tool to

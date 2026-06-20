@@ -334,6 +334,7 @@ A monorepo (npm workspaces). The **pure core** imports nothing host/transport/No
 | `@iris/bundle-coding` | The first domain tactic bundle — coding-specialized seam tactics. |
 | `@iris/inspect` · `@iris/observe` · `@iris/evals` | Read-only journal derivations — timeline viewer, OTel spans, reproducible-eval arbiter. |
 | `@iris/provider-anthropic` | The `model_call` performer — a direct Anthropic Messages adapter via built-in `fetch`. |
+| `@iris/subagents` · `@iris/schedule` | Breadth on the journaled substrate — an agent **delegates** to a child agent (its own durable session; the child's output is journaled in the parent, so the parent replays without re-running it), and a **recurring job** parks on durable timers between runs (cadence in the journal), driven by a host-side pump that resumes due sessions at-least-once. Both durably replayable; a schedule's per-tick job can itself be a delegation. |
 | `@iris/demo` | The no-model counter machine that parks and resumes across a restart. |
 
 ## Tested & proven
