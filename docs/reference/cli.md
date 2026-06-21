@@ -54,11 +54,12 @@ Drive an image: one turn, a server, or an interactive REPL.
 the provider selected from the image's model-id prefix).
 
 ```
-usage: iris run <layoutdir> --session <id> [--db <path>] [--tools <dir>] [--subagents <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]
+usage: iris run <layoutdir> --session <id> [--db <path>] [--store <name|module>] [--tools <dir>] [--subagents <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]
 ```
 
 - `--session <id>` — the durable session id (default `default`).
-- `--db <path>` — SQLite store path (default `:memory:`).
+- `--db <path>` — store path / URL (default `:memory:`); for a third-party store it's the connection string (e.g. a `postgres://…` DSN).
+- `--store <name|module>` — the host store: a built-in (`sqlite` default · `fs` · `memory`) or any module exporting `openStore({ url })` (e.g. `@irisrun/store-postgres`). On `run` / `serve` / `chat` / `audit` / `schedule`. See [adding a store](../contributing/adding-a-store.md). (`iris journal` separately overloads `--store` as a db-path alias.)
 - `--tools <dir>` — bundled-tools dir (default: the `tools/` sibling of the layout).
 - `--subagents <file>` — subagent map (default `subagents.json` beside the layout).
 - `--env-file <file>` / `--env KEY=VAL` — repeatable; supply the tool runtime env.
@@ -69,7 +70,7 @@ usage: iris run <layoutdir> --session <id> [--db <path>] [--tools <dir>] [--suba
 WebSocket). Defaults to a no-key echo model so it is demoable immediately.
 
 ```
-usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--model auto|anthropic|openai|echo] [--web] [--policy <file.json>] [--subagents <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]
+usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--store <name|module>] [--model auto|anthropic|openai|echo] [--web] [--policy <file.json>] [--subagents <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]
 ```
 
 - `--port N` (default `8787`), `--host H` (default `127.0.0.1`).
@@ -84,7 +85,7 @@ usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--model auto|an
 y/n approval.
 
 ```
-usage: iris chat <layoutdir> --session <id> [--db <path>] [--tools <dir>] [--subagents <file>] [--policy <file.json>] [--as <id>] [--role <r>] [--env-file <file>] [--env KEY=VAL] [--secret-files] [--fake]
+usage: iris chat <layoutdir> --session <id> [--db <path>] [--store <name|module>] [--tools <dir>] [--subagents <file>] [--policy <file.json>] [--as <id>] [--role <r>] [--env-file <file>] [--env KEY=VAL] [--secret-files] [--fake]
 ```
 
 - `--session <id>` (default `default`), `--db <path>` (default `:memory:` — warns it won't persist).
@@ -136,7 +137,7 @@ providers. The compliance side of these is covered in
 by a prior `run`/`serve`/`chat`.
 
 ```
-usage: iris audit <session> --db <path> [--interactive] [--json]
+usage: iris audit <session> --db <path> [--store <name|module>] [--interactive] [--json]
 ```
 
 - `--db <path>` — the store from a previous session (default `:memory:`, which warns it has no prior session).
@@ -156,7 +157,7 @@ usage: iris eval <suite.mjs> [--reproduce <N>] [--json]
 image; prints one JSON line per committed cycle.
 
 ```
-usage: iris schedule <layoutdir> --interval <ticks> --max-runs <n> [--ticks <n>] [--db <path>] [--session <id>]
+usage: iris schedule <layoutdir> --interval <ticks> --max-runs <n> [--ticks <n>] [--db <path>] [--store <name|module>] [--session <id>]
 ```
 
 - `--interval <ticks>` — ticks between cycles (default `10`).
