@@ -24,6 +24,7 @@ import { cmdSchedule } from "./schedule-cmd.ts";
 import { loadSubagents } from "./subagents-cfg.ts";
 import { resolveStore } from "./store.ts";
 import { loadMcpServers } from "./mcp-cfg.ts";
+import { resolveChildModel } from "./child-model.ts";
 import { createApprovalInbox } from "@irisrun/auth";
 import type { ApprovalPolicy, Principal } from "@irisrun/auth";
 import { loadBundledTools } from "./tools.ts";
@@ -180,11 +181,17 @@ async function buildSubagents(
     // tool `exec` in tools.ts, which becomes an auto-spawned subprocess and is restricted.
     const childLayout = isAbsolute(entry.image) ? entry.image : join(baseDir, entry.image);
     const image = await readOciLayout(childLayout);
-    const providerName = providerNameForModel(image.lock.model.id);
-    const envKey = providerDescriptor(providerName).envKey;
-    const hasKey = typeof process.env[envKey] === "string" && process.env[envKey] !== "";
-    const model = hasKey
-      ? (await loadModelProvider(providerName)).buffered({ model: stripModelPrefix(image.lock.model.id) })
+    // Per-child model/endpoint/key: the entry MAY override the image's model id, the
+    // provider endpoint, and the key env var (so one run mixes providers — e.g. an
+    // Anthropic PM delegating to an OpenAI-protocol engineer on a third-party base_url).
+    // No overrides → byte-identical to the prior single-provider selection.
+    const childModel = resolveChildModel(entry, image.lock.model.id, process.env);
+    const model = childModel.hasKey
+      ? (await loadModelProvider(childModel.providerName)).buffered({
+          model: childModel.model,
+          ...(childModel.baseUrl !== undefined ? { baseUrl: childModel.baseUrl } : {}),
+          ...(childModel.apiKey !== undefined ? { apiKey: childModel.apiKey } : {}),
+        })
       : makeChatFakeModel(); // keyless: a delegation still runs, echoing the task
     const bundled = await loadBundledTools(join(dirname(childLayout), "tools"));
     // INTENTIONAL non-goal (initiative 20260620-agentfile-env-secrets): a SUBAGENT

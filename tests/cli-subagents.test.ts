@@ -62,6 +62,39 @@ test("loadSubagents: malformed config fails LOUDLY", async () => {
   await assert.rejects(() => loadSubagents(dupName), /duplicate/i);
 });
 
+test("loadSubagents: optional per-child model/baseUrl/apiKeyEnv parse; bad ones are LOUD", async () => {
+  const dir = await tmp("iris-sub-m4-");
+  const write = async (name: string, body: string): Promise<string> => {
+    const p = join(dir, name);
+    await writeFile(p, body);
+    return p;
+  };
+
+  // A heterogeneous team: a plain child + an OpenAI-protocol child on a third-party endpoint.
+  const ok = await write("ok.json", JSON.stringify([
+    { name: "pm", image: "./pm" },
+    { name: "engineer", image: "./eng", model: "openai/kimi-k2", baseUrl: "https://api.moonshot.ai/v1", apiKeyEnv: "MOONSHOT_API_KEY" },
+  ]));
+  const cfg = await loadSubagents(ok);
+  assert.deepEqual(cfg.names, ["pm", "engineer"]);
+  assert.deepEqual(cfg.entries[0], { name: "pm", image: "./pm" }, "no overrides → just {name, image}");
+  assert.deepEqual(cfg.entries[1], {
+    name: "engineer",
+    image: "./eng",
+    model: "openai/kimi-k2",
+    baseUrl: "https://api.moonshot.ai/v1",
+    apiKeyEnv: "MOONSHOT_API_KEY",
+  });
+
+  // Each optional field, when present, must be a non-empty string.
+  const badModel = await write("bm.json", JSON.stringify([{ name: "x", image: "./x", model: 7 }]));
+  const emptyBase = await write("eb.json", JSON.stringify([{ name: "x", image: "./x", baseUrl: "" }]));
+  const badKeyEnv = await write("bk.json", JSON.stringify([{ name: "x", image: "./x", apiKeyEnv: false }]));
+  await assert.rejects(() => loadSubagents(badModel), /model/i);
+  await assert.rejects(() => loadSubagents(emptyBase), /baseUrl/i);
+  await assert.rejects(() => loadSubagents(badKeyEnv), /apiKeyEnv/i);
+});
+
 test("byte-identity: subagentPerformers(undefined,…) adds no subagent key", () => {
   assert.deepEqual(subagentPerformers(undefined, "s"), {});
   assert.equal(Object.keys(subagentPerformers(undefined, "s")).length, 0);
