@@ -184,6 +184,10 @@ adds no `subagent` key, and a `delegate` call with no config is just an ordinary
 
 ---
 
+For a production recipe that puts the per-child models to work — a PM / Engineer / QC
+team on three providers, with Postgres durability, an MCP memory, and a Telegram
+bridge — see the [coding-team guide](./coding-team.md).
+
 Delegation is durable because the journal is. To see how that journal becomes a
 replayable, auditable record, read [audit & reproducible evals](../audit-and-evals.md);
 for the loop the child and parent both run on, [the harness](../harness.md).

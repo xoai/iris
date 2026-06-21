@@ -125,6 +125,8 @@ whole team survives a restart, and the approval resumes the exact session.
 ## Going deeper
 
 - [Subagents](./subagents.md) — the delegation substrate and its guarantees.
+- [Coding team](./coding-team.md) — the production-grade version: each teammate on a
+  different model/endpoint, with Postgres durability, an MCP memory, and a Telegram bridge.
 - [Autoresearch loop](./autoresearch-loop.md) — when the orchestrator delegates the
   *same* specialist repeatedly to refine an answer.
 - [Automated workflow](./automated-workflow.md) — run a team unattended, on a

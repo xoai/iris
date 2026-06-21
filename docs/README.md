@@ -76,6 +76,9 @@ End-to-end recipes that compose the guides above into something you'd actually s
 - [Multi-agent teams](./guides/multi-agent-team.md) — an **orchestrator and its
   specialists**: build a marketing team where a coordinator delegates to researcher /
   copywriter / editor child agents, each its own durable session.
+- [Coding team](./guides/coding-team.md) — a full-stack **PM / Engineer / QC** team on
+  three different models (Opus plans · Kimi codes · gpt reviews), sharing **Postgres**
+  durability and an **mem0 MCP memory**, reachable from **Telegram**.
 - [Autoresearch loop](./guides/autoresearch-loop.md) — an agent that **iterates,
   delegates, and converges**, in-session or on a schedule — plus how to set up an
   `iris eval` suite to regression-test the loop.
