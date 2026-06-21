@@ -1,9 +1,9 @@
 // Telegram reference bridge. A thin adapter over the generic
 // REST-protocol bridge — a Telegram Update in, a webhook-response method out. Auth is
 // the `X-Telegram-Bot-Api-Secret-Token` header (set when you call setWebhook with
-// secret_token), compared constant-time. Zero @irisrun imports.
+// secret_token), compared constant-time. Imports only @irisrun/bridge + node:crypto.
 import { timingSafeEqual } from "node:crypto";
-import { makePlatformBridge, type PlatformAdapter, type PlatformBridge } from "../platform-bridge.ts";
+import { makePlatformBridge, type PlatformAdapter, type PlatformBridge } from "@irisrun/bridge";
 
 // Telegram lets the webhook RESPONSE carry a method call — the simplest reply path.
 type TelegramReply = { method: "sendMessage"; chat_id: string; text: string };

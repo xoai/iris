@@ -1,13 +1,13 @@
 // Reference bridge DEMO — `npm run demo:bridge`. Stands up an
 // in-process Iris REST channel and drives a two-turn conversation through the
-// fetch-only webhook bridge (webhook-bridge.ts), showing that a platform bridge needs
+// @irisrun/bridge SDK (makeBridgeSession), showing that a platform bridge needs
 // only the wire protocol and ZERO core changes. The bridge is the external process;
 // this harness only plays the role of "Iris is already running over here".
 import { MemoryStateStore, MemoryScheduler } from "@irisrun/store-memory";
 import { makeRestChannel, type TurnInputs } from "@irisrun/channel-rest";
 import type { Program, Json, JournalRecord } from "@irisrun/core";
 import type { HostAdapter } from "@irisrun/host";
-import { makeWebhookBridge } from "./webhook-bridge.ts";
+import { makeBridgeSession } from "@irisrun/bridge";
 
 type ChState = { turns: number };
 
@@ -46,7 +46,7 @@ export async function runBridgeDemo(log: (m: string) => void = console.log): Pro
   const channel = makeBridgeDemoChannel();
   const baseUrl = await channel.listen();
   try {
-    const bridge = makeWebhookBridge({ baseUrl });
+    const bridge = makeBridgeSession({ baseUrl });
     log(`bridge demo: Iris REST channel on ${baseUrl}; driving a 2-turn conversation through the bridge`);
     const r1 = await bridge.onMessage({ conversationId: "discord:guild/chan/thread-7", text: "hello" });
     log(`  turn 1 → status=${r1.status} output=${JSON.stringify(r1.output)}`);

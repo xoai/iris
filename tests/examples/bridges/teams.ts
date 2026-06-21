@@ -1,11 +1,11 @@
 // Microsoft Teams reference bridge, Outgoing-Webhook model. A thin
 // adapter over the generic REST-protocol bridge — a Bot-Framework Activity in, a message
 // Activity out. Auth is HMAC-SHA256 over the raw body with a base64 shared secret, sent
-// as `Authorization: HMAC <base64sig>` (Teams' Outgoing-Webhook signing). Zero @irisrun
-// imports. (Full Bot-Framework JWT auth is the heavier production path — documented, not
-// implemented in this reference.)
+// as `Authorization: HMAC <base64sig>` (Teams' Outgoing-Webhook signing). Imports only
+// @irisrun/bridge + node:crypto. (Full Bot-Framework JWT auth is the heavier production
+// path — documented, not implemented in this reference.)
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { makePlatformBridge, type PlatformAdapter, type PlatformBridge } from "../platform-bridge.ts";
+import { makePlatformBridge, type PlatformAdapter, type PlatformBridge } from "@irisrun/bridge";
 
 type TeamsReply = { type: "message"; text: string };
 

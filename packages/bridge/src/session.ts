@@ -1,9 +1,8 @@
-// Reference protocol BRIDGE. The whole point of a bridge: a
-// platform (Discord, Telegram, a generic webhook) is reached by an EXTERNAL process
-// that speaks the existing Iris REST channel protocol — NOT a first-party Iris package.
-// This file deliberately imports NOTHING from @irisrun/*: a bridge needs only the wire
-// protocol (HTTP + the rotated continuationToken), so it can be written in any
-// language. tests/bridge-reference.test.ts asserts this file has zero @irisrun imports.
+// The bridge session: maps a platform conversation to a durable Iris session over
+// the REST channel protocol, and ADOPTS the rotated continuationToken every turn —
+// the channel's single-use discipline, mirrored from outside. Speaks only `fetch` +
+// the wire protocol, so the same shape ports to any language and needs NO Iris core
+// changes for a new platform.
 
 /** A platform-shaped inbound message (what a Discord/Telegram/webhook adapter yields). */
 export interface BridgeInbound {
@@ -18,7 +17,7 @@ export interface BridgeReply {
   output: unknown;
 }
 
-export interface WebhookBridge {
+export interface BridgeSession {
   onMessage(inbound: BridgeInbound): Promise<BridgeReply>;
 }
 
@@ -35,14 +34,12 @@ interface TurnResponse {
 }
 
 /**
- * A generic-webhook bridge: maps `{conversationId, text}` ↔ the Iris REST channel.
- * It holds a `conversationId → SessionHandle` map and ADOPTS the rotated
- * continuationToken every turn — exactly the channel's single-use discipline, mirrored
- * from outside. Uses only `fetch` + the wire protocol; zero Iris dependencies, so the
- * same shape ports to any language. Additional platforms need NO core changes — only a
- * new adapter that produces `BridgeInbound` and consumes `BridgeReply`.
+ * A bridge session over the Iris REST channel: holds a `conversationId →
+ * SessionHandle` map and adopts the rotated continuationToken every turn. Additional
+ * platforms need only an adapter that produces `BridgeInbound` and consumes
+ * `BridgeReply` (see `makePlatformBridge`).
  */
-export function makeWebhookBridge(opts: { baseUrl: string; fetchImpl?: typeof fetch }): WebhookBridge {
+export function makeBridgeSession(opts: { baseUrl: string; fetchImpl?: typeof fetch }): BridgeSession {
   const doFetch = opts.fetchImpl ?? fetch;
   const handles = new Map<string, SessionHandle>();
 

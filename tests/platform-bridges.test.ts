@@ -1,17 +1,19 @@
-// Reference platform bridges: Discord, Telegram, Teams as
-// thin adapters over the generic REST-protocol bridge — proving "additional platforms
-// need no core changes" three times, with REAL per-platform auth (Ed25519 / secret
-// token / Outgoing-Webhook HMAC) and end-to-end turns against an in-process REST channel.
+// Reference platform bridges: Discord, Telegram, Teams as thin adapters over the
+// @irisrun/bridge SDK — proving "additional platforms need no core changes" three
+// times, with REAL per-platform auth (Ed25519 / secret token / Outgoing-Webhook HMAC),
+// end-to-end turns against an in-process REST channel, AND each adapter run through the
+// SDK's adapter conformance (verify accepts/rejects, parse maps, verify-first).
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { generateKeyPairSync, sign as edSign, createHmac } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
+import { runAdapterConformance, register } from "@irisrun/bridge";
 import { makeBridgeDemoChannel } from "./examples/bridge-reference.ts";
-import { makeDiscordBridge } from "./examples/bridges/discord.ts";
-import { makeTelegramBridge } from "./examples/bridges/telegram.ts";
-import { makeTeamsBridge } from "./examples/bridges/teams.ts";
+import { makeDiscordBridge, discordAdapter } from "./examples/bridges/discord.ts";
+import { makeTelegramBridge, telegramAdapter } from "./examples/bridges/telegram.ts";
+import { makeTeamsBridge, teamsAdapter } from "./examples/bridges/teams.ts";
 
 // ── Discord (Ed25519) ────────────────────────────────────────────────────────
 
@@ -24,6 +26,60 @@ function discordHeaders(privateKey: ReturnType<typeof discordKeys>["privateKey"]
   const sig = edSign(null, Buffer.from(ts + rawBody, "utf8"), privateKey).toString("hex");
   return { "x-signature-ed25519": sig, "x-signature-timestamp": ts };
 }
+
+// ── Telegram (secret token) ──────────────────────────────────────────────────
+
+const TG_SECRET = "telegram-webhook-secret";
+function tgHeaders(secret = TG_SECRET) {
+  return { "x-telegram-bot-api-secret-token": secret };
+}
+
+// ── Microsoft Teams (Outgoing-Webhook HMAC) ──────────────────────────────────
+
+const TEAMS_SECRET_B64 = Buffer.from("teams-shared-secret-bytes").toString("base64");
+function teamsAuth(rawBody: string, secretB64 = TEAMS_SECRET_B64) {
+  const sig = createHmac("sha256", Buffer.from(secretB64, "base64")).update(Buffer.from(rawBody, "utf8")).digest("base64");
+  return { authorization: `HMAC ${sig}` };
+}
+
+// ── Adapter conformance: verify accepts/rejects, parse maps, verify-first ─────
+
+{
+  const { publicKeyHex, privateKey } = discordKeys();
+  const body = JSON.stringify({ type: 2, channel_id: "chan-7", data: { name: "ask", options: [{ value: "hi" }] } });
+  register(
+    runAdapterConformance(discordAdapter({ publicKeyHex }), {
+      valid: { headers: discordHeaders(privateKey, body), rawBody: body },
+      tampered: { headers: { "x-signature-ed25519": "00".repeat(64), "x-signature-timestamp": "1700000000" }, rawBody: body },
+      expect: { conversationId: "chan-7", text: "hi" },
+    }),
+    test,
+  );
+}
+{
+  const body = JSON.stringify({ message: { chat: { id: 4242 }, text: "hi" } });
+  register(
+    runAdapterConformance(telegramAdapter({ secretToken: TG_SECRET }), {
+      valid: { headers: tgHeaders(), rawBody: body },
+      tampered: { headers: tgHeaders("WRONG"), rawBody: body },
+      expect: { conversationId: "4242", text: "hi" },
+    }),
+    test,
+  );
+}
+{
+  const body = JSON.stringify({ type: "message", text: "<at>Bot</at> hi", conversation: { id: "19:abc" } });
+  register(
+    runAdapterConformance(teamsAdapter({ sharedSecret: TEAMS_SECRET_B64 }), {
+      valid: { headers: teamsAuth(body), rawBody: body },
+      tampered: { headers: teamsAuth(body, Buffer.from("not-the-secret").toString("base64")), rawBody: body },
+      expect: { conversationId: "19:abc", text: "hi" },
+    }),
+    test,
+  );
+}
+
+// ── e2e: Discord ─────────────────────────────────────────────────────────────
 
 test("discord bridge: a signed slash command drives the session; two turns advance (token adopted)", async () => {
   const channel = makeBridgeDemoChannel();
@@ -73,12 +129,7 @@ test("discord bridge: a bad/absent signature is refused with 401 (body not proce
   }
 });
 
-// ── Telegram (secret token) ──────────────────────────────────────────────────
-
-const TG_SECRET = "telegram-webhook-secret";
-function tgHeaders(secret = TG_SECRET) {
-  return { "x-telegram-bot-api-secret-token": secret };
-}
+// ── e2e: Telegram ────────────────────────────────────────────────────────────
 
 test("telegram bridge: a text message with the right secret token drives two turns", async () => {
   const channel = makeBridgeDemoChannel();
@@ -105,7 +156,6 @@ test("telegram bridge: a wrong secret token is refused 401; a non-text update is
     const bridge = makeTelegramBridge({ baseUrl, secretToken: TG_SECRET });
     const body = JSON.stringify({ message: { chat: { id: 1 }, text: "hi" } });
     assert.equal((await bridge.handle(tgHeaders("WRONG"), body)).status, 401);
-    // a non-text update (e.g. a sticker) with valid auth is ignored, not crashed
     const nonText = JSON.stringify({ message: { chat: { id: 1 } } });
     const r = await bridge.handle(tgHeaders(), nonText);
     assert.equal(r.status, 200);
@@ -115,16 +165,9 @@ test("telegram bridge: a wrong secret token is refused 401; a non-text update is
   }
 });
 
-// ── Microsoft Teams (Outgoing-Webhook HMAC) ──────────────────────────────────
-
-const TEAMS_SECRET_B64 = Buffer.from("teams-shared-secret-bytes").toString("base64");
-function teamsAuth(rawBody: string, secretB64 = TEAMS_SECRET_B64) {
-  const sig = createHmac("sha256", Buffer.from(secretB64, "base64")).update(Buffer.from(rawBody, "utf8")).digest("base64");
-  return { authorization: `HMAC ${sig}` };
-}
+// ── e2e: Microsoft Teams ─────────────────────────────────────────────────────
 
 test("teams bridge: a valid HMAC message drives the session and strips the @mention", async () => {
-  // Capture the body the bridge POSTs to the channel, to prove the stripped text is sent.
   const captured: { body: { messages?: Array<{ content?: string }> } | null } = { body: null };
   const fetchImpl = (async (_url: string, init: { body: string }) => {
     captured.body = JSON.parse(init.body);
@@ -145,14 +188,10 @@ test("teams bridge: a wrong HMAC is refused 401; a non-message activity is ignor
   try {
     const bridge = makeTeamsBridge({ baseUrl, sharedSecret: TEAMS_SECRET_B64 });
     const body = JSON.stringify({ type: "message", text: "hi", conversation: { id: "19:x" } });
-    // wrong secret → wrong HMAC → 401
     const wrongSecret = Buffer.from("not-the-secret").toString("base64");
     assert.equal((await bridge.handle(teamsAuth(body, wrongSecret), body)).status, 401);
-    // a malformed (wrong-LENGTH) token must fail closed with 401, NOT crash
-    // timingSafeEqual — pins the length guard before the constant-time compare.
     assert.equal((await bridge.handle({ authorization: "HMAC A" }, body)).status, 401);
     assert.equal((await bridge.handle({ authorization: "not-hmac-scheme" }, body)).status, 401);
-    // valid auth but a non-message activity → ignored
     const ping = JSON.stringify({ type: "conversationUpdate", conversation: { id: "19:x" } });
     const r = await bridge.handle(teamsAuth(ping), ping);
     assert.equal(r.status, 200);
@@ -176,20 +215,20 @@ test("teams bridge: a real end-to-end turn against the in-process channel", asyn
   }
 });
 
-// ── the invariant: bridges import NOTHING from @irisrun/* ─────────────────────
+// ── purity: an adapter imports no @irisrun/* except the optional @irisrun/bridge SDK ─
 
-test("platform bridges + harness import nothing from @irisrun/* (any-language, zero core changes)", () => {
+test("platform adapters import no @irisrun/* except the optional @irisrun/bridge SDK", () => {
   const here = dirname(fileURLToPath(import.meta.url));
   const files = [
-    join(here, "examples", "platform-bridge.ts"),
     join(here, "examples", "bridges", "discord.ts"),
     join(here, "examples", "bridges", "telegram.ts"),
     join(here, "examples", "bridges", "teams.ts"),
   ];
   for (const f of files) {
     const src = readFileSync(f, "utf8");
-    const staticImport = /\bfrom\s+["']@irisrun\//.test(src);
-    const dynImport = /\bimport\s*\(\s*["']@irisrun\//.test(src);
-    assert.ok(!staticImport && !dynImport, `${f} must not import any @irisrun package — a bridge needs only the wire protocol`);
+    const irisImports = [...src.matchAll(/\bfrom\s+["'](@irisrun\/[^"']+)["']/g)].map((m) => m[1]);
+    for (const imp of irisImports) {
+      assert.equal(imp, "@irisrun/bridge", `${f} may import only @irisrun/bridge among @irisrun packages, found ${imp}`);
+    }
   }
 });

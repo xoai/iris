@@ -32,7 +32,7 @@ IRIS_LIVE_CONFORMANCE=1 ANTHROPIC_API_KEY=… npm test   # adds the live-provide
 
 The backbone of the suite, and the **executable spec** for Iris's port contracts —
 production code points here (e.g. a provider must pass `lib/model-provider-conformance.ts`;
-a channel must pass `lib/channel-port-conformance.ts`). Fakes, fixtures, the chaos
+a channel must pass `@irisrun/channel-conformance`). Fakes, fixtures, the chaos
 helpers, and `live-gate` live here. Imported by the suite; never published.
 
 ## `examples/` — reference implementations (and they're tested)
@@ -43,9 +43,8 @@ Runnable, copy-able reference code, each one regression-locked by a `*.test.ts`:
 | --- | --- | --- |
 | `portability-demo.ts` | the cross-host resume proof | `node tests/examples/portability-demo.ts` |
 | `cross-host-journal-demo.ts` | a session migrating fs → sqlite → edge | `npm run demo:cross-host` |
-| `webhook-bridge.ts` | a generic bridge over the wire protocol (zero `@irisrun/*` imports) | `npm run demo:bridge` |
-| `bridge-reference.ts` | a two-turn conversation through that bridge | `npm run demo:bridge` |
-| `platform-bridge.ts` + `bridges/` | Discord / Telegram / Teams as bridges (not packages) | see `docs/reference/bridge-pattern.md` |
+| `bridge-reference.ts` | a two-turn conversation through the `@irisrun/bridge` SDK | `npm run demo:bridge` |
+| `bridges/` | Discord / Telegram / Teams adapters over the `@irisrun/bridge` SDK (not packages) | see `docs/reference/bridge-pattern.md` |
 
 ## `smoke/` — real egress, gated, outside the suite
 

@@ -1,0 +1,29 @@
+{
+  "name": "@irisrun/bridge",
+  "version": "0.2.0",
+  "type": "module",
+  "description": "Iris bridge SDK — speak the Iris REST channel protocol from any platform (Telegram, Discord, Teams, a webhook) with token rotation handled for you. Zero deps; a bridge only speaks HTTP, so the same shape ports to any language.",
+  "exports": {
+    ".": {
+      "iris-src": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xoai/iris.git",
+    "directory": "packages/bridge"
+  },
+  "homepage": "https://github.com/xoai/iris#readme",
+  "files": [
+    "dist"
+  ]
+}

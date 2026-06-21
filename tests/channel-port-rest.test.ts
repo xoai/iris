@@ -6,7 +6,8 @@ import { makeRestChannel, type TurnInputs } from "@irisrun/channel-rest";
 import type { HostAdapter } from "@irisrun/host";
 import { TestClock } from "./lib/mem-store.ts";
 import { makeFlippableStore } from "./lib/flaky-store.ts";
-import { runChannelPortConformance, type ChannelOps, type Refusal } from "./lib/channel-port-conformance.ts";
+import { test } from "node:test";
+import { runChannelPortConformance, register, type ChannelOps, type Refusal } from "@irisrun/channel-conformance";
 
 type ChState = { turns: number };
 const program: Program<ChState> = {
@@ -39,7 +40,7 @@ function mapRefusal(status: number, errorMessage: string): Refusal {
   return "stale-token";
 }
 
-runChannelPortConformance({
+register(runChannelPortConformance({
   name: "channel-rest",
   async create(): Promise<ChannelOps> {
     const { store, setNext } = makeFlippableStore(new MemoryStateStore());
@@ -74,4 +75,4 @@ runChannelPortConformance({
       close: () => channel.close(),
     };
   },
-});
+}), test);

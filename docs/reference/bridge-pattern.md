@@ -17,8 +17,9 @@ A bridge is a small, standalone process (in **any language**) that:
    interactive components, and rate limits — none of which Iris should carry.
 2. **Speaks only the wire protocol.** It calls the Iris REST channel —
    `POST /v1/session` to start, `POST /v1/session/{sessionId}/message` to continue —
-   and needs nothing from any `@irisrun/*` package. (The reference bridge,
-   `tests/examples/webhook-bridge.ts`, imports zero Iris packages; a test asserts this.)
+   and needs nothing from the Iris runtime. The optional **`@irisrun/bridge`** SDK
+   handles the session/token choreography for you (and itself imports zero `@irisrun/*`,
+   speaking only HTTP), but a bridge can equally be written in any language with no SDK.
 3. **Mirrors the two-identifier discipline.** It holds a
    `platformConversationId → { sessionId, continuationToken }` map and **adopts the
    rotated token** the channel returns on every turn — the same single-use rule the
@@ -41,28 +42,41 @@ Discord / Telegram / webhook  ──(platform API)──►  BRIDGE  ──(HTTP
 - **Carry no durable state of its own** that it cannot rebuild. The durable session is
   the Iris journal; the bridge's map is a convenience cache.
 
-## Reference bridge
+## The SDK — `@irisrun/bridge`
 
-`tests/examples/webhook-bridge.ts` — `makeWebhookBridge({ baseUrl })` — a generic-webhook
-bridge that maps `{conversationId, text}` ↔ the REST channel using only `fetch`. Run
-the demo:
+`makeBridgeSession({ baseUrl })` maps `{conversationId, text}` ↔ the REST channel using
+only `fetch`, handling token adoption + rotation. `makePlatformBridge(adapter, { baseUrl })`
+adds the verify→parse→drive→format harness for a platform. The package is zero-dep and
+imports nothing from `@irisrun/*`. Run the demo:
 
 ```sh
 npm run demo:bridge   # stands up an in-process channel and drives a 2-turn conversation through the bridge
 ```
 
-`tests/bridge-reference.test.ts` drives a two-turn conversation end-to-end (token
-adoption + rotation across turns; independent conversations → independent sessions) and
-asserts the bridge imports nothing from `@irisrun/*`. A Discord or Telegram bridge is
-the same shape with a platform adapter in front — **no Iris core changes**.
+**Certify a bridge** with the suite the SDK ships — `runBridgeConformance()` (token
+adoption/rotation, independent conversations, clean restart, against an in-package fake
+channel) and `runAdapterConformance(adapter, vectors)` (verify accepts/rejects, parse
+maps, verify-first):
+
+```ts
+import { test } from "node:test";
+import { runBridgeConformance, runAdapterConformance, register } from "@irisrun/bridge";
+register(runBridgeConformance(), test);
+register(runAdapterConformance(myAdapter, vectors), test);
+```
+
+`tests/bridge-reference.test.ts` drives the SDK end-to-end against a real in-process
+channel and runs the conformance suite; a Discord or Telegram bridge is the same shape
+with a platform adapter in front — **no Iris core changes**.
 
 ## Worked examples — Discord, Telegram, Teams
 
-Three reference bridges show the pattern with **real per-platform auth**, each a thin
-adapter (`verify` + `parse` inbound + `format` outbound) over the shared
-`makePlatformBridge` harness, which itself wraps the fetch-only `webhook-bridge.ts`.
-All four files import **nothing** from `@irisrun/*` (a test asserts it) — adding a
-platform is an adapter, never a core change.
+Three reference adapters show the pattern with **real per-platform auth**, each a thin
+adapter (`verify` + `parse` inbound + `format` outbound) over the SDK's
+`makePlatformBridge`. They import **nothing from `@irisrun/*` except the optional
+`@irisrun/bridge` SDK** (a test asserts it) — adding a platform is an adapter, never a
+core change. They stay **reference examples** (copy and adapt), not maintained
+first-party packages, so Iris never owns a platform's API drift.
 
 | Platform | File | Inbound auth | Inbound → text | Outbound |
 | --- | --- | --- | --- | --- |
@@ -70,11 +84,11 @@ platform is an adapter, never a core change.
 | **Telegram** | `tests/examples/bridges/telegram.ts` | `X-Telegram-Bot-Api-Secret-Token` (constant-time) | `message.text`; conversation = `message.chat.id` | webhook-response `{method:"sendMessage", chat_id, text}` |
 | **Teams** | `tests/examples/bridges/teams.ts` | Outgoing-Webhook HMAC-SHA256 (base64) `Authorization: HMAC <sig>` | Activity `text` (leading `<at>…</at>` mention stripped); conversation = `conversation.id` | Activity `{type:"message", text}` |
 
-Each enforces the same discipline as the generic bridge: **verify first** (an
-unverified body is never processed → 401), normalize, drive the durable session
-(adopting the rotated token), format the reply. `tests/platform-bridges.test.ts` drives
-each end-to-end against an in-process channel (two turns on one conversation → token
-adoption), rejects bad auth, and pins the zero-`@irisrun`-import property.
+Each enforces the same discipline as the SDK: **verify first** (an unverified body is
+never processed → 401), normalize, drive the durable session (adopting the rotated
+token), format the reply. `tests/platform-bridges.test.ts` drives each end-to-end
+against an in-process channel, runs `runAdapterConformance` on each adapter, rejects bad
+auth, and pins that an adapter imports nothing `@irisrun/*` beyond the SDK.
 
 **Operator setup** (documented, not code): register the Discord application command +
 public key; `setWebhook` with a `secret_token` for Telegram; configure the Teams

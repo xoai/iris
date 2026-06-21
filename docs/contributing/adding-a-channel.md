@@ -184,11 +184,11 @@ one call and returns `{ ok: false, reason }` on refusal.
 
 ## Step 5 — Pass the conformance suite (the definition of a channel)
 
-Passing `tests/lib/channel-port-conformance.ts` **is** the definition of a first-class
-Iris channel. The suite drives behavior through your **real transport surface** — it
-does not unit-test the driver. You provide a `ChannelPortFixture` whose `create()`
-returns a `ChannelOps` adapter over your wire, and `setNext` flips an underlying store
-so the suite can force `contended`/`aborted` through the real transport:
+Passing the importable `@irisrun/channel-conformance` suite **is** the definition of a
+first-class Iris channel — run it in your own CI. It drives behavior through your **real
+transport surface** (it does not unit-test the driver). You provide a `ChannelPortFixture`
+whose `create()` returns a `ChannelOps` adapter over your wire, and `setNext` flips an
+underlying store so the suite can force `contended`/`aborted` through the real transport:
 
 ```ts
 export interface ChannelOps {
@@ -212,17 +212,19 @@ function mapRefusal(status: number, errorMessage: string): Refusal {
   return "stale-token";
 }
 
-runChannelPortConformance({
+import { test } from "node:test";
+import { runChannelPortConformance, register } from "@irisrun/channel-conformance";
+
+register(runChannelPortConformance({
   name: "channel-rest",
   async create(): Promise<ChannelOps> { /* listen(), drive with fetch, return ops */ },
-});
+}), test);
 ```
 
-Registration is **synchronous**: call `runChannelPortConformance(fixture)` at module
-load (the importing `*.test.ts` calls it at the top level), so `node:test` sees the
-tests during import. Each test calls `fx.create()` for a fresh channel inside its async
-body — never wrap these in a deferred callback. The eight assertions the suite pins
-(and therefore what your channel must satisfy):
+The suite is **runner-agnostic** — `runChannelPortConformance(fixture)` returns a list of
+cases and `register(cases, test)` wires them into `node:test` (or any runner). Each case
+calls `fx.create()` for a fresh channel. What the suite pins (and therefore what your
+channel must satisfy):
 
 - START mints a session and issues a non-empty token.
 - A committed continue rotates the token.
@@ -234,6 +236,15 @@ body — never wrap these in a deferred callback. The eight assertions the suite
 - An `aborted` turn **keeps** the prior token.
 - The token is single-use under concurrency: two same-token continues → exactly one
   wins, the other is refused `in-flight` **or** `stale-token`.
+- A **replayed** token (from a prior, already-rotated turn) and a **cross-session** token
+  are both refused `stale-token`; an empty-string token is `missing-token` (not stale); a
+  garbage sessionId is `unknown-session` (never a crash); and every refusal is within the
+  four-value taxonomy.
+- A non-committed chain (contended → contended → finished) keeps the token across the
+  non-committed turns and rotates exactly once on the commit.
+- **Opt-in:** a held-connection (WebSocket / gRPC) transport supplies
+  `fixture.holdConnection` to certify the `token:null` advance path — advance without a
+  presented token, rotate on commit, and a second concurrent advance is `in-flight`.
 
 ## Step 6 — Stay host-light at the seam
 
