@@ -37,6 +37,19 @@ export interface TurnInputs<S extends Json> {
   holderId?: string;
 }
 
+/** The per-(session,request) turn-inputs builder a channel drives. `emit` is present
+ *  ONLY on a streaming (SSE/WS) request. Exported as a named alias so adapter authors
+ *  (via @irisrun/sdk) can type their own builder. */
+export type MakeTurnInputs<S extends Json> = (
+  sessionId: string,
+  body: Json,
+  emit?: (ev: StreamEvent) => void,
+) => TurnInputs<S> | Promise<TurnInputs<S>>;
+
+/** A pre-POST GET hook (the web channel mounts here); returns true if it served the
+ *  request — the inline type RestChannelOptions.webHandler has always used. */
+export type WebHandler = (req: IncomingMessage, res: ServerResponse) => boolean;
+
 export interface RestChannelOptions<S extends Json> {
   adapter: HostAdapter;
   // Per-(session, request) turn inputs. Return PERSISTENT performers per session if
@@ -45,11 +58,7 @@ export interface RestChannelOptions<S extends Json> {
   // The 3rd arg `emit` is present ONLY on a streaming (SSE/WS) request — bind the
   // model performer's onDelta to it for live token deltas; undefined on the
   // buffered path (no deltas).
-  makeTurnInputs: (
-    sessionId: string,
-    body: Json,
-    emit?: (ev: StreamEvent) => void,
-  ) => TurnInputs<S> | Promise<TurnInputs<S>>;
+  makeTurnInputs: MakeTurnInputs<S>;
   mintSessionId?: () => string; // default: a random UUID
   mintToken?: () => string; // default: a random UUID (the channel owns this)
   // Optional PRE-POST GET hook (the web channel mounts here).
@@ -57,7 +66,7 @@ export interface RestChannelOptions<S extends Json> {
   // MUST return false for anything it does not serve, so the `/v1/*` POST routes and
   // the WebSocket upgrade path (a separate `upgrade` listener) are untouched. When
   // undefined, the channel behaves byte-identically to before (purely additive).
-  webHandler?: (req: IncomingMessage, res: ServerResponse) => boolean; // true = handled
+  webHandler?: WebHandler; // true = handled
 }
 
 export interface RestChannel {
