@@ -1,9 +1,10 @@
 // Discord reference bridge. A thin adapter over the generic
 // REST-protocol bridge — Discord Interactions in, an interaction response out. Auth is
 // Ed25519 over `timestamp + rawBody` against the app's public key (Discord's required
-// scheme). Zero @irisrun imports — only node:crypto + the shared harness.
+// scheme). Imports only @irisrun/bridge (the SDK) + node:crypto — nothing from the
+// Iris runtime/core, so this still ports to any language with no SDK at all.
 import { createPublicKey, verify as edVerify } from "node:crypto";
-import { makePlatformBridge, type PlatformAdapter, type PlatformBridge } from "../platform-bridge.ts";
+import { makePlatformBridge, type PlatformAdapter, type PlatformBridge } from "@irisrun/bridge";
 
 // Discord interaction response body (the bridge replies in the HTTP response).
 type DiscordReply = { type: number; data?: { content: string } };
