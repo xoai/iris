@@ -16,6 +16,10 @@ export interface McpServerSpec {
 export interface McpStdioOptions {
   timeoutMs?: number;
   protocolVersion?: string;
+  // When set, the server child is spawned with EXACTLY this environment
+  // (least-privilege — the CLI passes the image's scoped tool env so a declared
+  // secret like MEM0_API_KEY reaches the server). Absent → inherit process.env.
+  env?: Record<string, string>;
 }
 
 const DEFAULT_TIMEOUT_MS = 5000;
@@ -27,6 +31,7 @@ export function makeMcpStdioTransport(
 ): Transport {
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const protocolVersion = options.protocolVersion ?? DEFAULT_PROTOCOL;
+  const env = options.env;
   return {
     invoke(contract, input) {
       const id = locationHandle(contract.location, "mcp");
@@ -36,7 +41,7 @@ export function makeMcpStdioTransport(
           toolFailure(`mcp server not registered: "${id}"`, "unknown_tool"),
         );
       }
-      return callOverStdio(spec, contract.name, input, timeoutMs, protocolVersion);
+      return callOverStdio(spec, contract.name, input, timeoutMs, protocolVersion, env);
     },
   };
 }
@@ -53,10 +58,12 @@ function callOverStdio(
   input: Json,
   timeoutMs: number,
   protocolVersion: string,
+  env: Record<string, string> | undefined,
 ): Promise<ToolResult> {
   return new Promise<ToolResult>((resolve) => {
     const child = spawn(spec.command, spec.args ?? [], {
       stdio: ["pipe", "pipe", "pipe"],
+      ...(env ? { env } : {}),
     });
     let stdout = "";
     let stderr = "";

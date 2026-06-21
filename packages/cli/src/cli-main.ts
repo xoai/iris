@@ -11,7 +11,7 @@ import { readOciLayout, governingDigest, agentfileSchemaJson } from "@irisrun/ag
 import type { AgentImage } from "@irisrun/agent";
 import { defaultBundle, harnessProgram } from "@irisrun/core";
 import type { Performer, Json, StateStore, Scheduler } from "@irisrun/core";
-import { makeToolPerformer, makeToolRegistry, makeToolInvoker, makeSubprocessTransport } from "@irisrun/tools";
+import { makeToolPerformer, makeToolRegistry, makeToolInvoker, makeSubprocessTransport, makeMcpStdioTransport } from "@irisrun/tools";
 import type { ToolContract } from "@irisrun/tools";
 import { readFile } from "node:fs/promises";
 import { cmdInit, cmdBuild, cmdInspect, cmdVerify, cmdPush, cmdPull, cmdRun, cmdServe, cmdDeploy, loadApprovalPolicy, resolveBuildFile, type CliSubagents } from "./iris.ts";
@@ -23,6 +23,7 @@ import { cmdEval, loadEvalSuite } from "./eval-cmd.ts";
 import { cmdSchedule } from "./schedule-cmd.ts";
 import { loadSubagents } from "./subagents-cfg.ts";
 import { resolveStore } from "./store.ts";
+import { loadMcpServers } from "./mcp-cfg.ts";
 import { createApprovalInbox } from "@irisrun/auth";
 import type { ApprovalPolicy, Principal } from "@irisrun/auth";
 import { loadBundledTools } from "./tools.ts";
@@ -66,12 +67,18 @@ async function bundledToolWiring(
 ): Promise<{ toolInvoker: ReturnType<typeof makeToolInvoker>; safeTools: string[] }> {
   const toolsDir = flag(argv, "--tools") ?? join(dirname(layout), "tools");
   const bundled = await loadBundledTools(toolsDir);
-  // A scoped `toolEnv` (from --env-file/--env + the image's secrets/environment)
-  // is the SAME for every bundled tool — pass it transport-level. Absent → inherit
-  // process.env (byte-identical to before this feature).
+  // Optional MCP servers backing the image's `mcp://` tools (mcp.json beside the
+  // layout; `--mcp <file>` overrides). Empty → no `mcp` transport wired (byte-identical).
+  const mcpServers = await loadMcpServers(flag(argv, "--mcp") ?? join(dirname(layout), "mcp.json"));
+  // A scoped `toolEnv` (from --env-file/--env + the image's secrets/environment) is the
+  // SAME for every tool — pass it transport-level to BOTH subprocess and mcp servers, so
+  // a declared secret reaches an MCP server. Absent → inherit process.env (byte-identical).
   return {
     toolInvoker: makeToolInvoker({
       subprocess: makeSubprocessTransport(bundled.subprocessSpecs, toolEnv ? { env: toolEnv } : {}),
+      ...(Object.keys(mcpServers).length > 0
+        ? { mcp: makeMcpStdioTransport(mcpServers, toolEnv ? { env: toolEnv } : {}) }
+        : {}),
     }),
     safeTools: bundled.safeToolNames,
   };
@@ -224,7 +231,7 @@ async function buildSubagents(
 
 async function runCommand(argv: string[]): Promise<void> {
   const layout = argv[1];
-  if (!layout) throw new Error("usage: iris run <layoutdir> --session <id> [--db <path>] [--store <name|module>] [--tools <dir>] [--subagents <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]");
+  if (!layout) throw new Error("usage: iris run <layoutdir> --session <id> [--db <path>] [--store <name|module>] [--tools <dir>] [--subagents <file>] [--mcp <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]");
   const session = flag(argv, "--session") ?? "default";
   const db = flag(argv, "--db") ?? ":memory:";
   // A deploy-time endpoint override. The model-id prefix still selects the
@@ -263,7 +270,7 @@ async function serveCommand(argv: string[]): Promise<void> {
   const layout = argv[1];
   if (!layout)
     throw new Error(
-      "usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--store <name|module>] [--model auto|anthropic|openai|echo] [--web] [--policy <file.json>] [--subagents <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]",
+      "usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--store <name|module>] [--model auto|anthropic|openai|echo] [--web] [--policy <file.json>] [--subagents <file>] [--mcp <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]",
     );
   const port = Number(flag(argv, "--port") ?? 8787);
   const host = flag(argv, "--host") ?? "127.0.0.1";
@@ -353,7 +360,7 @@ async function serveCommand(argv: string[]): Promise<void> {
 async function chatCommand(argv: string[]): Promise<void> {
   const layout = argv[1];
   if (!layout) {
-    throw new Error("usage: iris chat <layoutdir> --session <id> [--db <path>] [--store <name|module>] [--tools <dir>] [--subagents <file>] [--policy <file.json>] [--as <id>] [--role <r>] [--env-file <file>] [--env KEY=VAL] [--secret-files] [--fake]");
+    throw new Error("usage: iris chat <layoutdir> --session <id> [--db <path>] [--store <name|module>] [--tools <dir>] [--subagents <file>] [--mcp <file>] [--policy <file.json>] [--as <id>] [--role <r>] [--env-file <file>] [--env KEY=VAL] [--secret-files] [--fake]");
   }
   const session = flag(argv, "--session") ?? "default";
   const db = flag(argv, "--db") ?? ":memory:";
