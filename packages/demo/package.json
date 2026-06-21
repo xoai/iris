@@ -1,13 +1,13 @@
 {
   "name": "@irisrun/demo",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "private": true,
   "license": "MIT",
   "description": "Iris no-model demo — 2-step counter machine that parks and resumes across a restart. In-repo example; consumed from source, never published.",
   "exports": "./src/index.ts",
   "dependencies": {
-    "@irisrun/core": "^0.2.0",
-    "@irisrun/store-sqlite": "^0.2.0"
+    "@irisrun/core": "^0.3.0",
+    "@irisrun/store-sqlite": "^0.3.0"
   }
 }

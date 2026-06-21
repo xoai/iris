@@ -1,6 +1,6 @@
 {
   "name": "@irisrun/channel-core",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "description": "Iris channel port — the narrow, replay-safe contract every channel implements: mint the sessionId, own and rotate a single-use continuation token (rotate only on a committed turn; keep it on a non-committed one), an atomic single-use in-flight claim, normalize-inbound / emit-outbound, and a loud refusal taxonomy. The shared driver behind channel-rest, channel-mcp, and channel-slack, with one conformance suite any channel must pass — so durable, resumable sessions are pluggable and replay-safe by construction. Depends only on @irisrun/core types.",
   "exports": {
@@ -11,7 +11,7 @@
     }
   },
   "dependencies": {
-    "@irisrun/core": "^0.2.0"
+    "@irisrun/core": "^0.3.0"
   },
   "license": "MIT",
   "engines": {

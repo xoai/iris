@@ -1,6 +1,6 @@
 {
   "name": "@irisrun/bridge",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "description": "Iris bridge SDK — speak the Iris REST channel protocol from any platform (Telegram, Discord, Teams, a webhook) with token rotation handled for you. Zero deps; a bridge only speaks HTTP, so the same shape ports to any language.",
   "exports": {

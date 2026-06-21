@@ -1,6 +1,6 @@
 {
   "name": "@irisrun/provider-openai",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "description": "Vendor-neutral, replay-safe model adapter — the OpenAI model_call performer behind Iris's portable model port; a peer of @irisrun/provider-anthropic behind the same port, so swapping providers leaves the agent and its byte-identical journal replay unchanged. Direct OpenAI Chat Completions over built-in fetch (zero deps). Real adapter runs only with OPENAI_API_KEY; tests use a fake fetch / fake model.",
   "exports": {
@@ -11,7 +11,7 @@
     }
   },
   "dependencies": {
-    "@irisrun/core": "^0.2.0"
+    "@irisrun/core": "^0.3.0"
   },
   "license": "MIT",
   "engines": {

@@ -1,6 +1,6 @@
 {
   "name": "@irisrun/inspect",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "description": "Iris journal/decision viewer (inspect surface) — reads a recorded session (snapshot + journal) from a StateStore and renders the deterministic decision/effect/marker timeline, keyed by the stable sessionId. READ-ONLY; re-derives the governing digest snapshot-safely; never writes. Pure over @irisrun/core.",
   "exports": {
@@ -11,7 +11,7 @@
     }
   },
   "dependencies": {
-    "@irisrun/core": "^0.2.0"
+    "@irisrun/core": "^0.3.0"
   },
   "license": "MIT",
   "engines": {

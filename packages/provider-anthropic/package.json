@@ -1,6 +1,6 @@
 {
   "name": "@irisrun/provider-anthropic",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "description": "Vendor-neutral, replay-safe model adapter — the Anthropic model_call performer behind Iris's portable model port; swap providers without touching the agent, and the captured reply replays byte-identically from the journal. Direct Anthropic Messages over built-in fetch (zero deps). Real adapter runs only with ANTHROPIC_API_KEY; tests use a fake fetch / fake model.",
   "exports": {
@@ -11,7 +11,7 @@
     }
   },
   "dependencies": {
-    "@irisrun/core": "^0.2.0"
+    "@irisrun/core": "^0.3.0"
   },
   "license": "MIT",
   "engines": {

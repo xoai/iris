@@ -1,6 +1,6 @@
 {
   "name": "@irisrun/sdk",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "description": "Iris adapter SDK — one dependency to build a store, channel, or provider adapter. Curated re-exports of the three port type-sets, the three importable conformance suites, and the forkless-loader contracts (openStore / openModelProvider / openChannel). Pair it with `iris adapter init`.",
   "exports": {
@@ -11,13 +11,13 @@
     }
   },
   "dependencies": {
-    "@irisrun/core": "^0.2.0",
-    "@irisrun/host": "^0.2.0",
-    "@irisrun/channel-core": "^0.2.0",
-    "@irisrun/channel-rest": "^0.2.0",
-    "@irisrun/store-conformance": "^0.2.0",
-    "@irisrun/channel-conformance": "^0.2.0",
-    "@irisrun/provider-conformance": "^0.2.0"
+    "@irisrun/core": "^0.3.0",
+    "@irisrun/host": "^0.3.0",
+    "@irisrun/channel-core": "^0.3.0",
+    "@irisrun/channel-rest": "^0.3.0",
+    "@irisrun/store-conformance": "^0.3.0",
+    "@irisrun/channel-conformance": "^0.3.0",
+    "@irisrun/provider-conformance": "^0.3.0"
   },
   "license": "MIT",
   "engines": {

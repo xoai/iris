@@ -1,6 +1,6 @@
 {
   "name": "@irisrun/provider-conformance",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "description": "Iris model-provider conformance suite — an importable, runner-agnostic harness that certifies any model_call performer (buffered + streaming) against the vendor-neutral model port. Two providers pass the same tests; pass it and yours is a first-class Iris provider.",
   "exports": {
@@ -11,7 +11,7 @@
     }
   },
   "dependencies": {
-    "@irisrun/core": "^0.2.0"
+    "@irisrun/core": "^0.3.0"
   },
   "license": "MIT",
   "engines": {

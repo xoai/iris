@@ -1,6 +1,6 @@
 {
   "name": "@irisrun/channel-rest",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "description": "Durable, replay-safe HTTP sessions — the in-process REST channel over node:http with live SSE + hand-rolled zero-dep WebSocket streaming. Owns the two-identifier protocol: the channel MINTS the sessionId and OWNS/ISSUES a single-use continuationToken, rotated every committed turn, so a missing/stale/malformed token is refused with a loud 4xx (never a silent 200). A real external HTTP deploy is a manual smoke.",
   "exports": {
@@ -11,9 +11,9 @@
     }
   },
   "dependencies": {
-    "@irisrun/core": "^0.2.0",
-    "@irisrun/channel-core": "^0.2.0",
-    "@irisrun/host": "^0.2.0"
+    "@irisrun/core": "^0.3.0",
+    "@irisrun/channel-core": "^0.3.0",
+    "@irisrun/host": "^0.3.0"
   },
   "license": "MIT",
   "engines": {

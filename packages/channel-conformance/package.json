@@ -1,6 +1,6 @@
 {
   "name": "@irisrun/channel-conformance",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "description": "Iris channel-port conformance suite — an importable, runner-agnostic harness that certifies any channel against the two-identifier protocol (sessionId + single-use continuation token, committed-only rotation, the refusal taxonomy). Pass it and your channel is replay-safe by construction.",
   "exports": {
@@ -11,7 +11,7 @@
     }
   },
   "dependencies": {
-    "@irisrun/channel-core": "^0.2.0"
+    "@irisrun/channel-core": "^0.3.0"
   },
   "license": "MIT",
   "engines": {

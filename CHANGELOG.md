@@ -7,6 +7,85 @@ packages (`iris-runtime` + the `@irisrun/*` libraries) share one lockstep versio
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-06-22
+
+The **forkless adapter ecosystem**: a single-dependency SDK for authoring
+storage / provider / channel / bridge adapters, three importable conformance suites
+that certify them, runtime loaders that plug a third-party adapter into the CLI
+without a fork, and a reference Postgres store — all preserving Iris's
+zero-external-dependency core and byte-identical defaults. One lockstep version
+across `iris-runtime` + every `@irisrun/*`.
+
+### Added
+
+- **`@irisrun/sdk` — one-dependency adapter authoring** — a curated, zero-runtime-logic
+  re-export surface: the three port type-sets (store / provider / channel), the three
+  `run*Conformance` suites with one canonical `register` / `ConformanceCase`, the
+  `ConformanceFixture` helper, and the forkless-loader contracts
+  (`OpenStore` / `OpenProvider` / `OpenChannel`). Author a conformant adapter against a
+  single dependency. Guide: `docs/sdk.md`.
+- **Forkless adapter loaders** — plug a third-party adapter into the CLI without forking
+  it: `--store <module>` (run / serve / chat / audit / schedule), `--provider <module>`
+  and `--channel <module>` (run / serve / chat). Built-ins (sqlite/fs/memory, the
+  prefix→provider default, the REST channel) stay the default and **byte-identical**;
+  any other value is dynamic-imported and its `openStore` / `openModelProvider` /
+  `openChannel` factory used. A bad or unresolvable module is refused loudly.
+- **`iris adapter init <kind>`** — scaffolds a buildable, conformance-wired adapter
+  package (one `@irisrun/sdk` dep + tsconfig + README + factory + test). The **store**
+  scaffold ships a correct in-memory store whose conformance suite is green out of the
+  box; channel/provider ship the port shape + wiring with marked TODOs. No-clobber;
+  unknown kind refused loudly.
+- **Importable conformance suites** — `@irisrun/store-conformance`,
+  `@irisrun/channel-conformance`, and `@irisrun/provider-conformance`: runner-agnostic
+  (never import `node:test`), each returns a `{name, fn}[]` that `register()` wires into
+  any runner. All first-party adapters were migrated onto them with no coverage
+  regression, plus gap cases (token replay, cross-session tokens, concurrency, the
+  contended-rotation chains) and an opt-in `{concurrency}` stress that catches racy
+  backends. Each ships a "teeth" meta-test proving the suite fails a contract-violating
+  adapter.
+- **`@irisrun/bridge` — the bridge SDK** — the proven, zero-dependency bridge reference
+  code promoted into a published package: `makeBridgeSession` + `makePlatformBridge` +
+  `PlatformAdapter`, plus `runBridgeConformance` / `runAdapterConformance` (certified
+  against an in-package fake REST channel, so the package keeps zero deps). The
+  Discord / Telegram / Teams adapters remain **reference examples** (Iris never owns
+  platform API drift) and now build on the SDK.
+- **`@irisrun/store-postgres` — reference Postgres store** — a host `StateStore` +
+  `Scheduler` on PostgreSQL, plugged in via the loader
+  (`--store @irisrun/store-postgres --db postgres://…`). `pg` is an **optional peer**
+  imported via a non-literal `import()`, so Iris's own tree stays
+  zero-external-dependency and the package typechecks/builds with no `pg` present.
+  Append is one `FOR UPDATE`-locked transaction (linearization, fence-before-seq,
+  truncation-surviving high-water mark); certified by the env-gated live-PG smoke
+  running the same `@irisrun/store-conformance` cases the built-ins pass.
+- **MCP-server tools wired at runtime** — an `mcp.json` beside the image
+  (`--mcp <file>` override) maps each `mcp://` tool to a `{command, args}`, so an
+  `mcp://` tool now resolves *and runs* (previously it resolved at build then failed at
+  run time). The image's scoped tool env reaches the server (`McpStdioOptions.env`,
+  additive in `@irisrun/tools`), so an MCP memory/tool gets its API key like a
+  subprocess tool. No `mcp.json` → byte-identical.
+- **Per-child subagent models** — declare `model` / `baseUrl` / `apiKeyEnv` per child in
+  `subagents.json` for heterogeneous teams (e.g. PM / Engineer / QC each on a different
+  model or endpoint).
+- **Use-case recipe guides** — `docs/sdk.md` plus seven scenario recipes (multi-agent
+  teams, autoresearch loop, automated workflow on Cloudflare DO + self-host VPS,
+  human-in-the-loop approvals, run-on-any-provider, never-lose-state portability, an
+  auditable agent) and a full coding-team guide (PM/Engineer/QC on three models +
+  Postgres + mem0 + Telegram), all reachable through the docs-funnel integrity guard.
+
+### Changed
+
+- **`iris deploy` refuses the forkless flags loudly** — `--store` / `--provider` /
+  `--channel` are deploy-incompatible (the portable image must stay endpoint- and
+  adapter-neutral), so deploy rejects them before running rather than silently dropping
+  them. Enforced by a behavioral test.
+
+### Hardened
+
+- The full suite stands at **955 passing** (from 801 at 0.2.0), the three new importable
+  conformance suites adding ~150 net cases. Zero new runtime dependencies; the pure core
+  and `@irisrun/audit` stay Node-free; `@irisrun/store-postgres` is the only package with
+  an external dependency (`pg`, an optional peer).
+
 ## [0.2.0] — 2026-06-21
 
 The **roadmap-v0.2** cycle: a verifiable portable journal, breadth across
@@ -139,6 +218,7 @@ The CLI publishes as **`iris-runtime`** (binary `iris`); the libraries as
 - **CLI surface** — `init · build · inspect · schema · verify · push · pull · run
   · serve · chat · deploy · audit · eval · schedule`.
 
-[Unreleased]: https://github.com/xoai/iris/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/xoai/iris/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/xoai/iris/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/xoai/iris/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/xoai/iris/releases/tag/v0.1.0
