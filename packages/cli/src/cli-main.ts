@@ -280,13 +280,14 @@ async function serveCommand(argv: string[]): Promise<void> {
   const layout = argv[1];
   if (!layout)
     throw new Error(
-      "usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--store <name|module>] [--model auto|anthropic|openai|echo] [--provider <module>] [--web] [--policy <file.json>] [--subagents <file>] [--mcp <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]",
+      "usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--store <name|module>] [--model auto|anthropic|openai|echo] [--provider <module>] [--channel <module>] [--web] [--policy <file.json>] [--subagents <file>] [--mcp <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]",
     );
   const port = Number(flag(argv, "--port") ?? 8787);
   const host = flag(argv, "--host") ?? "127.0.0.1";
   const db = flag(argv, "--db") ?? "./iris-serve.sqlite"; // a server wants durability (cf. run's :memory:)
   const modelOpt = flag(argv, "--model") ?? "auto";
   const web = argv.includes("--web"); // serve the web chat UI at GET /
+  const channelSpec = flag(argv, "--channel"); // forkless channel transport (default: rest)
   // Deploy-time endpoint override (see runCommand). The echo branch ignores it.
   const baseUrl = flag(argv, "--base-url") ?? process.env.IRIS_MODEL_BASE_URL;
 
@@ -352,6 +353,7 @@ async function serveCommand(argv: string[]): Promise<void> {
     web,
     toolInvoker,
     safeTools,
+    ...(channelSpec !== undefined ? { channel: channelSpec } : {}),
     ...(governance ? { governance } : {}),
     ...(subagents ? { subagents } : {}),
   });
