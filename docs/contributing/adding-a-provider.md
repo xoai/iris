@@ -176,12 +176,38 @@ provider at all: point `--base-url` (deployment knob; also `IRIS_MODEL_BASE_URL`
 it and reuse the matching adapter — see [Models & providers](../providers.md#point-base_url-at-any-compatible-endpoint).
 `opts.baseUrl` is exactly the seam the adapter reads (`opts.baseUrl ?? DEFAULT_URL`).
 
+### Forkless: ship it as your own package (`--provider <module>`)
+
+Editing `DESCRIPTORS` registers a **first-party** provider in this repo. To ship a
+provider as your **own npm package** — no Iris fork — export a single
+`openModelProvider()` factory (from `@irisrun/sdk`) and select it with `--provider`:
+
+```ts
+import type { OpenProvider } from "@irisrun/sdk";
+
+export const openModelProvider: OpenProvider = () => ({
+  buffered: (opts) => myModelPerformer(opts),
+  streaming: (opts) => myStreamingModelPerformer(opts),
+});
+```
+
+```sh
+iris serve ./image --provider @acme/iris-provider-foo --model foo/whatever
+```
+
+`iris run / serve / chat` **dynamic-import** the module (so it adds **no dependency** to
+Iris) and use its factories; the `<provider>/` prefix is still stripped for the API but
+need not be a known built-in. A module missing `openModelProvider`, or returning the
+wrong shape, is refused **loudly** — this mirrors the `--store <module>` loader. Note
+`iris deploy` bakes a built-in provider into the generated worker, so forkless
+`--provider` is `run`/`serve`/`chat`-only.
+
 ## Step 4 — Pass the shared conformance suite (the definition of "done")
 
 "Two providers pass the same tests behind the model port" is the literal guarantee,
-and it's what makes your provider first-class. The suite lives at
-`tests/lib/model-provider-conformance.ts`; you supply a **`ConformanceFixture`** and
-call `runModelProviderConformance(fixture)`. The fixture is only the
+and it's what makes your provider first-class. The suite ships as the importable
+`@irisrun/provider-conformance` package; you supply a **`ConformanceFixture`** and wire
+it with `register(runModelProviderConformance(fixture), test)`. The fixture is only the
 provider-specific surface — your two factories, your representative wire bodies, and
 the request-shape assertions:
 
@@ -201,7 +227,7 @@ const fixture: ConformanceFixture = {
   modelFromBody: (body) => body.model,
 };
 
-runModelProviderConformance(fixture);
+register(runModelProviderConformance(fixture), test);
 ```
 
 The suite drives your fixture through one behavioral checklist — pass it and you are
@@ -222,10 +248,10 @@ done:
 - **Result shape is exactly** `{ role, content, stopReason, usage? }`, `role` is
   `"assistant"`, and `usage` has exactly `{ inputTokens, outputTokens }`.
 
-> Note (registration, not invention): the suite is **synchronous** — `runModel
-> ProviderConformance` calls `node:test`'s `test()` in its body, and your `*.test.ts`
-> calls it at module load. Do not wrap it in an async IIFE or a deferred callback, or
-> the tests won't register.
+> Note (runner-agnostic): `runModelProviderConformance(fixture)` **returns a list of
+> cases** and imports no test runner; `register(cases, test)` wires them into `node:test`
+> (or any `(name, fn)` runner) from your own `*.test.ts`. Import both — plus the canonical
+> `ModelCall*` types — from `@irisrun/provider-conformance`.
 
 Optionally, once your adapter canonicalizes a representative endpoint reply, add a
 row to `@irisrun/provider-compat`'s matrix

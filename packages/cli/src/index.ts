@@ -83,6 +83,7 @@ export {
   stripModelPrefix,
   providerDescriptor,
   loadModelProvider,
+  resolveProvider,
 } from "./providers.ts";
 export type {
   ProviderName,

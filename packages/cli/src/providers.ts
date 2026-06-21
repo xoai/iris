@@ -6,6 +6,7 @@
 // dynamic-imports the chosen package so the no-key path stays light.
 import type { Performer } from "@irisrun/core";
 import type { ModelPerformerOptions, StreamingModelPerformerOptions } from "@irisrun/provider-conformance";
+import type { OpenProvider } from "@irisrun/sdk";
 
 export type ProviderName = "anthropic" | "openai";
 
@@ -67,7 +68,7 @@ export function providerDescriptor(name: ProviderName): ProviderDescriptor {
 export type { ModelPerformerOptions, StreamingModelPerformerOptions } from "@irisrun/provider-conformance";
 
 export interface LoadedProvider {
-  name: ProviderName;
+  name: string; // a built-in ProviderName, or a forkless `--provider` module specifier
   buffered(opts?: ModelPerformerOptions): Performer;
   streaming(opts?: StreamingModelPerformerOptions): Performer;
 }
@@ -94,4 +95,43 @@ export async function loadModelProvider(name: ProviderName): Promise<LoadedProvi
     buffered: (opts?: ModelPerformerOptions): Performer => bufferedFn(opts),
     streaming: (opts?: StreamingModelPerformerOptions): Performer => streamingFn(opts),
   };
+}
+
+/**
+ * Resolve the model provider for run/serve/chat. With no `--provider`, the image's
+ * `<provider>/` model-id prefix selects a BUILT-IN (byte-identical to before). With a
+ * `--provider <module>` specifier, FORKLESSLY load a third-party provider: dynamic-import
+ * the module and use its `openModelProvider()` factory — the prefix need not be a known
+ * built-in (it is only stripped for the API). A module that fails to import, lacks the
+ * export, or returns the wrong shape is refused LOUDLY (no-silent-failure). Mirrors the
+ * `--store <module>` loader in store.ts.
+ */
+export async function resolveProvider(
+  providerSpec: string | undefined,
+  modelId: string,
+): Promise<LoadedProvider> {
+  if (providerSpec === undefined) {
+    return loadModelProvider(providerNameForModel(modelId));
+  }
+  let mod: { openModelProvider?: OpenProvider };
+  try {
+    mod = (await import(providerSpec)) as { openModelProvider?: OpenProvider };
+  } catch (e) {
+    throw new Error(
+      `iris: --provider "${providerSpec}" — could not import the provider module (${(e as Error).message}). ` +
+        "Use a built-in model-id prefix (anthropic/ | openai/ | a bare id) or a module that exports openModelProvider().",
+    );
+  }
+  if (typeof mod.openModelProvider !== "function") {
+    throw new Error(
+      `iris: --provider "${providerSpec}" must export openModelProvider() — see docs/contributing/adding-a-provider.md`,
+    );
+  }
+  const factories = await mod.openModelProvider();
+  if (!factories || typeof factories.buffered !== "function" || typeof factories.streaming !== "function") {
+    throw new Error(
+      `iris: --provider "${providerSpec}" openModelProvider() must return { buffered, streaming } (got ${typeof factories})`,
+    );
+  }
+  return { name: providerSpec, buffered: factories.buffered, streaming: factories.streaming };
 }
