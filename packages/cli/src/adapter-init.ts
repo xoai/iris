@@ -97,7 +97,7 @@ const KIND_README: Record<AdapterKind, string> = {
   store:
     "`src/index.ts` ships a **minimal, correct in-memory store** — the conformance suite is\n**green** as-is. Replace the in-memory `Map`s with your backend (Postgres, Redis, S3, a KV\nnamespace…), keeping the one invariant: `append`'s fence-check + seq-check + insert are a\nsingle ATOMIC operation. Run it: `iris run ./image --store <this-package> --db <url>`.",
   channel:
-    "`src/index.ts` delegates to the built-in REST channel so `iris serve --channel\n<this-package>` works immediately. To build a REAL transport, drive `makeChannelSession`\nand map your wire to the `ChannelPort`, then certify it with a `ChannelPortFixture` against\n`@irisrun/channel-conformance` (see the TODOs in `test/`).",
+    "`src/index.ts` is a TODO skeleton — `openChannel` returns a `{ listen, close }` handle whose\n`listen` THROWS until you stand up your transport. Drive `makeChannelSession`, map your wire to the\n`ChannelPort`, and supply `runTurn` (via `runTurnOn` from `@irisrun/host`), then certify it with a\n`ChannelPortFixture` against `@irisrun/channel-conformance` (see the TODOs in `test/`).",
   provider:
     "`src/index.ts` is a working **buffered** `model_call` performer over a placeholder JSON\nAPI — adapt the request shaping + response canonicalization to your vendor, implement the\n**streaming** twin, then fill the fixture TODOs in `test/` to pass\n`@irisrun/provider-conformance`. Run it: `iris serve ./image --provider <this-package>`.",
 };
