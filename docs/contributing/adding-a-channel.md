@@ -23,6 +23,23 @@ and run the same suite — which is the whole point.
 > moat itself is demonstrated (which is why Slack is first-party and the rest are
 > bridges).
 
+> **Forkless: ship it as your own package (`--channel <module>`).** You no longer need a
+> monorepo PR to add a first-party-grade channel. Export a single `openChannel(opts)`
+> factory (from `@irisrun/sdk`) and select it with `iris serve --channel <module>`:
+> ```ts
+> import type { OpenChannel } from "@irisrun/sdk";
+> export const openChannel: OpenChannel = (opts) => makeMyChannel(opts); // returns { listen, close }
+> ```
+> ```sh
+> iris serve ./image --channel @acme/iris-channel-grpc
+> ```
+> `iris serve` dynamic-imports the module (no dependency added to Iris) and hands it the
+> same `OpenChannelOptions` (≡ channel-rest's `RestChannelOptions`) it builds for the
+> built-in `rest` transport; a module lacking `openChannel` is refused **loudly**. This
+> **complements** the bridge pattern — bridges stay the any-language, no-package path;
+> `--channel` is for an **in-process** channel that reuses `makeChannelSession`, the
+> streaming `record`/`delta` vocabulary, and the held-connection `token:null` path.
+
 ## Step 1 — Don't write the protocol: drive `makeChannelSession`
 
 The two-identifier protocol is not yours to reimplement. `makeChannelSession` owns it

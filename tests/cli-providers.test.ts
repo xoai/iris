@@ -4,7 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { dirname, join } from "node:path";
 import type { Json } from "@irisrun/core";
 import {
@@ -12,6 +12,8 @@ import {
   stripModelPrefix,
   providerDescriptor,
   loadModelProvider,
+  resolveProvider,
+  assertDeployFlagsSupported,
 } from "iris-runtime";
 
 test("providerNameForModel: known prefixes, bare default, unknown throws", () => {
@@ -120,4 +122,58 @@ test("every provider.buffered/streaming construction in cli-main passes baseUrl"
   for (const l of lines) {
     assert.match(l, /baseUrl/, `a provider performer is constructed WITHOUT baseUrl: ${l.trim()}`);
   }
+});
+
+// --- the forkless `--provider <module>` loader (resolveProvider) -------------
+test("resolveProvider: default (no --provider) selects the built-in by prefix", async () => {
+  const loaded = await resolveProvider(undefined, "anthropic/claude-x");
+  assert.equal(loaded.name, "anthropic");
+  assert.equal(typeof loaded.buffered, "function");
+  assert.equal(typeof loaded.streaming, "function");
+});
+
+test("resolveProvider: a --provider <module> exporting openModelProvider is loaded (forkless, any prefix)", async () => {
+  const here = dirname(fileURLToPath(import.meta.url));
+  const spec = pathToFileURL(join(here, "lib", "fake-provider-module.ts")).href;
+  // an unknown THIRD-PARTY prefix that providerNameForModel would reject — the module
+  // path must NOT consult it (the prefix is only stripped for the API).
+  const loaded = await resolveProvider(spec, "acme/whatever");
+  assert.equal(loaded.name, spec, "the LoadedProvider name carries the module specifier");
+  const out = await loaded.buffered({ model: "x" })({ messages: [{ role: "user", content: "hi" }] } as Json);
+  assert.ok(out.ok && (out.value as { content?: string }).content === "fake");
+});
+
+test("resolveProvider: a module without openModelProvider fails loudly", async () => {
+  await assert.rejects(resolveProvider("@irisrun/core", "x"), /must export openModelProvider/);
+});
+
+test("resolveProvider: an unresolvable module fails loudly", async () => {
+  await assert.rejects(resolveProvider("@irisrun/provider-does-not-exist-xyz", "x"), /could not import/);
+});
+
+// `iris deploy` refuses forkless --provider/--channel BEHAVIORALLY (the spec's testing
+// strategy named this) — the worker bakes a built-in provider and the prefix would throw
+// first, so the guard fires up front. deployCommand (an un-importable argv wrapper) calls
+// this exported guard.
+test("assertDeployFlagsSupported: refuses forkless --provider/--channel, allows neither", () => {
+  assert.throws(() => assertDeployFlagsSupported({ provider: "@acme/iris-provider-foo" }), /not supported at deploy time/);
+  assert.throws(() => assertDeployFlagsSupported({ channel: "@acme/iris-channel-grpc" }), /not supported at deploy time/);
+  assert.doesNotThrow(() => assertDeployFlagsSupported({}));
+});
+
+// Wiring guard (source assertion, like the base-url guard above): --provider is threaded
+// through the run/serve/chat sites, and deployCommand calls the behavioral guard above.
+test("cli-main threads --provider through run/serve/chat, and deploy calls the guard", () => {
+  const cliMain = readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), "..", "packages", "cli", "src", "cli-main.ts"),
+    "utf8",
+  );
+  const calls = cliMain.split("\n").filter((l) => /resolveProvider\(/.test(l));
+  assert.ok(calls.length >= 3, `expected resolveProvider at the run/serve/chat sites, found ${calls.length}`);
+  const deploySection = cliMain.slice(cliMain.indexOf("async function deployCommand"));
+  assert.match(
+    deploySection.slice(0, 900),
+    /assertDeployFlagsSupported\(/,
+    "deployCommand must call assertDeployFlagsSupported before cmdDeploy",
+  );
 });

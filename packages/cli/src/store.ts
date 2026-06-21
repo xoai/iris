@@ -5,18 +5,12 @@
 // WITHOUT forking the CLI. Default (no `--store`) is `sqlite` — byte-identical to before.
 import type { StateStore, Scheduler } from "@irisrun/core";
 import type { WakeupSource } from "@irisrun/schedule";
+import type { OpenStore, OpenStoreResult } from "@irisrun/sdk";
 
-/** What a pluggable store module returns from `openStore({ url })`. The scheduler must
- *  also implement the host-side `WakeupSource` (dueWakeups/confirmWoken) — the
- *  conformance suite certifies both. */
-export interface OpenStoreResult {
-  store: StateStore;
-  scheduler: Scheduler & WakeupSource;
-  close?(): Promise<void> | void;
-}
-
-/** The factory a third-party store package exports for `--store <module>`. */
-export type OpenStore = (opts: { url: string }) => Promise<OpenStoreResult> | OpenStoreResult;
+// OpenStore / OpenStoreResult are canonical in @irisrun/sdk (the one definition shared
+// by the store/provider/channel forkless loaders); re-exported here so existing
+// importers keep resolving them from "./store.ts".
+export type { OpenStore, OpenStoreResult } from "@irisrun/sdk";
 
 export interface ResolvedStore {
   store: StateStore;

@@ -2,7 +2,7 @@
 export const PACKAGE = "@irisrun/channel-rest";
 
 export { makeRestChannel } from "./server.ts";
-export type { RestChannel, RestChannelOptions, TurnInputs } from "./server.ts";
+export type { RestChannel, RestChannelOptions, TurnInputs, MakeTurnInputs, WebHandler } from "./server.ts";
 export type { StreamEvent } from "./events.ts";
 export { toOutcomeEvent } from "./events.ts";
 export {

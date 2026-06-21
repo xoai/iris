@@ -14,7 +14,7 @@ import type { Performer, Json, StateStore, Scheduler } from "@irisrun/core";
 import { makeToolPerformer, makeToolRegistry, makeToolInvoker, makeSubprocessTransport, makeMcpStdioTransport } from "@irisrun/tools";
 import type { ToolContract } from "@irisrun/tools";
 import { readFile } from "node:fs/promises";
-import { cmdInit, cmdBuild, cmdInspect, cmdVerify, cmdPush, cmdPull, cmdRun, cmdServe, cmdDeploy, loadApprovalPolicy, resolveBuildFile, type CliSubagents } from "./iris.ts";
+import { cmdInit, cmdBuild, cmdInspect, cmdVerify, cmdPush, cmdPull, cmdRun, cmdServe, cmdDeploy, assertDeployFlagsSupported, loadApprovalPolicy, resolveBuildFile, type CliSubagents } from "./iris.ts";
 import { existsSync, rmSync } from "node:fs";
 import { cmdAudit } from "./audit-cmd.ts";
 import { cmdJournalExport, cmdJournalVerify, cmdJournalImport } from "./journal-cmd.ts";
@@ -23,6 +23,7 @@ import { cmdEval, loadEvalSuite } from "./eval-cmd.ts";
 import { cmdSchedule } from "./schedule-cmd.ts";
 import { loadSubagents } from "./subagents-cfg.ts";
 import { resolveStore } from "./store.ts";
+import { cmdAdapterInit } from "./adapter-init.ts";
 import { loadMcpServers } from "./mcp-cfg.ts";
 import { resolveChildModel } from "./child-model.ts";
 import { createApprovalInbox } from "@irisrun/auth";
@@ -38,6 +39,7 @@ import {
   providerDescriptor,
   stripModelPrefix,
   loadModelProvider,
+  resolveProvider,
 } from "./providers.ts";
 import { COMPAT_MATRIX, entriesByProtocol, renderCompatMatrix } from "@irisrun/provider-compat";
 
@@ -238,7 +240,7 @@ async function buildSubagents(
 
 async function runCommand(argv: string[]): Promise<void> {
   const layout = argv[1];
-  if (!layout) throw new Error("usage: iris run <layoutdir> --session <id> [--db <path>] [--store <name|module>] [--tools <dir>] [--subagents <file>] [--mcp <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]");
+  if (!layout) throw new Error("usage: iris run <layoutdir> --session <id> [--db <path>] [--store <name|module>] [--provider <module>] [--tools <dir>] [--subagents <file>] [--mcp <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]");
   const session = flag(argv, "--session") ?? "default";
   const db = flag(argv, "--db") ?? ":memory:";
   // A deploy-time endpoint override. The model-id prefix still selects the
@@ -251,7 +253,9 @@ async function runCommand(argv: string[]): Promise<void> {
   // OPENAI_API_KEY). The bare (prefix-stripped) model id is baked into the
   // performer since the harness model_call request carries no model.
   const image = await readOciLayout(layout);
-  const provider = await loadModelProvider(providerNameForModel(image.lock.model.id));
+  // No --provider: the image's <provider>/ prefix selects a built-in (unchanged).
+  // --provider <module>: forklessly load a third-party provider (prefix only stripped).
+  const provider = await resolveProvider(flag(argv, "--provider"), image.lock.model.id);
   const { store, scheduler, close } = await resolveStore(flag(argv, "--store"), db);
   const toolEnv = await resolveRuntimeEnv(argv, image, "iris run");
   const { toolInvoker, safeTools } = await bundledToolWiring(argv, layout, toolEnv);
@@ -277,13 +281,14 @@ async function serveCommand(argv: string[]): Promise<void> {
   const layout = argv[1];
   if (!layout)
     throw new Error(
-      "usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--store <name|module>] [--model auto|anthropic|openai|echo] [--web] [--policy <file.json>] [--subagents <file>] [--mcp <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]",
+      "usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--store <name|module>] [--model auto|anthropic|openai|echo] [--provider <module>] [--channel <module>] [--web] [--policy <file.json>] [--subagents <file>] [--mcp <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]",
     );
   const port = Number(flag(argv, "--port") ?? 8787);
   const host = flag(argv, "--host") ?? "127.0.0.1";
   const db = flag(argv, "--db") ?? "./iris-serve.sqlite"; // a server wants durability (cf. run's :memory:)
   const modelOpt = flag(argv, "--model") ?? "auto";
   const web = argv.includes("--web"); // serve the web chat UI at GET /
+  const channelSpec = flag(argv, "--channel"); // forkless channel transport (default: rest)
   // Deploy-time endpoint override (see runCommand). The echo branch ignores it.
   const baseUrl = flag(argv, "--base-url") ?? process.env.IRIS_MODEL_BASE_URL;
 
@@ -298,18 +303,24 @@ async function serveCommand(argv: string[]): Promise<void> {
 
   const { store, scheduler } = await resolveStore(flag(argv, "--store"), db);
 
-  // The image's model-id prefix names the pinned provider (anthropic | openai).
   const image = await readOciLayout(layout);
-  const pinned = providerNameForModel(image.lock.model.id);
+  const providerSpec = flag(argv, "--provider"); // forkless: a third-party provider module
 
-  // Resolve which backend to serve. `auto` (default) uses the pinned provider when
-  // its API key is present, else the no-key echo model so it is demoable.
-  let resolved: "anthropic" | "openai" | "echo";
+  // Resolve which backend to serve. `--model echo` forces the no-key echo model (the
+  // explicit opt-out). A `--provider <module>` then FORCES that module over `auto`
+  // detection (the operator named a provider explicitly). Otherwise the prior behaviour:
+  // `auto` (default) uses the image's pinned provider when its API key is present, else
+  // the demoable echo model. providerNameForModel is consulted ONLY in the `auto` branch,
+  // so a forkless third-party prefix never throws here.
+  let resolved: "anthropic" | "openai" | "echo" | "module";
   if (modelOpt === "echo") {
     resolved = "echo";
+  } else if (providerSpec) {
+    resolved = "module";
   } else if (modelOpt === "anthropic" || modelOpt === "openai") {
     resolved = modelOpt;
   } else {
+    const pinned = providerNameForModel(image.lock.model.id);
     const envKey = providerDescriptor(pinned).envKey;
     const hasKey = typeof process.env[envKey] === "string" && process.env[envKey] !== "";
     resolved = hasKey ? pinned : "echo";
@@ -318,6 +329,11 @@ async function serveCommand(argv: string[]): Promise<void> {
   let makeModelPerformer: (model: string, onDelta?: (t: string) => void) => Performer;
   if (resolved === "echo") {
     makeModelPerformer = (_model, onDelta): Performer => echoStreamingPerformer(onDelta);
+  } else if (resolved === "module") {
+    const provider = await resolveProvider(providerSpec, image.lock.model.id);
+    // cmdServe passes the PREFIXED image model id — strip it before the API call.
+    makeModelPerformer = (model, onDelta): Performer =>
+      provider.streaming({ model: stripModelPrefix(model), onDelta, baseUrl });
   } else {
     const provider = await loadModelProvider(resolved);
     // cmdServe passes the PREFIXED image model id — strip it before the API call.
@@ -338,11 +354,12 @@ async function serveCommand(argv: string[]): Promise<void> {
     web,
     toolInvoker,
     safeTools,
+    ...(channelSpec !== undefined ? { channel: channelSpec } : {}),
     ...(governance ? { governance } : {}),
     ...(subagents ? { subagents } : {}),
   });
   console.log(
-    `iris serve: listening on ${serve.url} (model=${resolved}${web ? ", web=on" : ""}${governance ? ", governance=on" : ""})`,
+    `iris serve: listening on ${serve.url} (model=${resolved === "module" ? providerSpec : resolved}${web ? ", web=on" : ""}${governance ? ", governance=on" : ""})`,
   );
   if (governance)
     console.log(
@@ -367,7 +384,7 @@ async function serveCommand(argv: string[]): Promise<void> {
 async function chatCommand(argv: string[]): Promise<void> {
   const layout = argv[1];
   if (!layout) {
-    throw new Error("usage: iris chat <layoutdir> --session <id> [--db <path>] [--store <name|module>] [--tools <dir>] [--subagents <file>] [--mcp <file>] [--policy <file.json>] [--as <id>] [--role <r>] [--env-file <file>] [--env KEY=VAL] [--secret-files] [--fake]");
+    throw new Error("usage: iris chat <layoutdir> --session <id> [--db <path>] [--store <name|module>] [--provider <module>] [--tools <dir>] [--subagents <file>] [--mcp <file>] [--policy <file.json>] [--as <id>] [--role <r>] [--env-file <file>] [--env KEY=VAL] [--secret-files] [--fake]");
   }
   const session = flag(argv, "--session") ?? "default";
   const db = flag(argv, "--db") ?? ":memory:";
@@ -428,14 +445,23 @@ async function chatCommand(argv: string[]): Promise<void> {
   }));
   const toolPerformer = makeToolPerformer(makeToolRegistry(contracts), toolInvoker);
 
-  // Select the provider from the image's model-id prefix; use that provider's key.
-  const providerName = providerNameForModel(image.lock.model.id);
-  const providerEnvKey = providerDescriptor(providerName).envKey;
-  // Deploy-time endpoint override (see runCommand). Ignored on the fake path.
+  // Select the provider: the image's model-id prefix names a BUILT-IN; `--provider
+  // <module>` forklessly loads a third-party one. Deploy-time endpoint override (see
+  // runCommand); ignored on the fake path.
+  const providerSpec = flag(argv, "--provider");
   const baseUrl = flag(argv, "--base-url") ?? process.env.IRIS_MODEL_BASE_URL;
+  // useFake: --fake always wins. A BUILT-IN provider also falls back to the fake when its
+  // key is absent. A forkless --provider has NO built-in envKey (the module owns its own
+  // config, loud at construction), so only --fake forces the fake there — and
+  // providerNameForModel is NOT consulted (a third-party prefix never throws).
+  const builtinEnvKey = providerSpec
+    ? undefined
+    : providerDescriptor(providerNameForModel(image.lock.model.id)).envKey;
   const hasKey =
-    typeof process.env[providerEnvKey] === "string" && process.env[providerEnvKey] !== "";
-  const useFake = forceFake || !hasKey;
+    builtinEnvKey !== undefined &&
+    typeof process.env[builtinEnvKey] === "string" &&
+    process.env[builtinEnvKey] !== "";
+  const useFake = forceFake || (!providerSpec && !hasKey);
   // The streaming sink writes live tokens to the SAME stdout the REPL renders to.
   // The model performer streams into `sink.onDelta`; `runChat` resets the sink per
   // turn and renders the streamed reply without re-printing it.
@@ -445,11 +471,13 @@ async function chatCommand(argv: string[]): Promise<void> {
     console.warn(
       forceFake
         ? "iris chat: --fake — using the deterministic (fake model); replies echo your input"
-        : `iris chat: no ${providerEnvKey} — using the deterministic (fake model); replies echo your input`,
+        : `iris chat: no ${builtinEnvKey} — using the deterministic (fake model); replies echo your input`,
     );
     modelPerformer = makeChatStreamingFakeModel(sink.onDelta);
   } else {
-    const provider = await loadModelProvider(providerName);
+    const provider = providerSpec
+      ? await resolveProvider(providerSpec, image.lock.model.id)
+      : await loadModelProvider(providerNameForModel(image.lock.model.id));
     // Stream tokens live; `wrapModelForImage` still injects model/system/maxTokens
     // (model prefix-stripped; request.model wins) and absorbs a provider error into
     // a synthetic reply (Finding B) so a failed model_call never poisons the journal.
@@ -512,6 +540,10 @@ async function deployCommand(argv: string[]): Promise<void> {
   if (!layout) {
     throw new Error("usage: iris deploy <layoutdir> [--out dir] [--name n] [--deploy]");
   }
+  // Forkless --provider/--channel are run/serve/chat-only (the worker bakes a built-in
+  // provider; cmdDeploy derives the provider from the model-id prefix, which would throw
+  // first). Refuse loudly BEFORE cmdDeploy via the testable guard in iris.ts.
+  assertDeployFlagsSupported({ provider: flag(argv, "--provider"), channel: flag(argv, "--channel") });
   const outDir = flag(argv, "--out") ?? "./iris-edge";
   const name = flag(argv, "--name");
   const wantDeploy = argv.includes("--deploy");
@@ -768,6 +800,31 @@ async function main(argv: string[]): Promise<void> {
       console.log(`  iris build --out ./image     # compile the agent image (auto-detects ${agentFile})`);
       console.log("  iris chat ./image --session s1 --db s1.sqlite --fake   # talk to it (no key needed)");
       console.log("  (set ANTHROPIC_API_KEY and drop --fake for a real model that calls the now tool)");
+      break;
+    }
+    case "adapter": {
+      // `iris adapter init <store|channel|provider> <name> [dir]` — scaffold an adapter
+      // package wired to @irisrun/sdk + the matching conformance suite.
+      if (argv[1] !== "init") {
+        throw new Error("usage: iris adapter init <store|channel|provider> <name> [dir]");
+      }
+      const kind = argv[2];
+      const name = argv[3];
+      if (!kind || !name) {
+        throw new Error("usage: iris adapter init <store|channel|provider> <name> [dir]");
+      }
+      const { dir: out, files } = await cmdAdapterInit(kind, name, argv[4] ?? ".");
+      console.log(`iris: scaffolded ${out}/ — ${files.join(", ")}`);
+      console.log("next:");
+      console.log(`  cd ${out}`);
+      console.log("  npm install && npm test     # runs the conformance suite");
+      const plug =
+        kind === "channel"
+          ? `iris serve ./image --channel ${out}`
+          : kind === "provider"
+            ? `iris serve ./image --provider ${out}`
+            : `iris run ./image --store ${out} --db <url>`;
+      console.log(`  # then plug it in:  ${plug}`);
       break;
     }
     case "build": {

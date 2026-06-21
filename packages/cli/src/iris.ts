@@ -28,8 +28,9 @@ import {
   governingDigest,
 } from "@irisrun/agent";
 import type { AgentImage, ImageInspection, RegistryResolver, CapabilityProfile } from "@irisrun/agent";
-import { makeRestChannel, type StreamEvent } from "@irisrun/channel-rest";
+import type { StreamEvent } from "@irisrun/channel-rest";
 import { makeWebHandler } from "@irisrun/channel-web";
+import { resolveChannel } from "./channel.ts";
 import { assertDeployable, type HostAdapter } from "@irisrun/host";
 import { edgeHost, type DoStorage } from "@irisrun/store-do";
 import {
@@ -456,6 +457,7 @@ export interface CliServeOptions {
   clock?: LogicalClock; // default { now: () => 0 }
   onWarn?: (message: string) => void;
   web?: boolean; // serve the @irisrun/channel-web chat UI at GET / (same port)
+  channel?: string; // --channel: "rest" (default — makeRestChannel) or a module exporting openChannel
   toolInvoker?: ToolInvoker; // default: an empty invoker (no transport configured)
   safeTools?: string[]; // tools allowed without an approval gate (bundled retrySafe)
   // Opt-in governance (same shape as cmdRun): policy + inbox. Absent → ungoverned.
@@ -496,7 +498,11 @@ export async function cmdServe(layoutdir: string, opts: CliServeOptions): Promis
     opts.toolInvoker ?? makeToolInvoker({}),
   );
 
-  const channel = makeRestChannel<HarnessState>({
+  // Forkless channel selection: "rest" (default → makeRestChannel) or a module exporting
+  // openChannel. The options object below is the channel-rest RestChannelOptions, which is
+  // exactly the @irisrun/sdk OpenChannelOptions a custom channel also receives.
+  const makeChannel = await resolveChannel(opts.channel);
+  const channel = await makeChannel<HarnessState>({
     adapter: {
       name: "iris-serve",
       capabilities: opts.capabilities,
@@ -553,6 +559,19 @@ export async function cmdServe(layoutdir: string, opts: CliServeOptions): Promis
 // The terminal `wrangler deploy` network egress stays ENV-GATED (operator-installed
 // wrangler + a real Cloudflare account) — like push/pull's "real registry = manual" —
 // so the install-free / zero-runtime-dep invariant holds.
+
+/** `iris deploy` supports BUILT-IN providers only — forkless `--provider`/`--channel`
+ *  modules are run/serve/chat-only (the generated worker bakes a built-in provider, and
+ *  the deploy path derives the provider from the image's model-id prefix). Throws loudly
+ *  if either flag is present; `deployCommand` calls this BEFORE cmdDeploy so it pre-empts
+ *  the prefix throw. Exported so the refusal is behaviorally testable. */
+export function assertDeployFlagsSupported(flags: { provider?: string; channel?: string }): void {
+  if (flags.provider !== undefined || flags.channel !== undefined) {
+    throw new Error(
+      "iris deploy: forkless --provider/--channel modules are not supported at deploy time — the generated worker bakes in a built-in provider. Use them with `iris serve`/`run`/`chat`.",
+    );
+  }
+}
 
 export interface CliDeployOptions {
   // The edge target (capabilities + name). Defaults to the canonical Cloudflare DO

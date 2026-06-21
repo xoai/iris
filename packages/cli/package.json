@@ -25,6 +25,8 @@
     "@irisrun/provider-anthropic": "^0.2.0",
     "@irisrun/provider-openai": "^0.2.0",
     "@irisrun/provider-compat": "^0.2.0",
+    "@irisrun/provider-conformance": "^0.2.0",
+    "@irisrun/sdk": "^0.2.0",
     "@irisrun/auth": "^0.2.0",
     "@irisrun/audit": "^0.2.0",
     "@irisrun/journal-export": "^0.2.0",

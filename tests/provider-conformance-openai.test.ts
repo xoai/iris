@@ -2,9 +2,10 @@
 // pass the SAME tests behind the model port. See the Anthropic twin
 // in provider-conformance-anthropic.test.ts.
 import assert from "node:assert/strict";
+import { test } from "node:test";
 import { openaiModelPerformer, openaiStreamingModelPerformer } from "@irisrun/provider-openai";
-import { runModelProviderConformance } from "./lib/model-provider-conformance.ts";
-import type { ConformanceFixture } from "./lib/model-provider-conformance.ts";
+import { runModelProviderConformance, register } from "@irisrun/provider-conformance";
+import type { ConformanceFixture } from "@irisrun/provider-conformance";
 
 function sse(...frames: unknown[]): string {
   return frames.map((f) => `data: ${typeof f === "string" ? f : JSON.stringify(f)}`).join("\n\n") + "\n\n";
@@ -51,4 +52,4 @@ const fixture: ConformanceFixture = {
   modelFromBody: (body) => body.model,
 };
 
-runModelProviderConformance(fixture);
+register(runModelProviderConformance(fixture), test);

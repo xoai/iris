@@ -126,6 +126,10 @@ Start with **[CONTRIBUTING](../CONTRIBUTING.md)** — the dev loop (install-free
   host ports (`StateStore` / `Scheduler`), and the adapter layers.
 - [Conventions](./conventions.md) — the enforced house rules (core-is-pure, zero-dep,
   loud-refusal, tests-first).
+- [Adapter SDK](./sdk.md) — **one dependency** (`@irisrun/sdk`) to build a store, channel, or
+  provider adapter: the port types, the conformance suites, the `openStore` / `openModelProvider` /
+  `openChannel` contracts, plus `iris adapter init` to scaffold and `--store` / `--provider` /
+  `--channel <module>` to load without a fork.
 - Extension recipes, each with a conformance suite that defines "done":
   [add a provider](./contributing/adding-a-provider.md) ·
   [add a channel](./contributing/adding-a-channel.md) ·

@@ -11,6 +11,7 @@ export {
   cmdRun,
   cmdServe,
   cmdDeploy,
+  assertDeployFlagsSupported,
   governancePerformers,
   loadApprovalPolicy,
   subagentPerformers,
@@ -30,6 +31,8 @@ export { loadSubagents } from "./subagents-cfg.ts";
 export type { SubagentEntry, SubagentsConfig } from "./subagents-cfg.ts";
 export { resolveChildModel } from "./child-model.ts";
 export type { ChildModelConfig } from "./child-model.ts";
+export { cmdAdapterInit, ADAPTER_KINDS } from "./adapter-init.ts";
+export type { AdapterKind } from "./adapter-init.ts";
 export { cmdAudit } from "./audit-cmd.ts";
 export type { CliAuditOptions } from "./audit-cmd.ts";
 export { cmdJournalExport, cmdJournalVerify, cmdJournalImport } from "./journal-cmd.ts";
@@ -83,6 +86,7 @@ export {
   stripModelPrefix,
   providerDescriptor,
   loadModelProvider,
+  resolveProvider,
 } from "./providers.ts";
 export type {
   ProviderName,

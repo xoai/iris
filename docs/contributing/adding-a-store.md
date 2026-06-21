@@ -15,6 +15,12 @@ in-memory `Map`. That makes it the clearest place to see the shape. Where the
 serverless story differs, we point at `@irisrun/store-fs` (the `node:fs` adapter)
 for contrast.
 
+> **Tip — scaffold it.** `iris adapter init store <name>` writes a package wired to
+> `@irisrun/sdk` (the port types + the conformance suite + the `openStore` contract in one
+> dependency) with a working in-memory store — its conformance suite is **green out of the
+> box**, so you start by swapping the in-memory `Map`s for your backend. The same SDK and
+> `iris adapter init` cover channels and providers.
+
 ## The one thing to get right: a store stores bytes — it does not decide anything
 
 Before any code, internalize the boundary, because it is what keeps this safe.

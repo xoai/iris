@@ -28,6 +28,12 @@ portable across hosts.
 - **Tools as contracts** — tools are referenced by address (`mcp://`, `grpc://`,
   `subprocess://`), never embedded, so they can be written in any language.
   See [Tools](docs/tools.md).
+- **Adapter SDK** — `@irisrun/sdk` is one dependency to build a **store**, **channel**, or
+  **provider** adapter: the port types, the importable conformance suites, and the
+  forkless-loader contracts (`openStore` / `openModelProvider` / `openChannel`). Scaffold one
+  with `iris adapter init <store|channel|provider> <name>`, then load it without a fork —
+  `--store` / `--provider` / `--channel <module>`. See the recipes under
+  [docs/contributing](docs/contributing/).
 
 ## Conventions
 
