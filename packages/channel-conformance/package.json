@@ -1,0 +1,32 @@
+{
+  "name": "@irisrun/channel-conformance",
+  "version": "0.2.0",
+  "type": "module",
+  "description": "Iris channel-port conformance suite — an importable, runner-agnostic harness that certifies any channel against the two-identifier protocol (sessionId + single-use continuation token, committed-only rotation, the refusal taxonomy). Pass it and your channel is replay-safe by construction.",
+  "exports": {
+    ".": {
+      "iris-src": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@irisrun/channel-core": "^0.2.0"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xoai/iris.git",
+    "directory": "packages/channel-conformance"
+  },
+  "homepage": "https://github.com/xoai/iris#readme",
+  "files": [
+    "dist"
+  ]
+}

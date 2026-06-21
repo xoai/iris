@@ -1,6 +1,6 @@
 # Architecture
 
-Iris is ~31 packages, but the shape is one idea: a **pure core** that owns durability,
+Iris is ~32 packages, but the shape is one idea: a **pure core** that owns durability,
 and **host adapters** behind two narrow ports. Everything else is a layer around that
 spine. This page is the map a contributor needs before changing anything.
 
@@ -59,7 +59,7 @@ operation** — that's what makes at-least-once + single-writer safe across cras
 - **`@irisrun/sandbox`** — the security floor: deny-all network + credential brokering + a host-side egress proxy.
 
 ### Channels (one port)
-- **`@irisrun/channel-core`** — the channel **port** + the conformance suite every channel passes (`tests/lib/channel-port-conformance.ts`).
+- **`@irisrun/channel-core`** — the channel **port**; the conformance suite every channel passes ships as the importable `@irisrun/channel-conformance`.
 - **`channel-rest` · `channel-mcp` · `channel-slack`** — three channels behind that one port; **`channel-web` + `client-sdk`** put a human in front.
 
 ### Providers (one port)

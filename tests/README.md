@@ -32,7 +32,7 @@ IRIS_LIVE_CONFORMANCE=1 ANTHROPIC_API_KEY=… npm test   # adds the live-provide
 
 The backbone of the suite, and the **executable spec** for Iris's port contracts —
 production code points here (e.g. a provider must pass `lib/model-provider-conformance.ts`;
-a channel must pass `lib/channel-port-conformance.ts`). Fakes, fixtures, the chaos
+a channel must pass `@irisrun/channel-conformance`). Fakes, fixtures, the chaos
 helpers, and `live-gate` live here. Imported by the suite; never published.
 
 ## `examples/` — reference implementations (and they're tested)

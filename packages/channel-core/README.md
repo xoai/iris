@@ -27,7 +27,7 @@ protocol. This package is that protocol, factored into one driver:
   agree field-for-field.
 
 The proof that channels are interchangeable is a single shared **conformance suite**
-(`tests/lib/channel-port-conformance.ts`) that `channel-rest`, `channel-mcp`, and
+(the importable `@irisrun/channel-conformance`) that `channel-rest`, `channel-mcp`, and
 `channel-slack` all pass — "channels behind one port" is a literal, executed guarantee.
 
 The continuation token is an instance-local ordering credential; the **durable**

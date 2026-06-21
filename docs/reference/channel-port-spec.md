@@ -2,9 +2,9 @@
 
 The contract every Iris channel satisfies. A channel is a wire in front of a
 **durable session**; this spec is what makes channels pluggable and replay-safe by
-construction. It is implemented once in `@irisrun/channel-core` and verified by a
-conformance suite (`tests/lib/channel-port-conformance.ts`) that any channel must
-pass — `channel-rest`, `channel-mcp`, and `channel-slack` all run it.
+construction. It is implemented once in `@irisrun/channel-core` and verified by the
+importable `@irisrun/channel-conformance` suite that any channel must pass —
+`channel-rest`, `channel-mcp`, and `channel-slack` all run it.
 
 > Like the [verifiable-journal spec](./verifiable-journal-spec.md), this is a
 > reference document, not a tutorial — start at [Channels](../channels.md).
@@ -50,6 +50,15 @@ valid token is refused — never double-applied. The loser is refused either as
 `in-flight` (caught before the winner rotated) or `stale-token` (the winner already
 rotated); both uphold single-use.
 
+## Streaming: refuse before the stream opens
+
+A streaming transport (SSE / WebSocket) MUST validate and refuse a continue **before**
+it opens the stream — a refusal is a plain loud error (a JSON body, or a close frame),
+never a half-open stream that then errors. Use `validateContinue` (and `inFlight`) to
+refuse synchronously, then `advance` with no `await` between the check and the claim so
+the single-use guarantee holds. A held connection authorizes by the connection itself
+and advances with `token:null` (no presented token).
+
 ## Refusal taxonomy (all loud)
 
 A continue is refused — never a silent success — for exactly these reasons, each
@@ -79,10 +88,18 @@ ephemeral error):
 
 ## Conformance
 
-A channel passes the port conformance suite iff it: mints on START; rotates on a
-committed continue; refuses stale/missing/unknown loudly; keeps the prior token on
-`contended` and `aborted`; and enforces single-use under concurrency. Passing the
-suite is the definition of a first-class Iris channel.
+`@irisrun/channel-conformance` is the importable definition of done: supply a fixture
+that drives your transport and `register(runChannelPortConformance(fixture), test)`. It
+certifies that a channel mints on START; rotates **only** on a committed continue; keeps
+the prior token on `contended`/`aborted`; refuses stale/missing/unknown/in-flight loudly
+(and **only** those four); enforces single-use under concurrency (including **replayed**
+and **cross-session** tokens); and — via the opt-in `holdConnection` fixture — the
+`token:null` hold-connection advance path. Passing it is the definition of a first-class
+Iris channel.
+
+**Scope.** Conformance certifies the two-identifier protocol ONLY. Signature
+verification (e.g. Slack), approval / HITL logic, and frame encoding (SSE / WebSocket
+framing) are the channel's own concern — test those separately.
 
 ---
 

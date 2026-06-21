@@ -2,7 +2,7 @@
 // Iris channel. It owns the two-identifier protocol in ONE place: mint the sessionId,
 // own + rotate a single-use continuationToken, an atomic per-session in-flight claim,
 // and the loud refusal taxonomy. channel-rest, channel-mcp, and channel-slack all
-// drive it; a shared conformance suite (tests/lib/channel-port-conformance.ts) pins
+// drive it; a shared conformance suite (@irisrun/channel-conformance) pins
 // the contract so a new channel is replay-safe by construction.
 //
 // TOKEN ROTATION:

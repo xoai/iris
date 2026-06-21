@@ -8,7 +8,8 @@ import { makeMcpChannel, type TurnInputs } from "@irisrun/channel-mcp";
 import type { HostAdapter } from "@irisrun/host";
 import { TestClock } from "./lib/mem-store.ts";
 import { makeFlippableStore } from "./lib/flaky-store.ts";
-import { runChannelPortConformance, type ChannelOps, type Refusal } from "./lib/channel-port-conformance.ts";
+import { test } from "node:test";
+import { runChannelPortConformance, register, type ChannelOps, type Refusal } from "@irisrun/channel-conformance";
 
 type ChState = { turns: number };
 const program: Program<ChState> = {
@@ -38,7 +39,7 @@ function parseCallResult(resp: unknown): Record<string, Json> {
   return JSON.parse(text) as Record<string, Json>;
 }
 
-runChannelPortConformance({
+register(runChannelPortConformance({
   name: "channel-mcp",
   async create(): Promise<ChannelOps> {
     const { store, setNext } = makeFlippableStore(new MemoryStateStore());
@@ -80,4 +81,4 @@ runChannelPortConformance({
       close: async () => {},
     };
   },
-});
+}), test);

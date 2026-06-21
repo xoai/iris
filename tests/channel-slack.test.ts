@@ -10,7 +10,7 @@ import type { Json, TurnOutcome } from "@irisrun/core";
 import { makeChannelSession } from "@irisrun/channel-core";
 import { createApprovalInbox, makeGovernedApprovalPerformer } from "@irisrun/auth";
 import { makeSlackChannel, verifySlackSignature } from "@irisrun/channel-slack";
-import { runChannelPortConformance, type ChannelOps } from "./lib/channel-port-conformance.ts";
+import { runChannelPortConformance, register, type ChannelOps } from "@irisrun/channel-conformance";
 
 const SECRET = "slack-signing-secret";
 const NOW_MS = 1_700_000_000_000;
@@ -178,7 +178,7 @@ void makeGovernedApprovalPerformer;
 
 // ── the Slack channel's session passes the channel-port conformance suite ──
 
-runChannelPortConformance({
+register(runChannelPortConformance({
   name: "channel-slack-session",
   async create(): Promise<ChannelOps> {
     let next: "ok" | "contend" | "abort" = "ok";
@@ -214,4 +214,4 @@ runChannelPortConformance({
       close: async () => {},
     };
   },
-});
+}), test);

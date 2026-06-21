@@ -74,7 +74,7 @@ and cuts a GitHub Release. `v0.0.1` predates this; `v0.1.0` is the first synced 
 
 ### If a publish is interrupted (npm rate-limit / partial release)
 
-Publishing a monorepo of ~30 packages can trip npm's per-token publish
+Publishing a monorepo of ~31 packages can trip npm's per-token publish
 rate-limit (`E429 Too Many Requests — rate limited exceeded`) part-way through,
 leaving some packages at the new version and the rest behind. `npm run release`
 publishes **per package and idempotently** — it skips every package already live
