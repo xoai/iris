@@ -5,6 +5,7 @@
 // generated deploy worker. Pure functions are unit-tested; loadModelProvider
 // dynamic-imports the chosen package so the no-key path stays light.
 import type { Performer } from "@irisrun/core";
+import type { ModelPerformerOptions, StreamingModelPerformerOptions } from "@irisrun/provider-conformance";
 
 export type ProviderName = "anthropic" | "openai";
 
@@ -60,15 +61,10 @@ export function providerDescriptor(name: ProviderName): ProviderDescriptor {
   return DESCRIPTORS[name];
 }
 
-export interface ModelPerformerOptions {
-  apiKey?: string;
-  fetchImpl?: typeof fetch;
-  model?: string;
-  baseUrl?: string;
-}
-export interface StreamingModelPerformerOptions extends ModelPerformerOptions {
-  onDelta?: (text: string) => void;
-}
+// ModelPerformerOptions / StreamingModelPerformerOptions are canonical in
+// @irisrun/provider-conformance (the provider port package); re-exported here so the
+// CLI public surface (index.ts) keeps resolving them from "./providers.ts".
+export type { ModelPerformerOptions, StreamingModelPerformerOptions } from "@irisrun/provider-conformance";
 
 export interface LoadedProvider {
   name: ProviderName;
