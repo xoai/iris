@@ -211,30 +211,71 @@ on `:8787`.
 
 ## Put Telegram in front
 
-Iris has no first-party Telegram channel — and doesn't need one. A **bridge** is a
-small external process that maps a platform's webhook to the durable REST session,
-with the wire protocol (session minting, the rotating continuation token) handled by
-[`@irisrun/bridge`](../../packages/bridge/README.md). The Telegram adapter is a
-worked example you copy:
+Iris has no first-party Telegram channel — and doesn't need one. The Telegram bridge
+is a **second process** you run next to `iris serve`. The topology:
 
-```ts
-// telegram-bridge.ts — run alongside `iris serve`
-import { makeTelegramBridge } from "./telegram.ts"; // copy from tests/examples/bridges/telegram.ts
-
-const bridge = makeTelegramBridge({
-  baseUrl: "http://127.0.0.1:8787",         // the `iris serve` above
-  secretToken: process.env.TELEGRAM_SECRET!, // the secret you set on the webhook
-});
-
-// in your HTTP handler for Telegram's webhook POST:
-const { status, body } = await bridge.handle(req.headers, rawBody);
+```
+Telegram  ──HTTPS webhook──▶  telegram-bridge.ts  ──HTTP──▶  iris serve
+(the cloud)                   (your process, :8080)          (the team, :8787)
 ```
 
-Register the webhook with Telegram's `setWebhook` using the same `secret_token`; the
-adapter checks the `X-Telegram-Bot-Api-Secret-Token` header constant-time and
-**verifies before any turn runs** (a bad secret is `401`, never a wasted delegation).
-The `discord.ts` and `teams.ts` siblings in `tests/examples/bridges/` are the same
-shape for other platforms.
+`iris serve` stays private on `127.0.0.1:8787` — only the bridge is exposed to the
+internet. [`@irisrun/bridge`](../../packages/bridge/README.md) is a **library**, not a
+server: `makeTelegramBridge(...)` gives you a `handle(headers, rawBody) → { status,
+body }` that mints the durable session and adopts the rotating continuation token for
+you. You provide the HTTP server around it — a dozen lines of `node:http`, no
+dependency beyond the bridge:
+
+```ts
+// telegram-bridge.ts — copy tests/examples/bridges/telegram.ts beside this file
+import { createServer } from "node:http";
+import { makeTelegramBridge } from "./telegram.ts";
+
+const bridge = makeTelegramBridge({
+  baseUrl: "http://127.0.0.1:8787",          // the `iris serve` REST channel
+  secretToken: process.env.TELEGRAM_SECRET!, // the secret you set on setWebhook
+});
+
+createServer((req, res) => {
+  if (req.method !== "POST") return void res.writeHead(405).end();
+  let raw = "";
+  req.on("data", (c) => (raw += c));
+  req.on("end", async () => {
+    // headers verify-first (bad secret → 401, no turn); the JSON body is the
+    // reply Telegram executes (a sendMessage back to the chat).
+    const { status, body } = await bridge.handle(req.headers as Record<string, string | undefined>, raw);
+    res.writeHead(status, { "content-type": "application/json" });
+    res.end(JSON.stringify(body));
+  });
+}).listen(8080, () => console.log("telegram bridge on :8080 → iris :8787"));
+```
+
+Run the two processes side by side (the bridge needs `@irisrun/bridge` resolvable;
+`node` is install-free on Node 24, which strips the types):
+
+```sh
+# terminal 1 — the team
+iris serve ./coding-team/image --store @irisrun/store-postgres --db "$DATABASE_URL" --env-file coding-team/.env --port 8787
+
+# terminal 2 — the bridge
+npm install @irisrun/bridge
+TELEGRAM_SECRET=$(openssl rand -hex 16) node telegram-bridge.ts
+```
+
+Telegram only calls **public HTTPS** webhooks, so expose `:8080` with a tunnel in dev
+(`cloudflared tunnel --url http://localhost:8080`) or a TLS reverse proxy in prod,
+then register that public URL — with the same secret — once:
+
+```sh
+curl "https://api.telegram.org/bot$BOT_TOKEN/setWebhook" \
+  -d url="https://<your-public-host>/" -d secret_token="$TELEGRAM_SECRET"
+```
+
+Now a Telegram message hits the bridge, which verifies the
+`X-Telegram-Bot-Api-Secret-Token` header constant-time **before any turn runs** (a bad
+secret is `401`, never a wasted delegation), drives the durable session on `:8787`,
+and replies in the webhook response. The `discord.ts` and `teams.ts` siblings in
+`tests/examples/bridges/` are the same shape for other platforms.
 
 ## What a delegation does, and how it can end
 
