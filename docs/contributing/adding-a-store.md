@@ -236,29 +236,45 @@ a parked session. (For a durable host like `store-fs`, the same state lives on d
 a fresh instance over the same root sees the prior timers/signals — the serverless
 cold-start invariant.)
 
-## Step 3 — Pass the cross-store conformance
+## Step 3 — Pass the conformance suite
 
-There is no single `runStoreConformance(store)` helper to call. Conformance is a
-**checklist of behaviors**, asserted two ways:
+Conformance is an **importable suite** — `@irisrun/store-conformance` — that you run
+against your adapter in your own CI. It is **runner-agnostic** (it returns a list of
+cases and never imports a test runner), so wire it into `node:test` — or any
+`(name, fn)` runner — with `register`:
 
-**1. A per-store unit test** that drives your `StateStore` and `Scheduler` directly
-through the invariants. The template is `tests/store-memory.test.ts` (the smallest),
-with `tests/store-fs.test.ts` as the fuller version and `tests/ports.test.ts` as the
-structural baseline. Every store test asserts the same things — copy them against your
-adapter:
+```ts
+import { test } from "node:test";
+import { runStoreConformance, runSchedulerConformance, register } from "@irisrun/store-conformance";
+import { MyStateStore, MyScheduler } from "./index.ts";
 
-- `cas`: two writers with the same `expected`, exactly one wins; the loser gets
-  `{ ok: false, current }`.
-- `append`: rejects a **stale fence** (`reason: "stale_fence"`) and a **seq gap**
-  (`reason: "seq_conflict"`), and accepts a dense append.
-- truncation: seq numbers are **not reused** after `truncateJournal` (the hwm holds).
-- `readJournal`: dense readback that decodes, honoring `fromSeq`.
-- scheduler: `dueWakeups` peeks (idempotent), `confirmWoken` consumes.
+// The FULL port contract in one line each — CAS (incl. stale-expected and
+// non-null-on-missing), fenced/dense append with stale_fence PRECEDENCE over
+// seq_conflict, hwm survives truncation, writeSnapshot seeds hwm, snapshot/journal
+// overlap, multi-session isolation, readJournal edges, and the peek→confirm wakeup
+// protocol:
+register(runStoreConformance(() => new MyStateStore(), { concurrency: 8 }), test);
+register(runSchedulerConformance(() => new MyScheduler()), test);
+```
 
-For a host that needs a concurrency stand-in (like a Durable Object), there's a fixture
-pattern too — `tests/store-do-fake.test.ts` drives the adapter against an in-memory
-`FakeDoStorage` whose `transaction()` is a *real* serialized mutex, so the atomicity of
-your transactional path is actually exercised, not assumed.
+`make()` is called fresh per case, so each check starts from clean state. The opt-in
+`{ concurrency: N }` fires N racers at the same CAS and the same append and asserts
+**exactly one wins** — the check a racy or eventually-consistent backend fails. All
+four first-party stores register this same suite; `tests/store-memory.test.ts` is the
+whole-file example, and `tests/store-conformance-teeth.test.ts` proves the suite
+actually *fails* a contract-violating store (it has teeth).
+
+**What the suite assumes — and requires.** It certifies the in-process port contract;
+it cannot detect a weak backend from single-threaded calls. So your backend MUST give
+**linearizable compare-and-swap** and an **atomic fenced append** (the fence check +
+the `expectedSeq` check + the insert are one atomic operation). Eventual consistency
+is insufficient unless fronted by a strongly consistent path. **Durability across a
+cold process/instance** (reopen over the same directory / connection and read prior
+state) is inherently backing-specific — the portable suite can't express it; assert it
+with your own test, using `tests/store-fs.test.ts` (serverless cold-instance) and
+`tests/store-do.test.ts` (cold-isolate) as the reference pattern. For a transactional
+host that needs a concurrency stand-in, `tests/lib/fake-do.ts`'s `FakeDoStorage` (a
+real serialized-mutex `transaction()`) is the pattern store-do uses.
 
 **2. The end-to-end cross-store program** (`tests/cross-store-program.ts` +
 `tests/cross-store.test.ts`). This is the real proof that your store preserves
@@ -303,8 +319,9 @@ Finally, export the public surface from a package `index.ts`, the way
       store contract).
 - [ ] `Scheduler` records durable timers (logical time) and signals; the host wake
       path peeks then consumes only after the resumed turn commits.
-- [ ] A per-store test asserts the conformance behaviors (template:
-      `tests/store-memory.test.ts`).
+- [ ] Your adapter passes the importable `@irisrun/store-conformance` suite —
+      `register(runStoreConformance(() => new MyStore()), test)` + the scheduler suite
+      (the definition of "done"); run it with `{ concurrency }` for the racy-backend check.
 - [ ] The cross-store park → migrate → resume test (`tests/cross-store.test.ts`)
       passes against your store — resumed state byte-equals the baseline.
 - [ ] The adapter is host-only and lives in its own package; core stays

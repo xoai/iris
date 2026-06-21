@@ -1,6 +1,6 @@
 # Architecture
 
-Iris is ~29 packages, but the shape is one idea: a **pure core** that owns durability,
+Iris is ~30 packages, but the shape is one idea: a **pure core** that owns durability,
 and **host adapters** behind two narrow ports. Everything else is a layer around that
 spine. This page is the map a contributor needs before changing anything.
 

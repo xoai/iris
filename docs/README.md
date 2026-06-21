@@ -93,7 +93,7 @@ Normative specs and lookups, in [`reference/`](./reference/):
 Start with **[CONTRIBUTING](../CONTRIBUTING.md)** — the dev loop (install-free,
 `npm test` / `npm run typecheck`), the CI gate, and the house rules. Then:
 
-- [Architecture](./architecture.md) — how the ~29 packages fit: the pure core, the two
+- [Architecture](./architecture.md) — how the ~30 packages fit: the pure core, the two
   host ports (`StateStore` / `Scheduler`), and the adapter layers.
 - [Conventions](./conventions.md) — the enforced house rules (core-is-pure, zero-dep,
   loud-refusal, tests-first).
