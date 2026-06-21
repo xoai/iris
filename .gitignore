@@ -9,6 +9,7 @@ packages/*/tsconfig.build.json
 *.sqlite-wal
 *.sqlite-shm
 .iris-tmp/
+.adapter-init-*/
 
 .sage
 .sage-memory

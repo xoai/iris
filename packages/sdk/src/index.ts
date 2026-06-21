@@ -23,6 +23,7 @@ export type {
   ModelMessage,
   ModelPerformerOptions,
   StreamingModelPerformerOptions,
+  ConformanceFixture,
 } from "@irisrun/provider-conformance";
 export { runModelProviderConformance } from "@irisrun/provider-conformance";
 

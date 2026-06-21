@@ -23,6 +23,7 @@ import { cmdEval, loadEvalSuite } from "./eval-cmd.ts";
 import { cmdSchedule } from "./schedule-cmd.ts";
 import { loadSubagents } from "./subagents-cfg.ts";
 import { resolveStore } from "./store.ts";
+import { cmdAdapterInit } from "./adapter-init.ts";
 import { loadMcpServers } from "./mcp-cfg.ts";
 import { resolveChildModel } from "./child-model.ts";
 import { createApprovalInbox } from "@irisrun/auth";
@@ -804,6 +805,31 @@ async function main(argv: string[]): Promise<void> {
       console.log(`  iris build --out ./image     # compile the agent image (auto-detects ${agentFile})`);
       console.log("  iris chat ./image --session s1 --db s1.sqlite --fake   # talk to it (no key needed)");
       console.log("  (set ANTHROPIC_API_KEY and drop --fake for a real model that calls the now tool)");
+      break;
+    }
+    case "adapter": {
+      // `iris adapter init <store|channel|provider> <name> [dir]` — scaffold an adapter
+      // package wired to @irisrun/sdk + the matching conformance suite.
+      if (argv[1] !== "init") {
+        throw new Error("usage: iris adapter init <store|channel|provider> <name> [dir]");
+      }
+      const kind = argv[2];
+      const name = argv[3];
+      if (!kind || !name) {
+        throw new Error("usage: iris adapter init <store|channel|provider> <name> [dir]");
+      }
+      const { dir: out, files } = await cmdAdapterInit(kind, name, argv[4] ?? ".");
+      console.log(`iris: scaffolded ${out}/ — ${files.join(", ")}`);
+      console.log("next:");
+      console.log(`  cd ${out}`);
+      console.log("  npm install && npm test     # runs the conformance suite");
+      const plug =
+        kind === "channel"
+          ? `iris serve ./image --channel ${out}`
+          : kind === "provider"
+            ? `iris serve ./image --provider ${out}`
+            : `iris run ./image --store ${out} --db <url>`;
+      console.log(`  # then plug it in:  ${plug}`);
       break;
     }
     case "build": {
