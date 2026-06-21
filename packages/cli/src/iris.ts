@@ -560,6 +560,19 @@ export async function cmdServe(layoutdir: string, opts: CliServeOptions): Promis
 // wrangler + a real Cloudflare account) — like push/pull's "real registry = manual" —
 // so the install-free / zero-runtime-dep invariant holds.
 
+/** `iris deploy` supports BUILT-IN providers only — forkless `--provider`/`--channel`
+ *  modules are run/serve/chat-only (the generated worker bakes a built-in provider, and
+ *  the deploy path derives the provider from the image's model-id prefix). Throws loudly
+ *  if either flag is present; `deployCommand` calls this BEFORE cmdDeploy so it pre-empts
+ *  the prefix throw. Exported so the refusal is behaviorally testable. */
+export function assertDeployFlagsSupported(flags: { provider?: string; channel?: string }): void {
+  if (flags.provider !== undefined || flags.channel !== undefined) {
+    throw new Error(
+      "iris deploy: forkless --provider/--channel modules are not supported at deploy time — the generated worker bakes in a built-in provider. Use them with `iris serve`/`run`/`chat`.",
+    );
+  }
+}
+
 export interface CliDeployOptions {
   // The edge target (capabilities + name). Defaults to the canonical Cloudflare DO
   // profile via edgeHost; the gate reads only .name/.capabilities (never the store).

@@ -43,7 +43,7 @@
 - [Architecture](docs/architecture.md): the pure core + the two host ports (StateStore/Scheduler) + the adapter layers (how the ~29 packages fit).
 - [Conventions](docs/conventions.md): enforced house rules — core-is-pure (relative imports only), zero-dep, loud-refusal/no-silent-failure, tests-first.
 - [Add a provider](docs/contributing/adding-a-provider.md) / [channel](docs/contributing/adding-a-channel.md) / [store](docs/contributing/adding-a-store.md) / [tactic](docs/contributing/adding-a-tactic.md): the extension recipes, each with a conformance suite.
-- **Adapter SDK** — `@irisrun/sdk` packages the port types + conformance suites + the `openStore`/`openModelProvider`/`openChannel` contracts into ONE dependency; `iris adapter init <kind> <name>` scaffolds a conformance-wired package, and `--store`/`--provider`/`--channel <module>` load it without forking the CLI.
+- [Adapter SDK](docs/sdk.md): `@irisrun/sdk` — ONE dependency (port types + conformance suites + the `openStore`/`openModelProvider`/`openChannel` contracts) to build a store/channel/provider adapter; `iris adapter init <kind> <name>` scaffolds a conformance-wired package, and `--store`/`--provider`/`--channel <module>` load it without forking the CLI.
 
 ## Discovery
 - [agents.md](agents.md): how an AI agent or tool integrates with Iris — Agentfile schema, MCP server, REST API.

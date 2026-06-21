@@ -14,7 +14,7 @@ import type { Performer, Json, StateStore, Scheduler } from "@irisrun/core";
 import { makeToolPerformer, makeToolRegistry, makeToolInvoker, makeSubprocessTransport, makeMcpStdioTransport } from "@irisrun/tools";
 import type { ToolContract } from "@irisrun/tools";
 import { readFile } from "node:fs/promises";
-import { cmdInit, cmdBuild, cmdInspect, cmdVerify, cmdPush, cmdPull, cmdRun, cmdServe, cmdDeploy, loadApprovalPolicy, resolveBuildFile, type CliSubagents } from "./iris.ts";
+import { cmdInit, cmdBuild, cmdInspect, cmdVerify, cmdPush, cmdPull, cmdRun, cmdServe, cmdDeploy, assertDeployFlagsSupported, loadApprovalPolicy, resolveBuildFile, type CliSubagents } from "./iris.ts";
 import { existsSync, rmSync } from "node:fs";
 import { cmdAudit } from "./audit-cmd.ts";
 import { cmdJournalExport, cmdJournalVerify, cmdJournalImport } from "./journal-cmd.ts";
@@ -540,15 +540,10 @@ async function deployCommand(argv: string[]): Promise<void> {
   if (!layout) {
     throw new Error("usage: iris deploy <layoutdir> [--out dir] [--name n] [--deploy]");
   }
-  // Forkless --provider/--channel modules are run/serve/chat-only: the generated worker
-  // bakes in a BUILT-IN provider (workerMjs), and cmdDeploy derives the provider from the
-  // image's model-id prefix — which would THROW on a third-party prefix before any refusal
-  // could fire. Refuse here, loudly, before cmdDeploy. (Third-party-in-worker is deferred.)
-  if (flag(argv, "--provider") !== undefined || flag(argv, "--channel") !== undefined) {
-    throw new Error(
-      "iris deploy: forkless --provider/--channel modules are not supported at deploy time — the generated worker bakes in a built-in provider. Use them with `iris serve`/`run`/`chat`.",
-    );
-  }
+  // Forkless --provider/--channel are run/serve/chat-only (the worker bakes a built-in
+  // provider; cmdDeploy derives the provider from the model-id prefix, which would throw
+  // first). Refuse loudly BEFORE cmdDeploy via the testable guard in iris.ts.
+  assertDeployFlagsSupported({ provider: flag(argv, "--provider"), channel: flag(argv, "--channel") });
   const outDir = flag(argv, "--out") ?? "./iris-edge";
   const name = flag(argv, "--name");
   const wantDeploy = argv.includes("--deploy");

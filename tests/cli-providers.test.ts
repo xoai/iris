@@ -13,6 +13,7 @@ import {
   providerDescriptor,
   loadModelProvider,
   resolveProvider,
+  assertDeployFlagsSupported,
 } from "iris-runtime";
 
 test("providerNameForModel: known prefixes, bare default, unknown throws", () => {
@@ -150,9 +151,19 @@ test("resolveProvider: an unresolvable module fails loudly", async () => {
   await assert.rejects(resolveProvider("@irisrun/provider-does-not-exist-xyz", "x"), /could not import/);
 });
 
-// cli-main wiring guards (source assertions, like the base-url guard above): --provider
-// is threaded through run/serve/chat, and deploy refuses it loudly before cmdDeploy.
-test("cli-main threads --provider through run/serve/chat, and deploy refuses it", () => {
+// `iris deploy` refuses forkless --provider/--channel BEHAVIORALLY (the spec's testing
+// strategy named this) — the worker bakes a built-in provider and the prefix would throw
+// first, so the guard fires up front. deployCommand (an un-importable argv wrapper) calls
+// this exported guard.
+test("assertDeployFlagsSupported: refuses forkless --provider/--channel, allows neither", () => {
+  assert.throws(() => assertDeployFlagsSupported({ provider: "@acme/iris-provider-foo" }), /not supported at deploy time/);
+  assert.throws(() => assertDeployFlagsSupported({ channel: "@acme/iris-channel-grpc" }), /not supported at deploy time/);
+  assert.doesNotThrow(() => assertDeployFlagsSupported({}));
+});
+
+// Wiring guard (source assertion, like the base-url guard above): --provider is threaded
+// through the run/serve/chat sites, and deployCommand calls the behavioral guard above.
+test("cli-main threads --provider through run/serve/chat, and deploy calls the guard", () => {
   const cliMain = readFileSync(
     join(dirname(fileURLToPath(import.meta.url)), "..", "packages", "cli", "src", "cli-main.ts"),
     "utf8",
@@ -162,7 +173,7 @@ test("cli-main threads --provider through run/serve/chat, and deploy refuses it"
   const deploySection = cliMain.slice(cliMain.indexOf("async function deployCommand"));
   assert.match(
     deploySection.slice(0, 900),
-    /not supported at deploy time/,
-    "deployCommand must refuse forkless --provider/--channel before cmdDeploy",
+    /assertDeployFlagsSupported\(/,
+    "deployCommand must call assertDeployFlagsSupported before cmdDeploy",
   );
 });

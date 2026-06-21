@@ -35,6 +35,7 @@ Scaffold a project, compile it to an image, and inspect or verify the result.
 | Command | Synopsis | Flags |
 | --- | --- | --- |
 | `iris init [dir]` | Scaffold a self-contained project: `agent.yaml` (or `agent.json`), `instructions.md`, and a bundled `now` tool. | `--json` (author `agent.json` instead of the YAML default); `dir` is the first non-flag positional, default `.` |
+| `iris adapter init <store\|channel\|provider> <name> [dir]` | Scaffold a buildable **adapter** package wired to `@irisrun/sdk` + the matching conformance suite (one dependency). | `dir` default `.`; refuses a non-empty target (no-clobber); unknown kind is a loud usage error. See the [adapter SDK](../sdk.md). |
 | `iris build` | Compile the Agentfile to an OCI image layout (auto-detects `agent.json` → `agent.yaml` → `agent.yml`). | `--file <path>` (explicit Agentfile; wins over auto-detect), `--out <dir>` (default `./image`), `--tools <dir>` (default `<agent dir>/tools`) |
 | `iris inspect <layoutdir>` | Print the image inspection (model, tools, capabilities) as JSON. | none |
 | `iris verify <layoutdir>` | Re-resolve the image's tool refs and verify the lock. | `--tools <dir>` (default `tools`) |
@@ -54,12 +55,13 @@ Drive an image: one turn, a server, or an interactive REPL.
 the provider selected from the image's model-id prefix).
 
 ```
-usage: iris run <layoutdir> --session <id> [--db <path>] [--store <name|module>] [--tools <dir>] [--subagents <file>] [--mcp <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]
+usage: iris run <layoutdir> --session <id> [--db <path>] [--store <name|module>] [--provider <module>] [--tools <dir>] [--subagents <file>] [--mcp <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]
 ```
 
 - `--session <id>` — the durable session id (default `default`).
 - `--db <path>` — store path / URL (default `:memory:`); for a third-party store it's the connection string (e.g. a `postgres://…` DSN).
 - `--store <name|module>` — the host store: a built-in (`sqlite` default · `fs` · `memory`) or any module exporting `openStore({ url })` (e.g. `@irisrun/store-postgres`). On `run` / `serve` / `chat` / `audit` / `schedule`. See [adding a store](../contributing/adding-a-store.md). (`iris journal` separately overloads `--store` as a db-path alias.)
+- `--provider <module>` — the model provider: by default the image's `<provider>/` model-id prefix selects a built-in (`anthropic` · `openai`); pass a module exporting `openModelProvider()` to forklessly load a third-party provider (the prefix is still stripped for the API but need not be a known built-in). On `run` / `serve` / `chat` (not `deploy`). See [adding a provider](../contributing/adding-a-provider.md).
 - `--tools <dir>` — bundled-tools dir (default: the `tools/` sibling of the layout).
 - `--subagents <file>` — subagent map (default `subagents.json` beside the layout).
 - `--mcp <file>` — MCP-server map for the image's `mcp://` tools (default `mcp.json` beside the layout): a JSON array of `{ name, command, args? }` where `name` is the tool's **location handle** (the `mcp://` ref minus scheme, shown by `iris inspect`). The scoped tool env reaches each server. On `run` / `serve` / `chat`.
@@ -71,12 +73,14 @@ usage: iris run <layoutdir> --session <id> [--db <path>] [--store <name|module>]
 WebSocket). Defaults to a no-key echo model so it is demoable immediately.
 
 ```
-usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--store <name|module>] [--model auto|anthropic|openai|echo] [--web] [--policy <file.json>] [--subagents <file>] [--mcp <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]
+usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--store <name|module>] [--model auto|anthropic|openai|echo] [--provider <module>] [--channel <module>] [--web] [--policy <file.json>] [--subagents <file>] [--mcp <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]
 ```
 
 - `--port N` (default `8787`), `--host H` (default `127.0.0.1`).
 - `--db <path>` — store path (default `./iris-serve.sqlite`; a server wants durability).
 - `--model auto|anthropic|openai|echo` — backend (default `auto`: the pinned provider when its key is present, else `echo`).
+- `--provider <module>` — forkless third-party provider (as for `run`); when set it overrides `--model auto`, but `--model echo` still wins.
+- `--channel <module>` — the serving channel: `rest` (default — the built-in REST/SSE/WebSocket transport) or a module exporting `openChannel(opts)`. Complements the [bridge pattern](../reference/bridge-pattern.md) (a bridge is the any-language, no-package path); `--channel` is for an in-process channel. See [adding a channel](../contributing/adding-a-channel.md).
 - `--web` — also serve the web chat UI at `GET /`.
 - `--policy <file.json>` — load a who-may-approve policy + approval inbox (see [Governance](../governance.md)).
 - `--subagents`, `--mcp`, `--env-file`, `--env`, `--secret-files` — as for `run`.
@@ -86,14 +90,14 @@ usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--store <name|m
 y/n approval.
 
 ```
-usage: iris chat <layoutdir> --session <id> [--db <path>] [--store <name|module>] [--tools <dir>] [--subagents <file>] [--mcp <file>] [--policy <file.json>] [--as <id>] [--role <r>] [--env-file <file>] [--env KEY=VAL] [--secret-files] [--fake]
+usage: iris chat <layoutdir> --session <id> [--db <path>] [--store <name|module>] [--provider <module>] [--tools <dir>] [--subagents <file>] [--mcp <file>] [--policy <file.json>] [--as <id>] [--role <r>] [--env-file <file>] [--env KEY=VAL] [--secret-files] [--fake]
 ```
 
 - `--session <id>` (default `default`), `--db <path>` (default `:memory:` — warns it won't persist).
 - `--policy <file.json>` — who-may-approve policy; without it the local user is the approver.
 - `--as <id>` — principal id (default `local`); `--role <r>` — repeatable role (default `operator`).
-- `--fake` — force the deterministic fake model (replies echo your input).
-- `--tools`, `--subagents`, `--mcp`, `--env-file`, `--env`, `--secret-files` — as for `run`.
+- `--fake` — force the deterministic fake model (replies echo your input); wins over `--provider`.
+- `--provider <module>`, `--tools`, `--subagents`, `--mcp`, `--env-file`, `--env`, `--secret-files` — as for `run`.
 - `--base-url <url>` — endpoint override (or `IRIS_MODEL_BASE_URL`); read in `chatCommand`, not in the usage string.
 
 ---
@@ -125,6 +129,7 @@ usage: iris deploy <layoutdir> [--out dir] [--name n] [--deploy]
 - `--out <dir>` — output project dir (default `./iris-edge`).
 - `--name <n>` — wrangler worker name (default: the image's agent name, sanitized).
 - `--deploy` — run `wrangler deploy`. Refuses unless `IRIS_DEPLOY=1` is set and `wrangler` is on `PATH`; omit it to scaffold only.
+- Forkless `--provider` / `--channel` modules are **not** supported at deploy time (the generated worker bakes in a built-in provider) — `iris deploy` refuses them loudly. Use them with `run` / `serve` / `chat`.
 
 ---
 

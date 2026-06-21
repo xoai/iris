@@ -11,6 +11,7 @@ export {
   cmdRun,
   cmdServe,
   cmdDeploy,
+  assertDeployFlagsSupported,
   governancePerformers,
   loadApprovalPolicy,
   subagentPerformers,
