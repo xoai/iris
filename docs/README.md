@@ -69,6 +69,32 @@ Add a capability when you need it.
 - [Secrets & environment](./guides/secrets.md) — declare secret *names* in the Agentfile,
   supply *values* at run time (`--env-file` / `--secret-files`); least-privilege tool env.
 
+## Use cases
+
+End-to-end recipes that compose the guides above into something you'd actually ship.
+
+- [Multi-agent teams](./guides/multi-agent-team.md) — an **orchestrator and its
+  specialists**: build a marketing team where a coordinator delegates to researcher /
+  copywriter / editor child agents, each its own durable session.
+- [Autoresearch loop](./guides/autoresearch-loop.md) — an agent that **iterates,
+  delegates, and converges**, in-session or on a schedule — plus how to set up an
+  `iris eval` suite to regression-test the loop.
+- [Automated workflow](./guides/automated-workflow.md) — run a multi-agent pipeline
+  **unattended**, deployed two ways: Cloudflare Durable Objects, or self-hosted on any
+  VPS (`iris serve` / `iris schedule`, in your own container).
+- [Human-in-the-loop](./guides/human-in-the-loop.md) — **approvals that wait**: pause a
+  risky step for a human decision over REST or Slack, for days, and resume the exact
+  session.
+- [Run on any provider](./guides/any-provider.md) — **one image, any endpoint**: point a
+  portable agent at Anthropic/OpenAI, a gateway (Groq, Together, …), or a local model
+  (Ollama, vLLM) at deploy time; know which are replay-safe (`iris providers --matrix`).
+- [Never-lose-state agent](./guides/portable-durable-agent.md) — **crash, restart,
+  migrate**: pick a durable store and the session resumes byte-for-byte; export and move
+  it to another host with `iris journal`.
+- [Auditable agent](./guides/auditable-agent.md) — **prove what it did**: a
+  replay-verified, tamper-evident record from the same journal (`iris audit`), portable
+  for anyone to re-verify.
+
 ## Reference
 
 Normative specs and lookups, in [`reference/`](./reference/):
