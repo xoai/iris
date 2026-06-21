@@ -74,7 +74,7 @@ and cuts a GitHub Release. `v0.0.1` predates this; `v0.1.0` is the first synced 
 
 ### If a publish is interrupted (npm rate-limit / partial release)
 
-Publishing a monorepo of ~31 packages can trip npm's per-token publish
+Publishing a monorepo of ~32 packages can trip npm's per-token publish
 rate-limit (`E429 Too Many Requests — rate limited exceeded`) part-way through,
 leaving some packages at the new version and the rest behind. `npm run release`
 publishes **per package and idempotently** — it skips every package already live
@@ -118,7 +118,9 @@ publish step reports `0 still missing` and the GitHub Release is created.
   `client-sdk`, `store-do`, `store-fs`, `store-memory`, `store-sqlite`,
   `provider-anthropic`, `provider-openai`, `provider-compat`, `auth`, `audit`,
   `subagents`, `schedule`, `bundle-coding`, `inspect`, `observe`, `evals`,
-  `journal-export`, `sandbox`.
+  `journal-export`, `sandbox`, `store-conformance`, `channel-conformance`, `bridge`,
+  and `store-postgres` — the **only** package with an external dependency (`pg`, an
+  **optional peer** the operator installs; Iris's own tree stays dependency-free).
 
 All publishable packages share one lockstep version (currently `0.2.0`) and
 publish with public access via `publishConfig`.
