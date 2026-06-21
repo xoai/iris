@@ -11,7 +11,7 @@ import { readOciLayout, governingDigest, agentfileSchemaJson } from "@irisrun/ag
 import type { AgentImage } from "@irisrun/agent";
 import { defaultBundle, harnessProgram } from "@irisrun/core";
 import type { Performer, Json, StateStore, Scheduler } from "@irisrun/core";
-import { makeToolPerformer, makeToolRegistry, makeToolInvoker, makeSubprocessTransport } from "@irisrun/tools";
+import { makeToolPerformer, makeToolRegistry, makeToolInvoker, makeSubprocessTransport, makeMcpStdioTransport } from "@irisrun/tools";
 import type { ToolContract } from "@irisrun/tools";
 import { readFile } from "node:fs/promises";
 import { cmdInit, cmdBuild, cmdInspect, cmdVerify, cmdPush, cmdPull, cmdRun, cmdServe, cmdDeploy, loadApprovalPolicy, resolveBuildFile, type CliSubagents } from "./iris.ts";
@@ -22,6 +22,9 @@ import { writeFile } from "node:fs/promises";
 import { cmdEval, loadEvalSuite } from "./eval-cmd.ts";
 import { cmdSchedule } from "./schedule-cmd.ts";
 import { loadSubagents } from "./subagents-cfg.ts";
+import { resolveStore } from "./store.ts";
+import { loadMcpServers } from "./mcp-cfg.ts";
+import { resolveChildModel } from "./child-model.ts";
 import { createApprovalInbox } from "@irisrun/auth";
 import type { ApprovalPolicy, Principal } from "@irisrun/auth";
 import { loadBundledTools } from "./tools.ts";
@@ -65,12 +68,18 @@ async function bundledToolWiring(
 ): Promise<{ toolInvoker: ReturnType<typeof makeToolInvoker>; safeTools: string[] }> {
   const toolsDir = flag(argv, "--tools") ?? join(dirname(layout), "tools");
   const bundled = await loadBundledTools(toolsDir);
-  // A scoped `toolEnv` (from --env-file/--env + the image's secrets/environment)
-  // is the SAME for every bundled tool — pass it transport-level. Absent → inherit
-  // process.env (byte-identical to before this feature).
+  // Optional MCP servers backing the image's `mcp://` tools (mcp.json beside the
+  // layout; `--mcp <file>` overrides). Empty → no `mcp` transport wired (byte-identical).
+  const mcpServers = await loadMcpServers(flag(argv, "--mcp") ?? join(dirname(layout), "mcp.json"));
+  // A scoped `toolEnv` (from --env-file/--env + the image's secrets/environment) is the
+  // SAME for every tool — pass it transport-level to BOTH subprocess and mcp servers, so
+  // a declared secret reaches an MCP server. Absent → inherit process.env (byte-identical).
   return {
     toolInvoker: makeToolInvoker({
       subprocess: makeSubprocessTransport(bundled.subprocessSpecs, toolEnv ? { env: toolEnv } : {}),
+      ...(Object.keys(mcpServers).length > 0
+        ? { mcp: makeMcpStdioTransport(mcpServers, toolEnv ? { env: toolEnv } : {}) }
+        : {}),
     }),
     safeTools: bundled.safeToolNames,
   };
@@ -172,11 +181,17 @@ async function buildSubagents(
     // tool `exec` in tools.ts, which becomes an auto-spawned subprocess and is restricted.
     const childLayout = isAbsolute(entry.image) ? entry.image : join(baseDir, entry.image);
     const image = await readOciLayout(childLayout);
-    const providerName = providerNameForModel(image.lock.model.id);
-    const envKey = providerDescriptor(providerName).envKey;
-    const hasKey = typeof process.env[envKey] === "string" && process.env[envKey] !== "";
-    const model = hasKey
-      ? (await loadModelProvider(providerName)).buffered({ model: stripModelPrefix(image.lock.model.id) })
+    // Per-child model/endpoint/key: the entry MAY override the image's model id, the
+    // provider endpoint, and the key env var (so one run mixes providers — e.g. an
+    // Anthropic PM delegating to an OpenAI-protocol engineer on a third-party base_url).
+    // No overrides → byte-identical to the prior single-provider selection.
+    const childModel = resolveChildModel(entry, image.lock.model.id, process.env);
+    const model = childModel.hasKey
+      ? (await loadModelProvider(childModel.providerName)).buffered({
+          model: childModel.model,
+          ...(childModel.baseUrl !== undefined ? { baseUrl: childModel.baseUrl } : {}),
+          ...(childModel.apiKey !== undefined ? { apiKey: childModel.apiKey } : {}),
+        })
       : makeChatFakeModel(); // keyless: a delegation still runs, echoing the task
     const bundled = await loadBundledTools(join(dirname(childLayout), "tools"));
     // INTENTIONAL non-goal (initiative 20260620-agentfile-env-secrets): a SUBAGENT
@@ -223,7 +238,7 @@ async function buildSubagents(
 
 async function runCommand(argv: string[]): Promise<void> {
   const layout = argv[1];
-  if (!layout) throw new Error("usage: iris run <layoutdir> --session <id> [--db <path>] [--tools <dir>] [--subagents <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]");
+  if (!layout) throw new Error("usage: iris run <layoutdir> --session <id> [--db <path>] [--store <name|module>] [--tools <dir>] [--subagents <file>] [--mcp <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]");
   const session = flag(argv, "--session") ?? "default";
   const db = flag(argv, "--db") ?? ":memory:";
   // A deploy-time endpoint override. The model-id prefix still selects the
@@ -235,12 +250,9 @@ async function runCommand(argv: string[]): Promise<void> {
   // model-id prefix (needs that provider's API key, e.g. ANTHROPIC_API_KEY /
   // OPENAI_API_KEY). The bare (prefix-stripped) model id is baked into the
   // performer since the harness model_call request carries no model.
-  const sqlite = await import("@irisrun/store-sqlite");
   const image = await readOciLayout(layout);
   const provider = await loadModelProvider(providerNameForModel(image.lock.model.id));
-  const handle = sqlite.openDatabase(db);
-  const store = new sqlite.SqliteStateStore(handle);
-  const scheduler = new sqlite.SqliteScheduler(handle);
+  const { store, scheduler, close } = await resolveStore(flag(argv, "--store"), db);
   const toolEnv = await resolveRuntimeEnv(argv, image, "iris run");
   const { toolInvoker, safeTools } = await bundledToolWiring(argv, layout, toolEnv);
   const subagents = await buildSubagents(argv, layout, store, scheduler);
@@ -255,6 +267,7 @@ async function runCommand(argv: string[]): Promise<void> {
     ...(subagents ? { subagents } : {}),
   });
   console.log(JSON.stringify({ status: outcome.status }));
+  await close();
 }
 
 // `iris serve <layoutdir> [--port N] [--host H] [--db path] [--model ...]` — the
@@ -264,7 +277,7 @@ async function serveCommand(argv: string[]): Promise<void> {
   const layout = argv[1];
   if (!layout)
     throw new Error(
-      "usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--model auto|anthropic|openai|echo] [--web] [--policy <file.json>] [--subagents <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]",
+      "usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--store <name|module>] [--model auto|anthropic|openai|echo] [--web] [--policy <file.json>] [--subagents <file>] [--mcp <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]",
     );
   const port = Number(flag(argv, "--port") ?? 8787);
   const host = flag(argv, "--host") ?? "127.0.0.1";
@@ -283,10 +296,7 @@ async function serveCommand(argv: string[]): Promise<void> {
     ? { policy: loadApprovalPolicy(await readFile(policyFile, "utf8"), `--policy ${policyFile}`), inbox: createApprovalInbox() }
     : undefined;
 
-  const sqlite = await import("@irisrun/store-sqlite");
-  const handle = sqlite.openDatabase(db);
-  const store = new sqlite.SqliteStateStore(handle);
-  const scheduler = new sqlite.SqliteScheduler(handle);
+  const { store, scheduler } = await resolveStore(flag(argv, "--store"), db);
 
   // The image's model-id prefix names the pinned provider (anthropic | openai).
   const image = await readOciLayout(layout);
@@ -357,7 +367,7 @@ async function serveCommand(argv: string[]): Promise<void> {
 async function chatCommand(argv: string[]): Promise<void> {
   const layout = argv[1];
   if (!layout) {
-    throw new Error("usage: iris chat <layoutdir> --session <id> [--db <path>] [--tools <dir>] [--subagents <file>] [--policy <file.json>] [--as <id>] [--role <r>] [--env-file <file>] [--env KEY=VAL] [--secret-files] [--fake]");
+    throw new Error("usage: iris chat <layoutdir> --session <id> [--db <path>] [--store <name|module>] [--tools <dir>] [--subagents <file>] [--mcp <file>] [--policy <file.json>] [--as <id>] [--role <r>] [--env-file <file>] [--env KEY=VAL] [--secret-files] [--fake]");
   }
   const session = flag(argv, "--session") ?? "default";
   const db = flag(argv, "--db") ?? ":memory:";
@@ -379,10 +389,7 @@ async function chatCommand(argv: string[]): Promise<void> {
     roles: roleFlags.length ? roleFlags : ["operator"],
   };
 
-  const sqlite = await import("@irisrun/store-sqlite");
-  const handle = sqlite.openDatabase(db);
-  const store = new sqlite.SqliteStateStore(handle);
-  const scheduler = new sqlite.SqliteScheduler(handle);
+  const { store, scheduler, close } = await resolveStore(flag(argv, "--store"), db);
 
   if (db === ":memory:") {
     console.warn(
@@ -465,7 +472,7 @@ async function chatCommand(argv: string[]): Promise<void> {
   const onSigint = (): void => {
     process.stdout.write("\n");
     rl.close();
-    store.close();
+    void close();
     process.exit(0);
   };
   process.on("SIGINT", onSigint);
@@ -492,7 +499,7 @@ async function chatCommand(argv: string[]): Promise<void> {
   } finally {
     process.off("SIGINT", onSigint);
     rl.close();
-    store.close();
+    await close();
   }
 }
 
@@ -556,7 +563,7 @@ async function deployCommand(argv: string[]): Promise<void> {
 async function auditCommand(argv: string[]): Promise<void> {
   const session = argv[1];
   if (!session) {
-    throw new Error("usage: iris audit <session> --db <path> [--interactive] [--json]");
+    throw new Error("usage: iris audit <session> --db <path> [--store <name|module>] [--interactive] [--json]");
   }
   const db = flag(argv, "--db") ?? ":memory:";
   if (db === ":memory:") {
@@ -567,9 +574,7 @@ async function auditCommand(argv: string[]): Promise<void> {
   const json = argv.includes("--json");
   const forceInteractive = argv.includes("--interactive"); // override journal auto-detection
 
-  const sqlite = await import("@irisrun/store-sqlite");
-  const handle = sqlite.openDatabase(db);
-  const store = new sqlite.SqliteStateStore(handle);
+  const { store, close } = await resolveStore(flag(argv, "--store"), db);
   try {
     const { audit, verify, text } = await cmdAudit({
       store,
@@ -579,7 +584,7 @@ async function auditCommand(argv: string[]): Promise<void> {
     if (json) console.log(JSON.stringify({ audit, verify }, null, 2));
     else console.log(text);
   } finally {
-    store.close();
+    await close();
   }
 }
 
@@ -614,7 +619,7 @@ async function scheduleCommand(argv: string[]): Promise<void> {
   const layout = argv[1];
   if (!layout) {
     throw new Error(
-      "usage: iris schedule <layoutdir> --interval <ticks> --max-runs <n> [--ticks <n>] [--db <path>] [--session <id>]",
+      "usage: iris schedule <layoutdir> --interval <ticks> --max-runs <n> [--ticks <n>] [--db <path>] [--store <name|module>] [--session <id>]",
     );
   }
   const intervalTicks = Number(flag(argv, "--interval") ?? 10);
@@ -631,10 +636,7 @@ async function scheduleCommand(argv: string[]): Promise<void> {
     console.warn("iris schedule: --db :memory: — the schedule won't persist; pass --db <path> for a durable, resumable job");
   }
 
-  const sqlite = await import("@irisrun/store-sqlite");
-  const handle = sqlite.openDatabase(db);
-  const store = new sqlite.SqliteStateStore(handle);
-  const scheduler = new sqlite.SqliteScheduler(handle);
+  const { store, scheduler, close } = await resolveStore(flag(argv, "--store"), db);
   const image = await readOciLayout(layout); // pin the schedule's def to the agent image
 
   try {
@@ -654,7 +656,7 @@ async function scheduleCommand(argv: string[]): Promise<void> {
     });
     console.log(result.text);
   } finally {
-    store.close();
+    await close();
   }
 }
 

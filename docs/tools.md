@@ -54,6 +54,14 @@ honors it — an edge host that supports only remote tools will **refuse** an im
 that demands local subprocess tools, loudly, rather than silently degrade it (see
 [Deploy](./deploy.md)).
 
+**Wiring an MCP server.** An `mcp://` tool resolves at build time, but its server runs at
+run time — map each one to a command in an `mcp.json` beside the image (`--mcp <file>`
+overrides): `[{ "name": "<location-handle>", "command": "npx", "args": ["-y", "some-mcp"] }]`.
+The `name` is the tool's location handle (the `mcp://` ref minus scheme, shown by
+`iris inspect`), and the image's scoped tool env reaches the server — so an MCP memory like
+mem0 gets its API key exactly the way a subprocess tool does. Details in the
+[CLI reference](./reference/cli.md).
+
 ## The sandbox floor
 
 Tools don't inherit the host's privileges. The sandbox denies network by default and

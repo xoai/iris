@@ -28,6 +28,8 @@ export type {
 } from "./iris.ts";
 export { loadSubagents } from "./subagents-cfg.ts";
 export type { SubagentEntry, SubagentsConfig } from "./subagents-cfg.ts";
+export { resolveChildModel } from "./child-model.ts";
+export type { ChildModelConfig } from "./child-model.ts";
 export { cmdAudit } from "./audit-cmd.ts";
 export type { CliAuditOptions } from "./audit-cmd.ts";
 export { cmdJournalExport, cmdJournalVerify, cmdJournalImport } from "./journal-cmd.ts";

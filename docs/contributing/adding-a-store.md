@@ -305,6 +305,36 @@ point.
 Finally, export the public surface from a package `index.ts`, the way
 `store-memory/src/index.ts` exports `MemoryStateStore` and `MemoryScheduler`.
 
+## Step 4 — Expose it to the CLI: `openStore`
+
+A store that passes conformance is a correct Iris store; the last step is letting the
+CLI **use** it without a fork. The `--store` flag (on `run` / `serve` / `chat` /
+`audit` / `schedule`) takes a built-in short name (`sqlite` · `fs` · `memory`) **or any
+module specifier** — and for a module it calls a single exported factory:
+
+```ts
+import type { StateStore, Scheduler } from "@irisrun/core";
+import type { WakeupSource } from "@irisrun/schedule"; // dueWakeups/confirmWoken (the suite certifies it)
+
+export function openStore(opts: { url: string }): Promise<{
+  store: StateStore;
+  scheduler: Scheduler & WakeupSource;
+  close?(): Promise<void> | void;
+}> {
+  // open your backend — `opts.url` is whatever `--db` carried (a path, or a `postgres://…` DSN)
+}
+```
+
+Then an operator runs your store with no fork:
+
+```sh
+iris serve ./image --store @irisrun/store-postgres --db postgres://user@host/agents
+```
+
+The CLI **dynamic-imports** the module, so it adds **no dependency** to Iris — your
+store (and its driver) is the operator's dependency. A module without a callable
+`openStore`, or whose result lacks `store`/`scheduler`, is refused loudly.
+
 ## Checklist
 
 - [ ] `StateStore` and `Scheduler` are implemented against the real signatures in
@@ -324,6 +354,8 @@ Finally, export the public surface from a package `index.ts`, the way
       (the definition of "done"); run it with `{ concurrency }` for the racy-backend check.
 - [ ] The cross-store park → migrate → resume test (`tests/cross-store.test.ts`)
       passes against your store — resumed state byte-equals the baseline.
+- [ ] The package exports `openStore({ url }) → { store, scheduler, close? }` so
+      `--store <your-package>` runs it via the CLI without a fork.
 - [ ] The adapter is host-only and lives in its own package; core stays
       byte-untouched and pure.
 

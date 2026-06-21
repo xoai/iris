@@ -54,13 +54,15 @@ Drive an image: one turn, a server, or an interactive REPL.
 the provider selected from the image's model-id prefix).
 
 ```
-usage: iris run <layoutdir> --session <id> [--db <path>] [--tools <dir>] [--subagents <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]
+usage: iris run <layoutdir> --session <id> [--db <path>] [--store <name|module>] [--tools <dir>] [--subagents <file>] [--mcp <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]
 ```
 
 - `--session <id>` — the durable session id (default `default`).
-- `--db <path>` — SQLite store path (default `:memory:`).
+- `--db <path>` — store path / URL (default `:memory:`); for a third-party store it's the connection string (e.g. a `postgres://…` DSN).
+- `--store <name|module>` — the host store: a built-in (`sqlite` default · `fs` · `memory`) or any module exporting `openStore({ url })` (e.g. `@irisrun/store-postgres`). On `run` / `serve` / `chat` / `audit` / `schedule`. See [adding a store](../contributing/adding-a-store.md). (`iris journal` separately overloads `--store` as a db-path alias.)
 - `--tools <dir>` — bundled-tools dir (default: the `tools/` sibling of the layout).
 - `--subagents <file>` — subagent map (default `subagents.json` beside the layout).
+- `--mcp <file>` — MCP-server map for the image's `mcp://` tools (default `mcp.json` beside the layout): a JSON array of `{ name, command, args? }` where `name` is the tool's **location handle** (the `mcp://` ref minus scheme, shown by `iris inspect`). The scoped tool env reaches each server. On `run` / `serve` / `chat`.
 - `--env-file <file>` / `--env KEY=VAL` — repeatable; supply the tool runtime env.
 - `--secret-files` — materialize resolved secrets to `0600` temp files; tools get `<NAME>_FILE=<path>` instead of the value.
 - `--base-url <url>` — endpoint override (or `IRIS_MODEL_BASE_URL`); not in the usage string but read in `runCommand`.
@@ -69,7 +71,7 @@ usage: iris run <layoutdir> --session <id> [--db <path>] [--tools <dir>] [--suba
 WebSocket). Defaults to a no-key echo model so it is demoable immediately.
 
 ```
-usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--model auto|anthropic|openai|echo] [--web] [--policy <file.json>] [--subagents <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]
+usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--store <name|module>] [--model auto|anthropic|openai|echo] [--web] [--policy <file.json>] [--subagents <file>] [--mcp <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]
 ```
 
 - `--port N` (default `8787`), `--host H` (default `127.0.0.1`).
@@ -77,21 +79,21 @@ usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--model auto|an
 - `--model auto|anthropic|openai|echo` — backend (default `auto`: the pinned provider when its key is present, else `echo`).
 - `--web` — also serve the web chat UI at `GET /`.
 - `--policy <file.json>` — load a who-may-approve policy + approval inbox (see [Governance](../governance.md)).
-- `--subagents`, `--env-file`, `--env`, `--secret-files` — as for `run`.
+- `--subagents`, `--mcp`, `--env-file`, `--env`, `--secret-files` — as for `run`.
 - `--base-url <url>` — endpoint override (or `IRIS_MODEL_BASE_URL`); read in `serveCommand`, not in the usage string.
 
 **`iris chat`** — the interactive terminal REPL; a non-safe tool call pauses for inline
 y/n approval.
 
 ```
-usage: iris chat <layoutdir> --session <id> [--db <path>] [--tools <dir>] [--subagents <file>] [--policy <file.json>] [--as <id>] [--role <r>] [--env-file <file>] [--env KEY=VAL] [--secret-files] [--fake]
+usage: iris chat <layoutdir> --session <id> [--db <path>] [--store <name|module>] [--tools <dir>] [--subagents <file>] [--mcp <file>] [--policy <file.json>] [--as <id>] [--role <r>] [--env-file <file>] [--env KEY=VAL] [--secret-files] [--fake]
 ```
 
 - `--session <id>` (default `default`), `--db <path>` (default `:memory:` — warns it won't persist).
 - `--policy <file.json>` — who-may-approve policy; without it the local user is the approver.
 - `--as <id>` — principal id (default `local`); `--role <r>` — repeatable role (default `operator`).
 - `--fake` — force the deterministic fake model (replies echo your input).
-- `--tools`, `--subagents`, `--env-file`, `--env`, `--secret-files` — as for `run`.
+- `--tools`, `--subagents`, `--mcp`, `--env-file`, `--env`, `--secret-files` — as for `run`.
 - `--base-url <url>` — endpoint override (or `IRIS_MODEL_BASE_URL`); read in `chatCommand`, not in the usage string.
 
 ---
@@ -136,7 +138,7 @@ providers. The compliance side of these is covered in
 by a prior `run`/`serve`/`chat`.
 
 ```
-usage: iris audit <session> --db <path> [--interactive] [--json]
+usage: iris audit <session> --db <path> [--store <name|module>] [--interactive] [--json]
 ```
 
 - `--db <path>` — the store from a previous session (default `:memory:`, which warns it has no prior session).
@@ -156,7 +158,7 @@ usage: iris eval <suite.mjs> [--reproduce <N>] [--json]
 image; prints one JSON line per committed cycle.
 
 ```
-usage: iris schedule <layoutdir> --interval <ticks> --max-runs <n> [--ticks <n>] [--db <path>] [--session <id>]
+usage: iris schedule <layoutdir> --interval <ticks> --max-runs <n> [--ticks <n>] [--db <path>] [--store <name|module>] [--session <id>]
 ```
 
 - `--interval <ticks>` — ticks between cycles (default `10`).

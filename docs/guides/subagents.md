@@ -136,6 +136,38 @@ the matching API key is present (else a keyless echo model so a delegation still
 runs), and wires its bundled tools. The child shares the parent's store and
 scheduler family but runs under its own derived sessionId.
 
+## Per-child model, endpoint, and key
+
+By default a child runs **its own image's** model id, at the provider's **default
+endpoint**, with the provider's **standard key** (`ANTHROPIC_API_KEY` /
+`OPENAI_API_KEY`). Three optional fields let each child override that — so a
+single run can mix providers, endpoints, and keys:
+
+| Field | Overrides | Default |
+|---|---|---|
+| `model` | the child's model id (keep the `anthropic/` \| `openai/` prefix — it selects the protocol) | the image's `lock.model.id` |
+| `baseUrl` | the endpoint this child posts to (the deploy-time knob, per child) | the provider's default URL |
+| `apiKeyEnv` | the env var holding this child's key | the provider's standard key |
+
+A heterogeneous team — an Anthropic PM that delegates to a Kimi engineer on
+Moonshot's OpenAI-protocol endpoint and a GPT QC:
+
+```json
+[
+  { "name": "pm",       "image": "./children/pm" },
+  { "name": "engineer", "image": "./children/engineer",
+    "model": "openai/kimi-k2", "baseUrl": "https://api.moonshot.ai/v1", "apiKeyEnv": "MOONSHOT_API_KEY" },
+  { "name": "qc",       "image": "./children/qc", "model": "openai/gpt-5.5" }
+]
+```
+
+Here `engineer` rides the **OpenAI protocol** (`openai/` prefix) but reaches
+Moonshot via `baseUrl` and authenticates with `MOONSHOT_API_KEY` — no new provider
+prefix needed. A child whose `apiKeyEnv` is unset in the environment falls back to
+the keyless echo model (the delegation still runs), exactly as the top-level
+keyless path does. Each field, when present, must be a non-empty string or
+`loadSubagents` throws (`resolveChildModel`, `packages/cli/src/child-model.ts`).
+
 ## The byte-identity guarantee
 
 The harness kernel is golden-pinned and edited across many worktrees, so the
@@ -151,6 +183,10 @@ adds no `subagent` key, and a `delegate` call with no config is just an ordinary
 (gated) tool call (`tests/cli-subagents.test.ts`).
 
 ---
+
+For a production recipe that puts the per-child models to work — a PM / Engineer / QC
+team on three providers, with Postgres durability, an MCP memory, and a Telegram
+bridge — see the [coding-team guide](./coding-team.md).
 
 Delegation is durable because the journal is. To see how that journal becomes a
 replayable, auditable record, read [audit & reproducible evals](../audit-and-evals.md);

@@ -9,11 +9,20 @@
 // `name` is the delegate tool name the parent model calls; `image` is the child OCI
 // layout dir (resolved relative to the subagents.json file, or absolute). A missing
 // file yields an EMPTY config (zero-value-off — agents without subagents stay valid).
+//
+// Each child may also OPTIONALLY override its model/endpoint/key so one run can mix
+// providers (e.g. an Anthropic PM delegating to an OpenAI-protocol engineer on a
+// third-party base_url) — see `resolveChildModel` (child-model.ts):
+//   { "name": "engineer", "image": "./children/eng",
+//     "model": "openai/kimi-k2", "baseUrl": "https://api.moonshot.ai/v1", "apiKeyEnv": "MOONSHOT_API_KEY" }
 import { readFile } from "node:fs/promises";
 
 export interface SubagentEntry {
   name: string; // the delegate tool name (routed as a `subagent` effect)
   image: string; // the child agent's OCI layout dir
+  model?: string; // override the child image's model id (incl. `anthropic/`|`openai/` prefix)
+  baseUrl?: string; // override the provider's default endpoint (per child)
+  apiKeyEnv?: string; // env var holding this child's key (default: the provider's standard key)
 }
 
 export interface SubagentsConfig {
@@ -60,7 +69,25 @@ export async function loadSubagents(file: string): Promise<SubagentsConfig> {
       throw new Error(`subagents config "${file}": duplicate subagent name "${o.name}" (delegate tool names must be unique)`);
     }
     seen.add(o.name);
-    entries.push({ name: o.name, image: o.image });
+    // Optional per-child model overrides: each, if present, a non-empty string (else loud).
+    const opt = (key: "model" | "baseUrl" | "apiKeyEnv"): string | undefined => {
+      const v = (o as Record<string, unknown>)[key];
+      if (v === undefined) return undefined;
+      if (typeof v !== "string" || v === "") {
+        throw new Error(`subagents config "${file}": entry ${i} ("${o.name}") "${key}" must be a non-empty string when present`);
+      }
+      return v;
+    };
+    const model = opt("model");
+    const baseUrl = opt("baseUrl");
+    const apiKeyEnv = opt("apiKeyEnv");
+    entries.push({
+      name: o.name,
+      image: o.image,
+      ...(model !== undefined ? { model } : {}),
+      ...(baseUrl !== undefined ? { baseUrl } : {}),
+      ...(apiKeyEnv !== undefined ? { apiKeyEnv } : {}),
+    });
   }
 
   if (entries.length === 0) return EMPTY;
