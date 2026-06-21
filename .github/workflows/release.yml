@@ -53,7 +53,29 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: IRIS_PUBLISH=1 npm run release
 
+      # Release notes come from the matching CHANGELOG section, so the GitHub
+      # Release reads identically to CHANGELOG.md. Falls back to GitHub's
+      # auto-generated notes if the tagged version has no CHANGELOG entry.
+      - name: Build release notes from CHANGELOG
+        id: notes
+        run: |
+          VER="${GITHUB_REF_NAME#v}"
+          awk -v sec="$VER" '
+            $0 ~ "^## \\[" sec "\\]" {f=1; next}
+            f && /^## \[/ {exit}
+            f && /^\[[^]]*\]: / {exit}
+            f {print}
+          ' CHANGELOG.md > RELEASE_NOTES.md
+          if [ -s RELEASE_NOTES.md ]; then
+            echo "from_changelog=true" >> "$GITHUB_OUTPUT"
+            echo "notes: CHANGELOG [$VER] section ($(wc -l < RELEASE_NOTES.md) lines)"
+          else
+            echo "from_changelog=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::no CHANGELOG [$VER] section — falling back to auto-generated notes"
+          fi
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          generate_release_notes: true
+          body_path: ${{ steps.notes.outputs.from_changelog == 'true' && 'RELEASE_NOTES.md' || '' }}
+          generate_release_notes: ${{ steps.notes.outputs.from_changelog != 'true' }}
