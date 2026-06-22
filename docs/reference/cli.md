@@ -149,17 +149,22 @@ Both ship **no `usage:` string** — the positionals above are read from `cmdPus
 
 ## Deploy
 
-**`iris deploy`** — scaffold a Cloudflare Worker + Durable Object project (runs the
+**`iris deploy`** — scaffold a deploy project for a chosen platform (runs the
 capability-diff gate first). Scaffold-only by default. See [Deploy](../deploy.md).
 
 ```
-usage: iris deploy <layoutdir> [--out dir] [--name n] [--deploy]
+usage: iris deploy <layoutdir> [--target <name>] [--out dir] [--name n] [--deploy] [--list-targets]
 ```
 
+- `--target <name>` — the deploy target (default `cloudflare`). Nine targets across
+  three families: **edge** (`cloudflare`); **container** (`render`, `gcp-cloud-run`,
+  `azure-container-apps`, `digitalocean-app`, `docker`); **serverless** (`aws-lambda`,
+  `gcp-cloud-functions`, `azure-functions`).
+- `--list-targets` — print the available targets (name · family · description) and exit.
 - `--out <dir>` — output project dir (default `./iris-edge`).
-- `--name <n>` — wrangler worker name (default: the image's agent name, sanitized).
-- `--deploy` — run `wrangler deploy`. Refuses unless `IRIS_DEPLOY=1` is set and `wrangler` is on `PATH`; omit it to scaffold only.
-- Forkless `--provider` / `--channel` modules are **not** supported at deploy time (the generated worker bakes in a built-in provider) — `iris deploy` refuses them loudly. Use them with `run` / `serve` / `chat`.
+- `--name <n>` — service/worker name (default: the image's agent name, sanitized).
+- `--deploy` — run the real deploy (**Cloudflare/`wrangler` only**). Refuses unless `IRIS_DEPLOY=1` is set and `wrangler` is on `PATH`; for other targets it is refused loudly (scaffold then run the printed deploy command manually).
+- Forkless `--provider` / `--channel` modules are **not** supported at deploy time (the generated worker/handler bakes in a built-in provider) — `iris deploy` refuses them loudly. Use them with `run` / `serve` / `chat`.
 
 ---
 

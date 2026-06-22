@@ -34,13 +34,18 @@ import { resolveChannel } from "./channel.ts";
 import { resolveBridge } from "./bridge.ts";
 import { makePlatformBridge, type PlatformBridge } from "@irisrun/bridge";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { assertDeployable, type HostAdapter } from "@irisrun/host";
-import { edgeHost, type DoStorage } from "@irisrun/store-do";
+import { assertDeployable } from "@irisrun/host";
+import {
+  getTarget,
+  noopHostFor,
+  DEFAULT_COMPAT_DATE,
+  IRIS_VERSION,
+  type ScaffoldContext,
+} from "./deploy-targets.ts";
 import {
   providerNameForModel,
   providerDescriptor,
   stripModelPrefix,
-  type ProviderDescriptor,
 } from "./providers.ts";
 import { makeGovernedApprovalPerformer } from "@irisrun/auth";
 import type { ApprovalPolicy, ApprovalInbox, Principal, RawApproval } from "@irisrun/auth";
@@ -613,16 +618,18 @@ export async function cmdBridge(moduleSpec: string, opts: CliBridgeOptions): Pro
   };
 }
 
-// --- 9e: deploy (Cloudflare Durable Objects — the supported one-command path) -------
+// --- 9e: deploy (multi-platform target registry) ------------------------------
 //
-// Promotes the edge target from a hand-edited manual smoke
-// (tests/smoke/cloudflare-workers-smoke.ts) to a turnkey, TESTED command: read the image,
-// run the capability-diff gate (assertDeployable) and refuse an over-capable image
-// LOUDLY BEFORE writing anything, then scaffold a self-contained Worker
-// project (wrangler.toml + worker.mjs generalizing the smoke's inline DO class).
-// The terminal `wrangler deploy` network egress stays ENV-GATED (operator-installed
-// wrangler + a real Cloudflare account) — like push/pull's "real registry = manual" —
-// so the install-free / zero-runtime-dep invariant holds.
+// `iris deploy <layout> --target <name>` scaffolds a self-contained project for a
+// chosen platform: read the image, run the capability-diff gate (assertDeployable)
+// against the target's profile and refuse an over-capable image LOUDLY BEFORE
+// writing anything, then write the target's generated files. Targets span three
+// runtime families (edge / container / faas) defined in ./deploy-targets.ts;
+// `--target` defaults to "cloudflare" (backward-compatible). The ONLY real-deploy
+// egress is Cloudflare's `wrangler deploy`, ENV-GATED (operator-installed wrangler
+// + a real account) — every other target is scaffold-only with a printed deploy
+// hint, like push/pull's "real registry = manual", so the install-free /
+// zero-runtime-dep invariant holds.
 
 /** `iris deploy` supports BUILT-IN providers only — forkless `--provider`/`--channel`
  *  modules are run/serve/chat-only (the generated worker bakes a built-in provider, and
@@ -638,15 +645,18 @@ export function assertDeployFlagsSupported(flags: { provider?: string; channel?:
 }
 
 export interface CliDeployOptions {
-  // The edge target (capabilities + name). Defaults to the canonical Cloudflare DO
-  // profile via edgeHost; the gate reads only .name/.capabilities (never the store).
-  host?: HostAdapter;
+  // The deploy target (registry key in ./deploy-targets.ts). Default "cloudflare"
+  // (backward-compatible). The target supplies the capability profile the gate
+  // checks against + the scaffold generator. (Replaces the old `host?` field — no
+  // known caller injected a host; the gate now derives it from the target.)
+  target?: string;
   outDir: string;
-  name?: string; // wrangler worker name (default: the image's agent name, sanitized)
-  compatibilityDate?: string;
+  name?: string; // service/worker name (default: the image's agent name, sanitized)
+  compatibilityDate?: string; // Cloudflare compatibility_date (edge only; harmless elsewhere)
   writeFile?: (path: string, data: string) => Promise<void>; // injected; default fs
   mkdir?: (path: string) => Promise<void>;
-  // env-gated wrangler runner; absent = scaffold-only (print the plan, don't deploy).
+  // env-gated real-deploy runner — Cloudflare/wrangler ONLY (refused for non-edge
+  // targets); absent = scaffold-only (print the plan, don't deploy).
   deploy?: { run: (args: string[], cwd: string) => Promise<number> };
 }
 
@@ -657,150 +667,49 @@ export interface DeployResult {
   plan: string;
 }
 
-const DEFAULT_COMPAT_DATE = "2026-01-01";
+// `stripModelPrefix` + provider selection live in ./providers.ts; the per-target
+// scaffold generators, capability profiles, and the gate's noop host live in
+// ./deploy-targets.ts (imported above).
 
-// A DoStorage that THROWS if used — edgeHost wires it into a DoStateStore/DoScheduler
-// the deploy gate never touches (it reads only host.name/.capabilities). Refuse
-// loudly if any path actually reaches it (no silent fake storage).
-function noopDoStorage(): DoStorage {
-  const fail = (): never => {
-    throw new Error("iris deploy: edge storage is not available at scaffold time");
-  };
-  const s = {
-    get: fail,
-    put: fail,
-    delete: fail,
-    list: fail,
-    transaction: fail,
-    setAlarm: fail,
-    getAlarm: fail,
-  };
-  return s as unknown as DoStorage;
-}
-
-// `stripModelPrefix` + provider selection now live in ./providers.ts (the single
-// source shared with the run/serve/chat wiring) — imported above.
-
-// wrangler worker names: lowercase alphanumerics + hyphens.
+// service/worker names: lowercase alphanumerics + hyphens.
 function sanitizeName(name: string): string {
   const s = name.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "");
   return s === "" ? "iris-agent" : s;
 }
 
-function wranglerToml(name: string, compatDate: string): string {
-  return [
-    `name = "${name}"`,
-    `main = "worker.mjs"`,
-    `compatibility_date = "${compatDate}"`,
-    ``,
-    `# The agent's durable state lives in this Durable Object (single-writer lease +`,
-    `# transactional storage + alarms = sleepUntil). @irisrun/core + @irisrun/store-do are`,
-    `# edge-native (node:-free, Web btoa/atob), so no nodejs_compat flag is needed.`,
-    `[[durable_objects.bindings]]`,
-    `name = "AGENT"`,
-    `class_name = "AgentDO"`,
-    ``,
-    `[[migrations]]`,
-    `tag = "v1"`,
-    `new_classes = ["AgentDO"]`,
-    ``,
-  ].join("\n");
-}
-
-function workerMjs(model: string, defDigest: string, desc: ProviderDescriptor): string {
-  const M = JSON.stringify(model);
-  const D = JSON.stringify(defDigest);
-  const ENVKEY = desc.envKey; // e.g. ANTHROPIC_API_KEY | OPENAI_API_KEY
-  const PKG = desc.pkg; // @irisrun/provider-anthropic | @irisrun/provider-openai
-  const PERF = desc.bufferedExport; // anthropicModelPerformer | openaiModelPerformer
-  return `// GENERATED by \`iris deploy\` — a Cloudflare Worker + Durable Object running the
-// SAME @irisrun/core unchanged on workerd (generalizes tests/smoke/cloudflare-workers-smoke.ts).
-// Bundled by wrangler/esbuild on deploy; core is node:-free so it targets the isolate.
-import { edgeHost } from "@irisrun/store-do";
-import { harnessProgram, defaultBundle } from "@irisrun/core";
-import { runTurnOn } from "@irisrun/host";
-
-const MODEL = ${M};
-const DEF_DIGEST = ${D};
-
-// Adapt a real Cloudflare DurableObjectStorage to @irisrun/store-do's narrow DoStorage
-// (inlined from the smoke's doStorageAdapter so the worker is self-contained).
-function doStorageAdapter(storage) {
-  const wrap = (s) => ({
-    async get(key) { return (await s.get(key, { allowConcurrency: false })) ?? undefined; },
-    async put(key, value) { await s.put(key, value); },
-    async delete(key) { return await s.delete(key); },
-    async list(opts) { return await s.list(opts && opts.prefix ? { prefix: opts.prefix } : undefined); },
-    transaction(fn) { return s.transaction((txn) => fn(wrap(txn))); },
-    async setAlarm(t) { await s.setAlarm(t); },
-    async getAlarm() { return await s.getAlarm(); },
-  });
-  return wrap(storage);
-}
-
-async function runOneTurn(state, env, sessionId, input) {
-  const host = edgeHost(doStorageAdapter(state.storage));
-  const bundle = defaultBundle({ safeTools: [] });
-  const program = harnessProgram(input, { invariants: bundle.invariants });
-  // A real model when ${ENVKEY} is set (the ${PKG} adapter is fetch-based; dynamic
-  // import keeps it out of the no-key path), else an inline echo. The provider is
-  // selected from the image's model-id prefix at \`iris deploy\` time.
-  let model_call;
-  if (env && env.${ENVKEY}) {
-    const { ${PERF} } = await import("${PKG}");
-    model_call = ${PERF}({ apiKey: env.${ENVKEY}, model: MODEL });
-  } else {
-    model_call = async () => ({ ok: true, value: { role: "assistant", content: "echo (set ${ENVKEY} for a real model)", stopReason: "end_turn" } });
-  }
-  const performers = { tactic: bundle.tacticPerformer, model_call };
-  return runTurnOn(host, { sessionId, defDigest: DEF_DIGEST, program, performers, clock: { now: () => Date.now() }, assertReplay: true });
-}
-
-export class AgentDO {
-  constructor(state, env) { this.state = state; this.env = env; }
-  async fetch(req) {
-    const url = new URL(req.url);
-    const sessionId = url.searchParams.get("session") || "default";
-    let input = { messages: [{ role: "user", content: "hi" }] };
-    if (req.method === "POST") {
-      try { const b = await req.json(); if (b && Array.isArray(b.messages) && b.messages.length) input = { messages: b.messages }; } catch {}
-    }
-    const out = await runOneTurn(this.state, this.env, sessionId, input);
-    return new Response(JSON.stringify(out), { headers: { "content-type": "application/json" } });
-  }
-  // A DO alarm IS sleepUntil: on a scheduled wake, run a turn so the engine resumes a
-  // parked timer-wait. Best-effort — the durable timer records remain authoritative.
-  async alarm() { await runOneTurn(this.state, this.env, "default", { messages: [] }); }
-}
-
-export default {
-  async fetch(req, env) {
-    const url = new URL(req.url);
-    const session = url.searchParams.get("session") || "default";
-    const id = env.AGENT.idFromName(session);
-    return env.AGENT.get(id).fetch(req);
-  },
-};
-`;
-}
-
 export async function cmdDeploy(layoutdir: string, opts: CliDeployOptions): Promise<DeployResult> {
+  // 1. Resolve the target (throws loudly on an unknown name — ZERO files).
+  const target = getTarget(opts.target ?? "cloudflare");
+
+  // 2. Real-deploy egress is Cloudflare/wrangler-only. Refuse a non-edge --deploy
+  //    BEFORE reading the image or writing anything (ZERO files).
+  if (opts.deploy && target.family !== "edge") {
+    throw new Error(
+      `iris deploy: --deploy (real egress) is only supported for --target cloudflare (wrangler). ` +
+        `For ${target.label}, scaffold then run the printed deploy command manually.`,
+    );
+  }
+
   const image = await readOciLayout(layoutdir);
-  const host = opts.host ?? edgeHost(noopDoStorage());
 
-  // GATE: refuse an over-capable image LOUDLY, BEFORE writing anything.
-  assertDeployable(image.lock.capabilities, host);
+  // 3. GATE: refuse an over-capable image LOUDLY, BEFORE any write. The gate reads
+  //    only host.name (= target.label) + host.capabilities (the target's ceiling).
+  assertDeployable(image.lock.capabilities, noopHostFor(target));
 
-  const name = sanitizeName(opts.name ?? image.agentfile.name ?? "iris-agent");
-  const compatDate = opts.compatibilityDate ?? DEFAULT_COMPAT_DATE;
-  // Select the provider from the `<provider>/` prefix and strip it: image.lock.
-  // model.id is e.g. "anthropic/claude-x" or "openai/gpt-x", but the provider API
-  // wants the bare id (cf. wrapModelForImage). The worker bakes the bare id into
-  // <provider>ModelPerformer({ model }) for the real-key path.
-  const desc = providerDescriptor(providerNameForModel(image.lock.model.id));
-  const model = stripModelPrefix(image.lock.model.id);
-  const defDigest = image.lock.imageDigest;
+  // 4. Build the scaffold context. The provider is selected from the image's
+  //    `<provider>/` model-id prefix and stripped to the bare id the API wants
+  //    (cf. wrapModelForImage).
+  const ctx: ScaffoldContext = {
+    name: sanitizeName(opts.name ?? image.agentfile.name ?? "iris-agent"),
+    model: stripModelPrefix(image.lock.model.id),
+    defDigest: image.lock.imageDigest,
+    provider: providerDescriptor(providerNameForModel(image.lock.model.id)),
+    compatDate: opts.compatibilityDate ?? DEFAULT_COMPAT_DATE,
+    irisVersion: IRIS_VERSION,
+  };
 
+  // 5. Generate the files (pure) and write them, creating nested parent dirs
+  //    (e.g. ".do/app.yaml") as needed.
   const writeFileImpl = opts.writeFile ?? ((p: string, d: string): Promise<void> => writeFile(p, d));
   const mkdirImpl =
     opts.mkdir ??
@@ -809,10 +718,16 @@ export async function cmdDeploy(layoutdir: string, opts: CliDeployOptions): Prom
     });
 
   await mkdirImpl(opts.outDir);
-  await writeFileImpl(join(opts.outDir, "wrangler.toml"), wranglerToml(name, compatDate));
-  await writeFileImpl(join(opts.outDir, "worker.mjs"), workerMjs(model, defDigest, desc));
-  const files = ["wrangler.toml", "worker.mjs"];
+  const scaffold = target.scaffold(ctx);
+  for (const f of scaffold) {
+    const full = join(opts.outDir, f.path);
+    const parent = dirname(full);
+    if (parent !== opts.outDir) await mkdirImpl(parent); // nested path (e.g. .do/app.yaml)
+    await writeFileImpl(full, f.contents);
+  }
+  const files = scaffold.map((f) => f.path);
 
+  // 6. Real deploy: Cloudflare/wrangler only (guaranteed edge by step 2).
   let deployed = false;
   if (opts.deploy) {
     const code = await opts.deploy.run(["deploy"], opts.outDir);
@@ -821,8 +736,7 @@ export async function cmdDeploy(layoutdir: string, opts: CliDeployOptions): Prom
   }
 
   const plan = deployed
-    ? `iris deploy: deployed '${name}' to ${host.name} (wrangler deploy)`
-    : `iris deploy: scaffolded a ${host.name} Worker for '${name}' in ${opts.outDir}.\n` +
-      `  To deploy: cd ${opts.outDir} && wrangler deploy  (needs a Cloudflare account + wrangler; set ${desc.envKey} as a secret for a real model)`;
+    ? `iris deploy: deployed '${ctx.name}' to ${target.label} (wrangler deploy)`
+    : target.plan(ctx, opts.outDir);
   return { outDir: opts.outDir, files, deployed, plan };
 }

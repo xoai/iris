@@ -32,7 +32,7 @@ for a real model.
 
 - **Author & inspect** — `init`, `build`, `inspect`, `schema`, `providers`
 - **Distribute** — `verify`, `push`, `pull` (local OCI layout; a real registry is manual)
-- **Run** — `run`, `serve`, `chat`, `deploy` (scaffold a Cloudflare Worker + Durable Object)
+- **Run** — `run`, `serve`, `chat`, `deploy` (`--target <name>` scaffolds for 9 platforms across edge / container / serverless; `--list-targets`)
 - **Operate & assure** — `audit`, `eval`, `schedule`, `journal`
 
 See the **[CLI reference](../../docs/reference/cli.md)** for every command's
