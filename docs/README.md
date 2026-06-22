@@ -108,8 +108,9 @@ Normative specs and lookups, in [`reference/`](./reference/):
   the five seam signatures, composition rules, and the journaled `{seam, tacticId, choice}`.
 - [Channel-port spec](./reference/channel-port-spec.md) — the contract every channel
   passes (two-identifier protocol, token rotation, refusal taxonomy, conformance).
-- [Bridge pattern](./reference/bridge-pattern.md) — reaching Discord / Telegram / Teams
-  as external bridges (not first-party packages), with worked examples.
+- [Bridge pattern](./reference/bridge-pattern.md) — reaching Discord · Telegram · Teams ·
+  WhatsApp · Twilio · Google Chat as external bridges (not first-party packages), with
+  worked examples and the plug-and-play `iris bridge <module>` loader.
 - [Verifiable-journal format](./reference/verifiable-journal-spec.md) — the
   content-addressed export format, reproducible in any language from the document alone.
 - [Journal threat model](./reference/threat-model.md) — what journal verification detects
