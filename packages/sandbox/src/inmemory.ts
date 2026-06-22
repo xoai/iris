@@ -9,6 +9,7 @@ import type {
   OutboundRequest,
   RunResult,
   SandboxBackend,
+  SandboxCommand,
   SandboxSession,
   CreateOptions,
 } from "./backend.ts";
@@ -34,6 +35,7 @@ export function createInMemorySession(
   let policy: NetworkPolicy = opts.network ?? "deny-all";
   const env: Record<string, string> = { ...(opts.env ?? {}) };
   const broker: CredentialBroker | undefined = opts.broker;
+  const commands = opts.commands;
   const workspace = new Map<string, Uint8Array>();
   const egress: OutboundRequest[] = [];
   const id = `inmemory-${sessionCounter++}`;
@@ -67,13 +69,15 @@ export function createInMemorySession(
     async setNetworkPolicy(next) {
       policy = next;
     },
-    async run(cmd) {
+    async run(cmd, opts) {
       return runCommand(cmd, {
         policy,
         env,
         broker,
         workspace,
         egress,
+        commands,
+        stdin: opts?.stdin ?? new Uint8Array(),
       });
     },
   };
@@ -86,6 +90,8 @@ interface RunContext {
   broker: CredentialBroker | undefined;
   workspace: Map<string, Uint8Array>;
   egress: OutboundRequest[];
+  commands: Record<string, SandboxCommand> | undefined;
+  stdin: Uint8Array;
 }
 
 const ok = (stdout: string): RunResult => ({ stdout, stderr: "", exit: 0 });
@@ -99,6 +105,11 @@ const fail = (stderr: string, exit = 1): RunResult => ({ stdout: "", stderr, exi
 function runCommand(cmd: string, ctx: RunContext): RunResult {
   const parts = cmd.trim().split(/\s+/);
   const verb = parts[0] ?? "";
+  // A registered command handler wins over the built-in toy verbs — it gets the
+  // run's stdin and the parsed args, so the tool request/response protocol can be
+  // exercised in CI without a real process.
+  const handler = ctx.commands?.[verb];
+  if (handler) return handler(ctx.stdin, parts.slice(1));
   switch (verb) {
     case "echo":
       return ok(parts.slice(1).join(" "));

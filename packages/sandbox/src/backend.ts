@@ -14,10 +14,24 @@ export interface RunResult {
   exit: number;
 }
 
+// Options for a single run. `stdin` feeds the process's standard input (the tool
+// request/response protocol writes a JSON line in and reads one out); `timeoutMs`
+// overrides the backend default. Both optional → absent is byte-identical to the
+// historical `run(cmd)` behavior.
+export interface RunOpts {
+  stdin?: Uint8Array;
+  timeoutMs?: number;
+}
+
+// A test-facing command handler for the in-memory backend: given the run's stdin
+// and the command's parsed args, return a RunResult. Lets the tool line-protocol be
+// exercised in CI without a real process/Docker. (The docker backend ignores it.)
+export type SandboxCommand = (stdin: Uint8Array, args: string[]) => RunResult;
+
 export interface SandboxSession {
   readonly id: string;
-  // Blocks until the command exits.
-  run(cmd: string): Promise<RunResult>;
+  // Blocks until the command exits. `opts` is additive — `run(cmd)` is unchanged.
+  run(cmd: string, opts?: RunOpts): Promise<RunResult>;
   // Rooted at /workspace; a path outside it is rejected.
   readFile(path: string): Promise<Uint8Array>;
   writeFile(path: string, bytes: Uint8Array): Promise<void>;
@@ -28,6 +42,10 @@ export interface CreateOptions {
   network?: NetworkPolicy; // default: "deny-all"
   env?: Record<string, string>; // sandbox-visible env — NEVER secrets
   broker?: CredentialBroker;
+  // Test-facing command handlers (in-memory backend only; docker ignores). A
+  // command whose verb matches is dispatched to its handler before the built-in
+  // toy verbs. Absent → today's behavior.
+  commands?: Record<string, SandboxCommand>;
 }
 
 export interface SandboxBackend {

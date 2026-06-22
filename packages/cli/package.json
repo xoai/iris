@@ -33,7 +33,8 @@
     "@irisrun/journal-export": "^0.3.0",
     "@irisrun/evals": "^0.3.0",
     "@irisrun/subagents": "^0.3.0",
-    "@irisrun/schedule": "^0.3.0"
+    "@irisrun/schedule": "^0.3.0",
+    "@irisrun/sandbox": "^0.3.0"
   },
   "license": "MIT",
   "engines": {

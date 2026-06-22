@@ -68,6 +68,12 @@ Add a capability when you need it.
   web chat UI (`iris serve --web`) and the isomorphic `@irisrun/client-sdk`.
 - [Secrets & environment](./guides/secrets.md) — declare secret *names* in the Agentfile,
   supply *values* at run time (`--env-file` / `--secret-files`); least-privilege tool env.
+- [Connecting external services](./guides/connections.md) — wire an **external tool**
+  (MCP / gRPC / subprocess), get a **credential** to it safely, and **gate** the calls
+  that touch reality: transports, secrets, and approvals in one place.
+- [The sandbox](./guides/sandbox.md) — the **untrusted-code security floor**: deny-all
+  egress and secrets brokered at the boundary; the library backends, plus an honest note
+  on what isn't wired into the runtime yet.
 
 ## Use cases
 

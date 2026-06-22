@@ -22,7 +22,7 @@ export { makeInProcessTransport } from "./transports/in-process.ts";
 export type { InProcessFn } from "./transports/in-process.ts";
 
 export { makeSubprocessTransport } from "./transports/subprocess.ts";
-export type { SubprocessSpec, SubprocessOptions } from "./transports/subprocess.ts";
+export type { SubprocessSpec, SubprocessOptions, SandboxExecutor } from "./transports/subprocess.ts";
 
 export { makeMcpStdioTransport } from "./transports/mcp-stdio.ts";
 export type { McpServerSpec, McpStdioOptions } from "./transports/mcp-stdio.ts";
