@@ -5,6 +5,8 @@ export { makeCredentialBroker, networkAllows, normalizeHost } from "./backend.ts
 export type {
   NetworkPolicy,
   RunResult,
+  RunOpts,
+  SandboxCommand,
   SandboxSession,
   SandboxBackend,
   CreateOptions,

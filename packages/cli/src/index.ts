@@ -27,6 +27,8 @@ export type {
   CliSubagents,
   ResolveBuildFileResult,
 } from "./iris.ts";
+export { buildSandboxExecutor, parseNetworkPolicy } from "./sandbox-exec.ts";
+export type { AgentfileSandbox } from "./sandbox-exec.ts";
 export { loadSubagents } from "./subagents-cfg.ts";
 export type { SubagentEntry, SubagentsConfig } from "./subagents-cfg.ts";
 export { resolveChildModel } from "./child-model.ts";

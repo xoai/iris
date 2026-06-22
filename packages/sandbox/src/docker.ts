@@ -102,7 +102,7 @@ export async function createDockerSession(
 
   return {
     id,
-    async run(cmd) {
+    async run(cmd, opts) {
       // Route a {allow} container through the sidecar proxy. The proxy URL is NOT
       // a secret (host:port only) — it is injected as HTTP(S)_PROXY so well-behaved
       // clients egress via the proxy, which enforces the allowlist + brokers
@@ -125,10 +125,15 @@ export async function createDockerSession(
         "-e",
         `${k}=${v}`,
       ]);
+      // `-i` keeps the container's stdin open so a tool can read its JSON request
+      // line (the subprocess tool protocol). Only added when stdin is supplied — a
+      // plain `run(cmd)` is unchanged. NOT `-t` (no TTY in a non-interactive host).
+      const stdin = opts?.stdin;
       return execDocker(
         [
           "run",
           "--rm",
+          ...(stdin !== undefined ? ["-i"] : []),
           ...extraArgs,
           `--network=${dockerNetwork(policy)}`,
           "-v",
@@ -141,7 +146,8 @@ export async function createDockerSession(
           "-c",
           cmd,
         ],
-        timeoutMs,
+        opts?.timeoutMs ?? timeoutMs,
+        stdin,
       );
     },
     async readFile(path) {
@@ -159,9 +165,9 @@ export async function createDockerSession(
   };
 }
 
-function execDocker(args: string[], timeoutMs: number): Promise<RunResult> {
+function execDocker(args: string[], timeoutMs: number, stdin?: Uint8Array): Promise<RunResult> {
   return new Promise<RunResult>((resolve) => {
-    execFile(
+    const child = execFile(
       "docker",
       args,
       { timeout: timeoutMs, maxBuffer: 16 * 1024 * 1024 },
@@ -175,5 +181,11 @@ function execDocker(args: string[], timeoutMs: number): Promise<RunResult> {
         resolve({ stdout: String(stdout), stderr: String(stderr), exit: code });
       },
     );
+    // Feed the request to the container's stdin (paired with `-i`), then close it
+    // so a one-shot tool sees EOF and exits. (Exercised by the docker smoke only.)
+    if (stdin !== undefined) {
+      child.stdin?.write(stdin);
+      child.stdin?.end();
+    }
   });
 }

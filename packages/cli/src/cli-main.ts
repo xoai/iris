@@ -12,7 +12,7 @@ import type { AgentImage } from "@irisrun/agent";
 import { defaultBundle, harnessProgram } from "@irisrun/core";
 import type { Performer, Json, StateStore, Scheduler } from "@irisrun/core";
 import { makeToolPerformer, makeToolRegistry, makeToolInvoker, makeSubprocessTransport, makeMcpStdioTransport } from "@irisrun/tools";
-import type { ToolContract } from "@irisrun/tools";
+import type { ToolContract, SandboxExecutor } from "@irisrun/tools";
 import { readFile } from "node:fs/promises";
 import { cmdInit, cmdBuild, cmdInspect, cmdVerify, cmdPush, cmdPull, cmdRun, cmdServe, cmdDeploy, assertDeployFlagsSupported, loadApprovalPolicy, resolveBuildFile, type CliSubagents } from "./iris.ts";
 import { existsSync, rmSync } from "node:fs";
@@ -30,6 +30,7 @@ import { createApprovalInbox } from "@irisrun/auth";
 import type { ApprovalPolicy, Principal } from "@irisrun/auth";
 import { loadBundledTools } from "./tools.ts";
 import { resolveToolEnvForImage, secretFileEnv, type EnvMap } from "./env.ts";
+import { buildSandboxExecutor } from "./sandbox-exec.ts";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { echoStreamingPerformer } from "./echo.ts";
@@ -67,6 +68,7 @@ async function bundledToolWiring(
   argv: string[],
   layout: string,
   toolEnv?: EnvMap,
+  sandbox?: SandboxExecutor,
 ): Promise<{ toolInvoker: ReturnType<typeof makeToolInvoker>; safeTools: string[] }> {
   const toolsDir = flag(argv, "--tools") ?? join(dirname(layout), "tools");
   const bundled = await loadBundledTools(toolsDir);
@@ -78,7 +80,10 @@ async function bundledToolWiring(
   // a declared secret reaches an MCP server. Absent → inherit process.env (byte-identical).
   return {
     toolInvoker: makeToolInvoker({
-      subprocess: makeSubprocessTransport(bundled.subprocessSpecs, toolEnv ? { env: toolEnv } : {}),
+      subprocess: makeSubprocessTransport(bundled.subprocessSpecs, {
+        ...(toolEnv ? { env: toolEnv } : {}),
+        ...(sandbox ? { sandbox } : {}),
+      }),
       ...(Object.keys(mcpServers).length > 0
         ? { mcp: makeMcpStdioTransport(mcpServers, toolEnv ? { env: toolEnv } : {}) }
         : {}),
@@ -258,7 +263,13 @@ async function runCommand(argv: string[]): Promise<void> {
   const provider = await resolveProvider(flag(argv, "--provider"), image.lock.model.id);
   const { store, scheduler, close } = await resolveStore(flag(argv, "--store"), db);
   const toolEnv = await resolveRuntimeEnv(argv, image, "iris run");
-  const { toolInvoker, safeTools } = await bundledToolWiring(argv, layout, toolEnv);
+  // --sandbox (opt-in, off by default): run the image's subprocess tools inside the
+  // sandbox declared by its Agentfile `sandbox:` block. Refuses loudly on inmemory /
+  // unsupported backends; real in-docker execution is the gated smoke (not CI).
+  const sandboxExec = argv.includes("--sandbox")
+    ? buildSandboxExecutor(image.agentfile.sandbox, toolEnv ?? {})
+    : undefined;
+  const { toolInvoker, safeTools } = await bundledToolWiring(argv, layout, toolEnv, sandboxExec);
   const subagents = await buildSubagents(argv, layout, store, scheduler);
   const outcome = await cmdRun(layout, {
     sessionId: session,
@@ -342,7 +353,13 @@ async function serveCommand(argv: string[]): Promise<void> {
   }
 
   const toolEnv = await resolveRuntimeEnv(argv, image, "iris serve");
-  const { toolInvoker, safeTools } = await bundledToolWiring(argv, layout, toolEnv);
+  // --sandbox (opt-in, off by default): run the image's subprocess tools inside the
+  // sandbox declared by its Agentfile `sandbox:` block. Refuses loudly on inmemory /
+  // unsupported backends; real in-docker execution is the gated smoke (not CI).
+  const sandboxExec = argv.includes("--sandbox")
+    ? buildSandboxExecutor(image.agentfile.sandbox, toolEnv ?? {})
+    : undefined;
+  const { toolInvoker, safeTools } = await bundledToolWiring(argv, layout, toolEnv, sandboxExec);
   const subagents = await buildSubagents(argv, layout, store, scheduler);
   const serve = await cmdServe(layout, {
     store,
@@ -430,7 +447,13 @@ async function chatCommand(argv: string[]): Promise<void> {
   // approval), a lock-derived tool performer over the project's subprocess tools,
   // and a model performer (wrapped Anthropic, or the deterministic fake).
   const toolEnv = await resolveRuntimeEnv(argv, image, "iris chat");
-  const { toolInvoker, safeTools } = await bundledToolWiring(argv, layout, toolEnv);
+  // --sandbox (opt-in, off by default): run the image's subprocess tools inside the
+  // sandbox declared by its Agentfile `sandbox:` block. Refuses loudly on inmemory /
+  // unsupported backends; real in-docker execution is the gated smoke (not CI).
+  const sandboxExec = argv.includes("--sandbox")
+    ? buildSandboxExecutor(image.agentfile.sandbox, toolEnv ?? {})
+    : undefined;
+  const { toolInvoker, safeTools } = await bundledToolWiring(argv, layout, toolEnv, sandboxExec);
   const subagents = await buildSubagents(argv, layout, store, scheduler);
   // Fold any delegate names into the SAME bundle the gate consults, so a delegation
   // auto-allows (not parks) — the kernel reads this one bundle's safeTools.

@@ -66,6 +66,23 @@ async function main() {
 
   console.log("docker-smoke: PASS (workspace round-trip, deny-all egress, no secret leak)");
 
+  // 3.5) sandbox-runtime-wiring: run a REAL subprocess tool INSIDE the sandbox.
+  //   Stage a node tool into /workspace and feed it the JSON request on stdin — the
+  //   C1 run(cmd,{stdin}) path + the node image the `--sandbox` docker adapter
+  //   selects (the default alpine:3 has no node). This is what buildSandboxExecutor
+  //   does per tool call; here we prove the round-trip end-to-end in a container.
+  const tools = await createDockerSession({ image: "node:22-alpine", network: "deny-all" });
+  const TOOL =
+    `let b="";process.stdin.on("data",d=>{b+=d;const n=b.indexOf("\\n");if(n<0)return;` +
+    `const r=JSON.parse(b.slice(0,n));process.stdout.write(JSON.stringify({id:r.id,ok:true,value:{ran:true}})+"\\n");` +
+    `process.exit(0);});`;
+  await tools.writeFile("/workspace/now.mjs", new TextEncoder().encode(TOOL));
+  const req = JSON.stringify({ id: "req-1", name: "now", input: {} }) + "\n";
+  const out = await tools.run("node /workspace/now.mjs", { stdin: new TextEncoder().encode(req) });
+  check(out.exit === 0 && out.stdout.includes('"ran":true'),
+    "a subprocess tool runs in the sandbox and answers over stdin/stdout");
+  console.log("docker-smoke: PASS (subprocess tool executed in-sandbox via run+stdin)");
+
   // 4) REAL brokered egress through the sidecar EgressProxy (the un-gated path).
   //    The proxy binds 0.0.0.0 so the container reaches it via host.docker.internal;
   //    it forwards to the host-side upstream on 127.0.0.1 (allowlisted).

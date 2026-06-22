@@ -19,12 +19,28 @@ export interface SubprocessSpec {
   env?: Record<string, string>;
 }
 
+// An out-of-process executor that runs a tool INSIDE a sandbox. Dependency-inverted
+// so @irisrun/tools needs no @irisrun/sandbox import — the CLI adapts a sandbox
+// backend to this. Given the tool's spawn spec and the JSON request as stdin, it
+// returns raw stdout/stderr/exit; the transport parses the SAME response line it
+// parses from a spawned child.
+export interface SandboxExecutor {
+  exec(
+    spec: { command: string; args?: string[]; env?: Record<string, string> },
+    stdin: Uint8Array,
+    timeoutMs: number,
+  ): Promise<{ stdout: string; stderr: string; exit: number }>;
+}
+
 export interface SubprocessOptions {
   timeoutMs?: number;
   // A transport-level env applied to every spec that does not carry its own. The CLI
   // passes the SCOPED env here (the same declared env for all of a project's tools);
   // absent → inherit process.env.
   env?: Record<string, string>;
+  // When present, tools run via this executor (inside a sandbox) instead of a bare
+  // spawn. Zero-value-off: absent → the spawn path runs verbatim (byte-identical).
+  sandbox?: SandboxExecutor;
 }
 
 const DEFAULT_TIMEOUT_MS = 5000;
@@ -40,6 +56,7 @@ export function makeSubprocessTransport(
 ): Transport {
   const timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
   const transportEnv = options.env;
+  const sandbox = options.sandbox;
   return {
     invoke(contract, input) {
       const id = locationHandle(contract.location, "subprocess");
@@ -55,6 +72,7 @@ export function makeSubprocessTransport(
         effective,
         { id: `req-${requestSeq++}`, name: contract.name, input },
         timeoutMs,
+        sandbox,
       );
     },
   };
@@ -70,7 +88,11 @@ function exchange(
   spec: SubprocessSpec,
   request: ToolRequest,
   timeoutMs: number,
+  sandbox?: SandboxExecutor,
 ): Promise<ToolResult> {
+  // Zero-value-off: only when a sandbox executor is configured do we leave the
+  // spawn path. The spawn branch below is byte-identical to before.
+  if (sandbox) return execViaSandbox(sandbox, spec, request, timeoutMs);
   return new Promise<ToolResult>((resolve) => {
     const child = spawn(spec.command, spec.args ?? [], {
       stdio: ["pipe", "pipe", "pipe"],
@@ -141,6 +163,38 @@ function exchange(
       finish(toolFailure(`failed to send request: ${messageOf(e)}`, "spawn_failed"));
     }
   });
+}
+
+// Run the tool through a SandboxExecutor: the JSON request becomes stdin, and the
+// raw stdout is parsed with the SAME response logic as the spawn path. (The executor
+// blocks until the tool exits, so this skips the spawn path's first-newline streaming
+// finish + SIGKILL-on-finish — fine for an opt-in request/response gate.)
+async function execViaSandbox(
+  sandbox: SandboxExecutor,
+  spec: SubprocessSpec,
+  request: ToolRequest,
+  timeoutMs: number,
+): Promise<ToolResult> {
+  const stdin = new TextEncoder().encode(`${JSON.stringify(request)}\n`);
+  let res: { stdout: string; stderr: string; exit: number };
+  try {
+    res = await sandbox.exec(
+      { command: spec.command, args: spec.args, env: spec.env },
+      stdin,
+      timeoutMs,
+    );
+  } catch (e) {
+    return toolFailure(`sandbox exec failed: ${messageOf(e)}`, "spawn_failed");
+  }
+  const nl = res.stdout.indexOf("\n");
+  const line = nl >= 0 ? res.stdout.slice(0, nl) : res.stdout.trim();
+  if (line.length > 0) return parseResponse(line);
+  return toolFailure(
+    `tool exited with code ${res.exit} before responding${
+      res.stderr.trim() ? `: ${res.stderr.trim()}` : ""
+    }`,
+    "no_response",
+  );
 }
 
 function parseResponse(line: string): ToolResult {

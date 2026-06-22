@@ -8,13 +8,12 @@ when it does reach out, secrets are **brokered at the egress boundary** — inje
 into the outbound request as it leaves, so only a marker *name* ever crosses into
 the box.
 
-> **Status — read this first.** The sandbox is the part of Iris that is **not yet
-> wired into the runtime**. `@irisrun/sandbox` ships the boundary, two backends,
-> and an adversarially-reviewed threat model — but nothing in the agent/tool loop
-> runs a tool inside a sandbox automatically today. This page documents the
-> **library** as it honestly exists, not a feature you switch on from an
-> Agentfile. See [Honest status](#honest-status) for exactly what is and isn't
-> connected.
+> **Status — read this first.** A subprocess tool can run inside the sandbox
+> **opt-in** via `iris run|serve|chat --sandbox` (off by default — without it, a
+> tool runs host-side exactly as before). The *wiring* — the session API, the
+> transport seam, and the activation refusals — is CI-verified; **real in-container
+> execution is smoke-gated** (it needs Docker, so the unit suite doesn't prove it).
+> See [Honest status](#honest-status) for exactly what is verified vs. gated.
 
 ## What it is
 
@@ -129,29 +128,33 @@ the container as `-e`, an argument, or a volume.
 
 ## Honest status
 
-Two things a reader could reasonably assume are wired — and aren't:
+`iris … --sandbox` runs the image's subprocess tools inside the sandbox, using the
+backend + network from the Agentfile `sandbox:` block. With `--sandbox` absent (the
+default) a `subprocess://` tool runs **host-side** with least-privilege env (see
+[secrets & environment](./secrets.md)), byte-for-byte as before. What's *verified*
+vs. *gated*, stated plainly:
 
-- **The sandbox is not consumed by the tool loop.** Every caller of
-  `@irisrun/sandbox` outside the package is a test or a manual smoke script — no
-  `@irisrun/host`, `@irisrun/tools`, or `@irisrun/agent` constructs a session to
-  run a tool, and the package boundary test asserts the pure core never imports it.
-  So today a `subprocess://` tool runs **host-side** with least-privilege env (see
-  [secrets & environment](./secrets.md)); it does **not** run inside a
-  `@irisrun/sandbox` session.
-- **The Agentfile `sandbox:` block is declarative-only.** An Agentfile carries a
-  `sandbox: { backend, network, workspace? }` block, and it is parsed and
-  validated — but only `sandbox.workspace` is consumed (hashed into the image as a
-  content path). `backend` and `network` are validated and otherwise inert: no
-  field constructs a session yet. Treat the block as a forward-declared intent, not
-  an active control.
+- **Verified in CI:** the wiring — the `run(cmd, { stdin })` API, the zero-value-off
+  `SandboxExecutor` seam on the subprocess transport (off ⇒ identical to the
+  bare-spawn path), and `--sandbox`'s loud refusals (an `inmemory` backend can't
+  execute real tools; a non-node or multi-file tool is rejected).
+- **Smoke-gated (NOT in CI):** real in-container execution. Running a tool in Docker
+  needs a node image + a host→container command/path rewrite + staging — the
+  `--sandbox` docker adapter does this, but it is exercised only by
+  `tests/smoke/docker-smoke.ts` (run on a machine with Docker), never the unit
+  suite. Treat real isolation as *implemented and reference-tested*, not CI-proven.
+- **Scope today:** single-file **node** exec tools only; `mcp://`/`grpc://`,
+  multi-file/native tools, and per-host allowlist egress under `--sandbox` are not
+  wired.
 
-Stated plainly: the *floor* (deny-all, brokering, backends, threat model) is real
-and tested; *wiring it into the runtime* so a tool automatically runs behind it is
-the next initiative, not a flag you can flip today.
+`@irisrun/cli` depends on `@irisrun/sandbox` to do this; the pure core imports
+neither `@irisrun/sandbox` nor `@irisrun/tools` (the boundary test pins that).
 
 ## Not yet / on the roadmap
 
-- **Runtime wiring** — the harness running a tool inside a session.
+- **Broader runtime wiring** — `--sandbox` runs single-file node `subprocess://`
+  tools in a docker sandbox (real execution smoke-gated); `mcp://`/`grpc://`,
+  multi-file/native tools, allowlist egress, and an always-on mode remain.
 - **More backends** — two ship today (`inMemoryBackend` for tests, `dockerBackend`
   for real isolation); a hosted/VM backend and a no-Docker local backend are not
   here.
