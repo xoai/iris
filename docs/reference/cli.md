@@ -60,7 +60,13 @@ usage: iris run <layoutdir> --session <id> [--db <path>] [--store <name|module>]
 
 - `--session <id>` — the durable session id (default `default`).
 - `--db <path>` — store path / URL (default `:memory:`); for a third-party store it's the connection string (e.g. a `postgres://…` DSN).
-- `--store <name|module>` — the host store: a built-in (`sqlite` default · `fs` · `memory`) or any module exporting `openStore({ url })` (e.g. `@irisrun/store-postgres`). On `run` / `serve` / `chat` / `audit` / `schedule`. See [adding a store](../contributing/adding-a-store.md). (`iris journal` separately overloads `--store` as a db-path alias.)
+- `--store <name|module>` — the host store: a built-in (`sqlite` default · `fs` · `memory`) or **any module exporting `openStore({ url })`** — plug & play, no fork. Shipped peer-dep-only stores: `@irisrun/store-postgres` · `@irisrun/store-mysql` · `@irisrun/store-redis` · `@irisrun/store-mongo` (install the matching driver — `pg` / `mysql2` / `redis` / `mongodb` — and pass its connection string as `--db`). On `run` / `serve` / `chat` / `audit` / `schedule`. See [adding a store](../contributing/adding-a-store.md). (`iris journal` separately overloads `--store` as a db-path alias.)
+
+  ```sh
+  npm i pg @irisrun/store-postgres        # the driver is yours; Iris stays zero-dep
+  iris serve ./image --store @irisrun/store-postgres --db postgres://user@host/agents
+  # …or --store @irisrun/store-mysql --db mysql://…  / store-redis --db redis://…  / store-mongo --db mongodb://…
+  ```
 - `--provider <module>` — the model provider: by default the image's `<provider>/` model-id prefix selects a built-in (`anthropic` · `openai`); pass a module exporting `openModelProvider()` to forklessly load a third-party provider (the prefix is still stripped for the API but need not be a known built-in). On `run` / `serve` / `chat` (not `deploy`). See [adding a provider](../contributing/adding-a-provider.md).
 - `--tools <dir>` — bundled-tools dir (default: the `tools/` sibling of the layout).
 - `--subagents <file>` — subagent map (default `subagents.json` beside the layout).
@@ -101,6 +107,28 @@ usage: iris chat <layoutdir> --session <id> [--db <path>] [--store <name|module>
 - `--fake` — force the deterministic fake model (replies echo your input); wins over `--provider`.
 - `--provider <module>`, `--tools`, `--subagents`, `--mcp`, `--openapi`, `--sandbox`, `--env-file`, `--env`, `--secret-files` — as for `run`.
 - `--base-url <url>` — endpoint override (or `IRIS_MODEL_BASE_URL`); read in `chatCommand`, not in the usage string.
+
+**`iris bridge`** — serve a **platform bridge** (Discord, Telegram, Teams, WhatsApp,
+Twilio, Google Chat, …) in front of a running channel: it speaks the platform's webhook
+in and the Iris REST channel wire out, so a chat platform reaches a durable session with
+**no core change**. Pluggable by module specifier — the channel analog of `--store`.
+
+```
+usage: iris bridge <module> --base-url <iris-channel-url> [--port N] [--host H]
+```
+
+- `<module>` — a module exporting **`openBridge(opts)`** (an `@irisrun/bridge` `OpenBridge`); it builds the platform adapter from the environment. The six shipped reference adapters live at `examples/bridges/<platform>.ts` (copy & adapt — they're examples, not packages, per the [bridge pattern](../reference/bridge-pattern.md)).
+- `--base-url <url>` — **required**: where `iris serve` is listening (e.g. `http://127.0.0.1:8787`).
+- `--port N` (default `8788`), `--host H` (default `127.0.0.1`) — where the bridge itself listens for the platform's webhook.
+- Platform config comes from the **environment** (per adapter): `DISCORD_PUBLIC_KEY` · `TELEGRAM_SECRET_TOKEN` · `TEAMS_SHARED_SECRET` · `WHATSAPP_APP_SECRET` · `TWILIO_AUTH_TOKEN`+`TWILIO_WEBHOOK_URL` · `GOOGLE_CHAT_TOKEN`.
+- Not a deploy verb (the forkless-module deploy restriction does not apply).
+
+```sh
+iris serve ./image --port 8787 &     # 1) the durable Iris channel
+DISCORD_PUBLIC_KEY=<app-public-key> \
+  iris bridge ./examples/bridges/discord.ts --base-url http://127.0.0.1:8787   # 2) the bridge
+# point your platform's webhook at the bridge's URL (default http://127.0.0.1:8788)
+```
 
 ---
 

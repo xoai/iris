@@ -10,10 +10,13 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { runAdapterConformance, register } from "@irisrun/bridge";
-import { makeBridgeDemoChannel } from "./examples/bridge-reference.ts";
-import { makeDiscordBridge, discordAdapter } from "./examples/bridges/discord.ts";
-import { makeTelegramBridge, telegramAdapter } from "./examples/bridges/telegram.ts";
-import { makeTeamsBridge, teamsAdapter } from "./examples/bridges/teams.ts";
+import { makeBridgeDemoChannel } from "../examples/bridge-reference.ts";
+import { makeDiscordBridge, discordAdapter } from "../examples/bridges/discord.ts";
+import { makeTelegramBridge, telegramAdapter } from "../examples/bridges/telegram.ts";
+import { makeTeamsBridge, teamsAdapter } from "../examples/bridges/teams.ts";
+import { makeWhatsappBridge, whatsappAdapter } from "../examples/bridges/whatsapp.ts";
+import { makeTwilioBridge, twilioAdapter } from "../examples/bridges/twilio.ts";
+import { makeGoogleChatBridge, googleChatAdapter } from "../examples/bridges/googlechat.ts";
 
 // ── Discord (Ed25519) ────────────────────────────────────────────────────────
 
@@ -40,6 +43,27 @@ const TEAMS_SECRET_B64 = Buffer.from("teams-shared-secret-bytes").toString("base
 function teamsAuth(rawBody: string, secretB64 = TEAMS_SECRET_B64) {
   const sig = createHmac("sha256", Buffer.from(secretB64, "base64")).update(Buffer.from(rawBody, "utf8")).digest("base64");
   return { authorization: `HMAC ${sig}` };
+}
+
+// ── WhatsApp (Meta Cloud API — X-Hub-Signature-256) ──────────────────────────
+const WA_SECRET = "whatsapp-app-secret";
+function waHeaders(rawBody: string, secret = WA_SECRET) {
+  return { "x-hub-signature-256": `sha256=${createHmac("sha256", secret).update(Buffer.from(rawBody, "utf8")).digest("hex")}` };
+}
+
+// ── Twilio (X-Twilio-Signature: HMAC-SHA1 base64 over url + sorted params) ────
+const TW_TOKEN = "twilio-auth-token";
+const TW_URL = "https://hooks.example.com/iris/twilio";
+function twSig(rawBody: string, token = TW_TOKEN, url = TW_URL) {
+  const params = [...new URLSearchParams(rawBody).entries()].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  const base = params.reduce((acc, [k, v]) => acc + k + v, url);
+  return { "x-twilio-signature": createHmac("sha1", token).update(base, "utf8").digest("base64") };
+}
+
+// ── Google Chat (simple shared verification token) ───────────────────────────
+const GC_TOKEN = "google-chat-verification-token";
+function gcHeaders(token = GC_TOKEN) {
+  return { authorization: `Bearer ${token}` };
 }
 
 // ── Adapter conformance: verify accepts/rejects, parse maps, verify-first ─────
@@ -74,6 +98,40 @@ function teamsAuth(rawBody: string, secretB64 = TEAMS_SECRET_B64) {
       valid: { headers: teamsAuth(body), rawBody: body },
       tampered: { headers: teamsAuth(body, Buffer.from("not-the-secret").toString("base64")), rawBody: body },
       expect: { conversationId: "19:abc", text: "hi" },
+    }),
+    test,
+  );
+}
+
+{
+  const body = JSON.stringify({ entry: [{ changes: [{ value: { messages: [{ from: "15551234567", text: { body: "hi" } }] } }] }] });
+  register(
+    runAdapterConformance(whatsappAdapter({ appSecret: WA_SECRET }), {
+      valid: { headers: waHeaders(body), rawBody: body },
+      tampered: { headers: waHeaders(body, "wrong-secret"), rawBody: body },
+      expect: { conversationId: "15551234567", text: "hi" },
+    }),
+    test,
+  );
+}
+{
+  const body = "From=%2B15551234567&Body=hi&MessageSid=SM123";
+  register(
+    runAdapterConformance(twilioAdapter({ authToken: TW_TOKEN, url: TW_URL }), {
+      valid: { headers: twSig(body), rawBody: body },
+      tampered: { headers: { "x-twilio-signature": "bogus-signature" }, rawBody: body },
+      expect: { conversationId: "+15551234567", text: "hi" },
+    }),
+    test,
+  );
+}
+{
+  const body = JSON.stringify({ type: "MESSAGE", message: { text: "hi" }, space: { name: "spaces/AAA" } });
+  register(
+    runAdapterConformance(googleChatAdapter({ token: GC_TOKEN }), {
+      valid: { headers: gcHeaders(), rawBody: body },
+      tampered: { headers: gcHeaders("WRONG-TOKEN"), rawBody: body },
+      expect: { conversationId: "spaces/AAA", text: "hi" },
     }),
     test,
   );
@@ -215,14 +273,120 @@ test("teams bridge: a real end-to-end turn against the in-process channel", asyn
   }
 });
 
+// ── e2e: WhatsApp ────────────────────────────────────────────────────────────
+
+test("whatsapp bridge: a signed message drives two turns (token adopted); reply targets the sender", async () => {
+  const channel = makeBridgeDemoChannel();
+  const baseUrl = await channel.listen();
+  try {
+    const bridge = makeWhatsappBridge({ baseUrl, appSecret: WA_SECRET });
+    const body = JSON.stringify({ entry: [{ changes: [{ value: { messages: [{ from: "15551234567", text: { body: "hi" } }] } }] }] });
+    const r1 = await bridge.handle(waHeaders(body), body);
+    assert.equal(r1.status, 200);
+    assert.equal((r1.body as { to?: string }).to, "15551234567", "reply targets the sender's wa_id");
+    assert.match((r1.body as { text?: { body?: string } }).text?.body ?? "", /"turn":0/);
+    const r2 = await bridge.handle(waHeaders(body), body);
+    assert.match((r2.body as { text?: { body?: string } }).text?.body ?? "", /"turn":1/, "same sender continues the session");
+  } finally {
+    await channel.close();
+  }
+});
+
+test("whatsapp bridge: a bad/absent signature is 401; a status event is ignored", async () => {
+  const channel = makeBridgeDemoChannel();
+  const baseUrl = await channel.listen();
+  try {
+    const bridge = makeWhatsappBridge({ baseUrl, appSecret: WA_SECRET });
+    const body = JSON.stringify({ entry: [{ changes: [{ value: { messages: [{ from: "1", text: { body: "hi" } }] } }] }] });
+    assert.equal((await bridge.handle(waHeaders(body, "wrong-secret"), body)).status, 401);
+    assert.equal((await bridge.handle({}, body)).status, 401);
+    const status = JSON.stringify({ entry: [{ changes: [{ value: { statuses: [{ status: "read" }] } }] }] });
+    const r = await bridge.handle(waHeaders(status), status);
+    assert.equal(r.status, 200);
+    assert.match(JSON.stringify(r.body), /ignored/);
+  } finally {
+    await channel.close();
+  }
+});
+
+// ── e2e: Twilio ──────────────────────────────────────────────────────────────
+
+test("twilio bridge: a signed SMS drives two turns; the reply is TwiML (served raw)", async () => {
+  const channel = makeBridgeDemoChannel();
+  const baseUrl = await channel.listen();
+  try {
+    const bridge = makeTwilioBridge({ baseUrl, authToken: TW_TOKEN, url: TW_URL });
+    const body = "From=%2B15551234567&Body=hi";
+    const r1 = await bridge.handle(twSig(body), body);
+    assert.equal(r1.status, 200);
+    assert.equal(typeof r1.body, "string", "TwiML is a string body");
+    assert.match(String(r1.body), /<Response><Message>.*turn.*:0/);
+    const r2 = await bridge.handle(twSig(body), body);
+    assert.match(String(r2.body), /turn.*:1/, "same From continues the session");
+  } finally {
+    await channel.close();
+  }
+});
+
+test("twilio bridge: a wrong/absent X-Twilio-Signature is 401", async () => {
+  const channel = makeBridgeDemoChannel();
+  const baseUrl = await channel.listen();
+  try {
+    const bridge = makeTwilioBridge({ baseUrl, authToken: TW_TOKEN, url: TW_URL });
+    const body = "From=%2B1&Body=hi";
+    assert.equal((await bridge.handle({ "x-twilio-signature": "bogus" }, body)).status, 401);
+    assert.equal((await bridge.handle({}, body)).status, 401);
+  } finally {
+    await channel.close();
+  }
+});
+
+// ── e2e: Google Chat ─────────────────────────────────────────────────────────
+
+test("googlechat bridge: a MESSAGE event drives two turns (space continues)", async () => {
+  const channel = makeBridgeDemoChannel();
+  const baseUrl = await channel.listen();
+  try {
+    const bridge = makeGoogleChatBridge({ baseUrl, token: GC_TOKEN });
+    const body = JSON.stringify({ type: "MESSAGE", message: { text: "hi" }, space: { name: "spaces/AAA" } });
+    const r1 = await bridge.handle(gcHeaders(), body);
+    assert.equal(r1.status, 200);
+    assert.match((r1.body as { text?: string }).text ?? "", /"turn":0/);
+    const r2 = await bridge.handle(gcHeaders(), body);
+    assert.match((r2.body as { text?: string }).text ?? "", /"turn":1/, "same space continues the session");
+  } finally {
+    await channel.close();
+  }
+});
+
+test("googlechat bridge: a wrong token is 401; a non-MESSAGE event is ignored", async () => {
+  const channel = makeBridgeDemoChannel();
+  const baseUrl = await channel.listen();
+  try {
+    const bridge = makeGoogleChatBridge({ baseUrl, token: GC_TOKEN });
+    const body = JSON.stringify({ type: "MESSAGE", message: { text: "hi" }, space: { name: "spaces/AAA" } });
+    assert.equal((await bridge.handle(gcHeaders("WRONG"), body)).status, 401);
+    assert.equal((await bridge.handle({}, body)).status, 401);
+    const added = JSON.stringify({ type: "ADDED_TO_SPACE", space: { name: "spaces/AAA" } });
+    const r = await bridge.handle(gcHeaders(), added);
+    assert.equal(r.status, 200);
+    assert.match(JSON.stringify(r.body), /ignored/);
+  } finally {
+    await channel.close();
+  }
+});
+
 // ── purity: an adapter imports no @irisrun/* except the optional @irisrun/bridge SDK ─
 
 test("platform adapters import no @irisrun/* except the optional @irisrun/bridge SDK", () => {
   const here = dirname(fileURLToPath(import.meta.url));
   const files = [
-    join(here, "examples", "bridges", "discord.ts"),
-    join(here, "examples", "bridges", "telegram.ts"),
-    join(here, "examples", "bridges", "teams.ts"),
+    join(here, "..", "examples", "bridges", "discord.ts"),
+    join(here, "..", "examples", "bridges", "telegram.ts"),
+    join(here, "..", "examples", "bridges", "teams.ts"),
+    join(here, "..", "examples", "bridges", "whatsapp.ts"),
+    join(here, "..", "examples", "bridges", "twilio.ts"),
+    join(here, "..", "examples", "bridges", "googlechat.ts"),
   ];
   for (const f of files) {
     const src = readFileSync(f, "utf8");

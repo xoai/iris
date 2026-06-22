@@ -13,6 +13,65 @@ dependency** that gives you everything to build one, and the matching CLI loader
 > [bridge](./reference/bridge-pattern.md) — an external process speaking the REST wire. The
 > SDK makes *in-process TypeScript* adapter authoring easy.
 
+## Adapter or bridge? (the word "adapter" is overloaded)
+
+Two different things, often both called "adapter" — this is the usual point of confusion:
+
+| | **Port adapter** (this SDK) | **Bridge** |
+| --- | --- | --- |
+| **Reaches** | one of Iris's **ports** | a non-first-party **platform** (Discord, Telegram, WhatsApp, …) |
+| **Kinds** | `store` · `channel` · `provider` | one per platform |
+| **Runs** | **inside** the Iris runtime (TypeScript) | **outside** Iris, any language — speaks only the REST channel **wire protocol** |
+| **Implements** | a typed core port + a conformance suite | nothing of Iris's — it translates webhook ↔ wire |
+| **Ships as** | a package (`@irisrun/store-mysql`) | a **reference example** you copy & adapt |
+| **Selected with** | `--store` / `--channel` / `--provider <module>` | `iris bridge <module>` |
+| **Scaffold** | `iris adapter init <store\|channel\|provider>` | copy `examples/bridges/<x>.ts` |
+
+The trap: a **bridge internally uses a "platform adapter"** — the `verify` / `parse` /
+`formatReply` triple (`@irisrun/bridge`'s `PlatformAdapter`). That is **not** an Iris port
+adapter; it's the platform-specific glue inside a bridge. So "adapter" means a *port adapter*
+at the Iris level and a *platform adapter* inside a bridge — different layers.
+
+**Rule of thumb.** Implementing a **port** (a new DB backend, a new in-process transport, a
+new model vendor) → a **port adapter**, this SDK, loaded with `--store`/`--channel`/`--provider`.
+Reaching a **chat platform** Iris doesn't own → a **bridge**, run with `iris bridge` (see the
+[bridge pattern](./reference/bridge-pattern.md)). The one exception: **Slack** is a first-party
+channel *adapter*, not a bridge — it's the platform chosen to demonstrate the durable-HITL moat;
+every other platform is a bridge.
+
+At a glance — three **port adapters** plug in *inside* the runtime; an external platform is
+reached by a **bridge** *outside* it, over the channel's wire protocol:
+
+```
+  ── inside the Iris runtime (one process) ─────────────────────────────────────
+
+       @irisrun/core   ·   pure engine: journal · replay · lease
+            ▲                        ▲                        ▲
+      StateStore/Scheduler       ChannelPort              model_call
+            │                        │                        │
+     ┌──────┴──────┐         ┌───────┴───────┐         ┌───────┴──────┐
+     │    STORE    │         │    CHANNEL    │         │   PROVIDER   │
+     │   adapter   │         │    adapter    │         │   adapter    │
+     │   --store   │         │   --channel   │         │  --provider  │
+     └─────────────┘         └───────┬───────┘         └──────────────┘
+    postgres mysql            rest mcp slack            anthropic openai
+    redis mongo                 web · Slack
+    sqlite fs do                    │
+         PORT ADAPTERS — in-process · TypeScript · this SDK · conformance-certified
+                                    │
+            REST channel wire protocol (HTTP)   ← the only seam a bridge touches
+                                    │
+  ── outside Iris · any language ───┼───────────────────────────────────────────
+                                    ▼
+     ┌─────────────┐   platform webhook    ┌───────────────────────────────────┐
+     │   BRIDGE    │ ◄───────────────────► │   external PLATFORM                │
+     │ iris bridge │                       │   Discord · Telegram · Teams ·      │
+     │  <module>   │                       │   WhatsApp · Twilio · Google Chat   │
+     └─────────────┘                       └───────────────────────────────────┘
+       a bridge holds a *platform adapter* (verify · parse · formatReply) —
+       which is NOT an Iris port adapter; it speaks only the wire protocol.
+```
+
 ## What it gives you
 
 | Family | Port you implement | Conformance suite | Forkless loader |

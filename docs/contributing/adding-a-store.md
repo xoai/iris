@@ -365,6 +365,22 @@ store (and its driver) is the operator's dependency. A module without a callable
 - [ ] The adapter is host-only and lives in its own package; core stays
       byte-untouched and pure.
 
+## Shipped reference stores (crib from these)
+
+Beyond the in-memory/fs worked examples above, Iris ships conformant stores over real
+backends — each a peer-dependency-only package certified by `@irisrun/store-conformance`,
+showing the atomic-append primitive on a different substrate:
+
+- **`@irisrun/store-postgres`** / **`@irisrun/store-mysql`** — SQL. The append is one
+  transaction that locks the per-session meta row `FOR UPDATE` (the linearization point),
+  checks the fence before the seq, and bumps the high-water mark. (`pg` / `mysql2` peer dep.)
+- **`@irisrun/store-redis`** — KV. CAS and the fenced append are made atomic with an
+  optimistic transaction (`WATCH` the meta key → `MULTI`/`EXEC`; a concurrent commit fails
+  `EXEC` with a `WatchError`, so exactly one writer wins). (`redis` peer dep.)
+- **`@irisrun/store-mongo`** — document. The append rests on single-document atomicity of
+  the meta doc: a guarded `findOneAndUpdate` reserves the dense seq range (fence first),
+  then the journal docs are inserted — no multi-document transaction. (`mongodb` peer dep.)
+
 ## See also
 
 - [Architecture](../architecture.md) — pure core behind two ports, why `append` is the

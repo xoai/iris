@@ -15,7 +15,7 @@ import { makeToolPerformer, makeToolRegistry, makeToolInvoker, makeSubprocessTra
 import { composeResolvers } from "@irisrun/agent";
 import type { ToolContract, SandboxExecutor } from "@irisrun/tools";
 import { readFile } from "node:fs/promises";
-import { cmdInit, cmdBuild, cmdInspect, cmdVerify, cmdPush, cmdPull, cmdRun, cmdServe, cmdDeploy, assertDeployFlagsSupported, loadApprovalPolicy, resolveBuildFile, type CliSubagents } from "./iris.ts";
+import { cmdInit, cmdBuild, cmdInspect, cmdVerify, cmdPush, cmdPull, cmdRun, cmdServe, cmdBridge, cmdDeploy, assertDeployFlagsSupported, loadApprovalPolicy, resolveBuildFile, type CliSubagents } from "./iris.ts";
 import { existsSync, rmSync } from "node:fs";
 import { cmdAudit } from "./audit-cmd.ts";
 import { cmdJournalExport, cmdJournalVerify, cmdJournalImport } from "./journal-cmd.ts";
@@ -291,6 +291,26 @@ async function runCommand(argv: string[]): Promise<void> {
 // `iris serve <layoutdir> [--port N] [--host H] [--db path] [--model ...]` — the
 // turnkey HTTP server: buffered REST + streaming SSE + a hand-rolled WebSocket.
 // Defaults to a no-key echo streaming model so it is demoable immediately.
+// `iris bridge <module> --base-url <channelUrl>` — serve a forkless platform bridge in
+// front of a running channel (the channel analog of `--store <module>`). cmdBridge does
+// the resolveBridge → makePlatformBridge → node:http work; this just parses argv.
+async function bridgeCommand(argv: string[]): Promise<void> {
+  const moduleSpec = argv[1];
+  if (!moduleSpec || moduleSpec.startsWith("--")) {
+    throw new Error("usage: iris bridge <module> --base-url <iris-channel-url> [--port N] [--host H]");
+  }
+  const baseUrl = flag(argv, "--base-url");
+  if (!baseUrl) {
+    throw new Error(
+      "iris bridge: --base-url <url> is required — the running Iris channel the bridge speaks to (e.g. http://127.0.0.1:8787)",
+    );
+  }
+  const portFlag = flag(argv, "--port");
+  const host = flag(argv, "--host");
+  const handle = await cmdBridge(moduleSpec, { baseUrl, port: portFlag ? Number(portFlag) : undefined, host });
+  console.log(`iris bridge: serving "${moduleSpec}" → ${baseUrl} on ${handle.url}`);
+}
+
 async function serveCommand(argv: string[]): Promise<void> {
   const layout = argv[1];
   if (!layout)
@@ -913,6 +933,9 @@ async function main(argv: string[]): Promise<void> {
     case "serve":
       await serveCommand(argv);
       break;
+    case "bridge":
+      await bridgeCommand(argv);
+      break;
     case "chat":
       await chatCommand(argv);
       break;
@@ -932,7 +955,7 @@ async function main(argv: string[]): Promise<void> {
       await journalCommand(argv);
       break;
     default:
-      console.error("usage: iris <init|build|inspect|schema|providers|verify|push|pull|run|serve|chat|deploy|audit|eval|schedule|journal>");
+      console.error("usage: iris <init|build|inspect|schema|providers|verify|push|pull|run|serve|bridge|chat|deploy|audit|eval|schedule|journal>");
       process.exit(2);
   }
 }

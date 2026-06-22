@@ -18,7 +18,7 @@ node --conditions=iris-src packages/cli/src/cli-main.ts <cmd>
 ```
 
 Substitute whichever form you use. (The same `--conditions=iris-src` runs the in-repo
-demos directly, e.g. `node --conditions=iris-src tests/examples/portability-demo.ts`.)
+demos directly, e.g. `node --conditions=iris-src examples/portability-demo.ts`.)
 
 ## Getting started
 
@@ -39,6 +39,9 @@ Follow these in order — each ends with a **Next →** to the next stop.
 
 How the runtime works, page by page.
 
+- [Stores — durability backends](./stores.md) — where a session's journal lives: pick &
+  plug a store (SQLite · Postgres · MySQL · Redis · Mongo · fs · edge) by name or module
+  specifier, all behind one conformance-certified `StateStore`/`Scheduler` port.
 - [The harness](./harness.md) — the model↔tool loop as swappable **tactics** at five
   **seams**; every decision is journaled, so you re-shape how the agent thinks without
   losing deterministic replay.
@@ -114,8 +117,9 @@ Normative specs and lookups, in [`reference/`](./reference/):
   the five seam signatures, composition rules, and the journaled `{seam, tacticId, choice}`.
 - [Channel-port spec](./reference/channel-port-spec.md) — the contract every channel
   passes (two-identifier protocol, token rotation, refusal taxonomy, conformance).
-- [Bridge pattern](./reference/bridge-pattern.md) — reaching Discord / Telegram / Teams
-  as external bridges (not first-party packages), with worked examples.
+- [Bridge pattern](./reference/bridge-pattern.md) — reaching Discord · Telegram · Teams ·
+  WhatsApp · Twilio · Google Chat as external bridges (not first-party packages), with
+  worked examples and the plug-and-play `iris bridge <module>` loader.
 - [Verifiable-journal format](./reference/verifiable-journal-spec.md) — the
   content-addressed export format, reproducible in any language from the document alone.
 - [Journal threat model](./reference/threat-model.md) — what journal verification detects

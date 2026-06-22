@@ -26,7 +26,7 @@ real port impl.
 ## Use it
 
 ```sh
-node --conditions=iris-src tests/examples/portability-demo.ts   # resume on a different host
+node --conditions=iris-src examples/portability-demo.ts   # resume on a different host
 ```
 
 See **[docs/Deploy](../../docs/deploy.md)** and **[docs/Architecture](../../docs/architecture.md)**.

@@ -25,7 +25,7 @@ There is **no build step** for development. Source runs directly through the
 
 ```sh
 node --conditions=iris-src packages/cli/src/cli-main.ts <cmd>     # the `iris` bin, from source
-node --conditions=iris-src tests/examples/portability-demo.ts     # the cross-host proof
+node --conditions=iris-src examples/portability-demo.ts     # the cross-host proof
 ```
 
 `npm run build` exists (it compiles `dist/` for publishing), but you don't need it to

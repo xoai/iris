@@ -70,16 +70,33 @@ npm run demo:cross-host
 The store is the only thing that changes between a laptop, a VPS, and the edge —
 the agent and its journal don't:
 
-| Store | Package | Use it for |
-|---|---|---|
-| Memory | `@irisrun/store-memory` | tests, `--fake` runs — **not** durable |
-| File system | `@irisrun/store-fs` | a single box, simple persistence |
-| SQLite | `@irisrun/store-sqlite` | the default durable local/VPS store (`--db <path>`) |
-| Durable Objects | `@irisrun/store-do` | Cloudflare edge (via `iris deploy`) |
+| Store | Package | Driver (peer dep) | Use it for |
+|---|---|---|---|
+| Memory | `@irisrun/store-memory` | — (built-in) | tests, `--fake` runs — **not** durable |
+| File system | `@irisrun/store-fs` | — (built-in) | a single box, simple persistence |
+| SQLite | `@irisrun/store-sqlite` | — (`node:sqlite`) | the default durable local/VPS store (`--db <path>`) |
+| Durable Objects | `@irisrun/store-do` | — (Cloudflare) | Cloudflare edge (via `iris deploy`) |
+| PostgreSQL | `@irisrun/store-postgres` | `pg` | a shared SQL backend (`--db postgres://…`) |
+| MySQL / MariaDB | `@irisrun/store-mysql` | `mysql2` | a shared SQL backend (`--db mysql://…`) |
+| Redis | `@irisrun/store-redis` | `redis` | fast KV durability (`--db redis://…`) |
+| MongoDB | `@irisrun/store-mongo` | `mongodb` | a document backend (`--db mongodb://…`) |
 
-Because they all implement the same `StateStore` port, the journal you wrote on
-one is the journal you read on another — which is exactly what makes the cross-host
-move byte-identical.
+`memory` · `fs` · `sqlite` are **built-in short names**; the rest **plug & play by module
+specifier** — install the driver yourself (Iris's tree stays zero-dependency) and select
+the store with `--store`:
+
+```sh
+npm i pg @irisrun/store-postgres
+iris serve ./image --store @irisrun/store-postgres --db postgres://user@host/agents
+# swap the pair for any other: --store @irisrun/store-mysql --db mysql://…  ·  store-redis --db redis://…  ·  store-mongo --db mongodb://…
+```
+
+Every one is certified against the same `@irisrun/store-conformance` suite (atomic fenced
+append, CAS, snapshot/truncate, durable timers/signals). Because they all implement the
+same `StateStore` port, the journal you wrote on one is the journal you read on another —
+which is exactly what makes the cross-host move byte-identical. New backend? Any module
+exporting `openStore({ url })` works with no fork — see the [stores reference](../stores.md)
+and the [adding-a-store recipe](../contributing/adding-a-store.md).
 
 ## Going deeper
 

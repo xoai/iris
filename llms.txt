@@ -14,6 +14,7 @@
 - [Deploy](docs/deploy.md): resume the same session on a different host — one command to a Cloudflare Durable Object.
 
 ## Concepts
+- [Stores — durability backends](docs/stores.md): where a session's journal lives; pick & plug a store (sqlite/fs/memory built-in; postgres/mysql/redis/mongo/do peer-dep) via --store <name|module>, all behind one @irisrun/store-conformance-certified StateStore/Scheduler port.
 - [The harness](docs/harness.md): the model↔tool loop as swappable tactics at five seams (assembleContext, shouldCompact, decideNext, gateAction, onToolError); every decision is journaled, so tactics can be third-party/nondeterministic and replay still can't diverge. Default bundle + the coding bundle; configure via harness.bundle / harness.tactics.
 - [Models & providers](docs/providers.md): vendor-neutral, replay-safe model adapters; how to add one.
 - [Governance & approvals](docs/governance.md): the approval gate, the policy layer, the journaled approval trail.
@@ -33,7 +34,7 @@
 - [CLI](docs/reference/cli.md): every iris command and its flags.
 - [Harness seams](docs/reference/harness-seams.md): the normative tactic/bundle contract — seam signatures, composition, the journaled effect, invariant caps.
 - [Channel-port spec](docs/reference/channel-port-spec.md): the contract every channel passes.
-- [Bridge pattern](docs/reference/bridge-pattern.md): Discord/Telegram/Teams as external bridges.
+- [Bridge pattern](docs/reference/bridge-pattern.md): Discord/Telegram/Teams/WhatsApp/Twilio/Google Chat as external bridges (reference examples, not packages), plug-and-play via `iris bridge <module> --base-url`.
 - [Verifiable-journal format](docs/reference/verifiable-journal-spec.md): the export format, reproducible from the file alone.
 - [Journal threat model](docs/reference/threat-model.md): what journal verification detects, and what it does not claim.
 - [Sandbox-egress threat model](docs/reference/security-sandbox-threat-model.md): the egress firewall + credential broker.
@@ -43,7 +44,7 @@
 - [Architecture](docs/architecture.md): the pure core + the two host ports (StateStore/Scheduler) + the adapter layers (how the ~29 packages fit).
 - [Conventions](docs/conventions.md): enforced house rules — core-is-pure (relative imports only), zero-dep, loud-refusal/no-silent-failure, tests-first.
 - [Add a provider](docs/contributing/adding-a-provider.md) / [channel](docs/contributing/adding-a-channel.md) / [store](docs/contributing/adding-a-store.md) / [tactic](docs/contributing/adding-a-tactic.md): the extension recipes, each with a conformance suite.
-- [Adapter SDK](docs/sdk.md): `@irisrun/sdk` — ONE dependency (port types + conformance suites + the `openStore`/`openModelProvider`/`openChannel` contracts) to build a store/channel/provider adapter; `iris adapter init <kind> <name>` scaffolds a conformance-wired package, and `--store`/`--provider`/`--channel <module>` load it without forking the CLI.
+- [Adapter SDK](docs/sdk.md): `@irisrun/sdk` — ONE dependency (port types + conformance suites + the `openStore`/`openModelProvider`/`openChannel` contracts) to build a store/channel/provider adapter; `iris adapter init <kind> <name>` scaffolds a conformance-wired package, and `--store`/`--provider`/`--channel <module>` load it without forking the CLI. Shipped peer-dep stores: `@irisrun/store-postgres` (`pg`) · `@irisrun/store-mysql` (`mysql2`) · `@irisrun/store-redis` (`redis`) · `@irisrun/store-mongo` (`mongodb`). Platform bridges (`@irisrun/bridge` `openBridge`) load forklessly via `iris bridge <module> --base-url`.
 
 ## Discovery
 - [agents.md](agents.md): how an AI agent or tool integrates with Iris — Agentfile schema, MCP server, REST API.

@@ -28,6 +28,19 @@ export interface PlatformBridge<Reply> {
 }
 
 /**
+ * The forkless `iris bridge <module>` entry point: a bridge module exports `openBridge`,
+ * which builds a `PlatformAdapter` reading its platform config (public key / secret /
+ * webhook URL) from the environment. Mirrors `@irisrun/sdk`'s `OpenStore`/`OpenChannel`,
+ * but lives HERE (not in sdk) ON PURPOSE: a bridge author then depends ONLY on
+ * `@irisrun/bridge` — the import-discipline `tests/platform-bridges.test.ts` pins (sourcing
+ * this from sdk would force a bridge→sdk import and break that assertion). `env` defaults
+ * to `process.env` at the call site.
+ */
+export type OpenBridge = (
+  opts?: { env?: Record<string, string | undefined> },
+) => PlatformAdapter<unknown> | Promise<PlatformAdapter<unknown>>;
+
+/**
  * Wire a PlatformAdapter to the REST-protocol bridge session. Verify-first: an
  * unverified body is `401` and NEVER drives a turn.
  */

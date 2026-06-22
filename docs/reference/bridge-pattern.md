@@ -80,9 +80,12 @@ first-party packages, so Iris never owns a platform's API drift.
 
 | Platform | File | Inbound auth | Inbound → text | Outbound |
 | --- | --- | --- | --- | --- |
-| **Discord** | `tests/examples/bridges/discord.ts` | Ed25519 over `timestamp + body` vs the app public key (`X-Signature-Ed25519`); PING→PONG | slash command (`type:2`) → `data.options[0].value`; conversation = `channel_id` | interaction response `{type:4, data:{content}}` |
-| **Telegram** | `tests/examples/bridges/telegram.ts` | `X-Telegram-Bot-Api-Secret-Token` (constant-time) | `message.text`; conversation = `message.chat.id` | webhook-response `{method:"sendMessage", chat_id, text}` |
-| **Teams** | `tests/examples/bridges/teams.ts` | Outgoing-Webhook HMAC-SHA256 (base64) `Authorization: HMAC <sig>` | Activity `text` (leading `<at>…</at>` mention stripped); conversation = `conversation.id` | Activity `{type:"message", text}` |
+| **Discord** | `examples/bridges/discord.ts` | Ed25519 over `timestamp + body` vs the app public key (`X-Signature-Ed25519`); PING→PONG | slash command (`type:2`) → `data.options[0].value`; conversation = `channel_id` | interaction response `{type:4, data:{content}}` |
+| **Telegram** | `examples/bridges/telegram.ts` | `X-Telegram-Bot-Api-Secret-Token` (constant-time) | `message.text`; conversation = `message.chat.id` | webhook-response `{method:"sendMessage", chat_id, text}` |
+| **Teams** | `examples/bridges/teams.ts` | Outgoing-Webhook HMAC-SHA256 (base64) `Authorization: HMAC <sig>` | Activity `text` (leading `<at>…</at>` mention stripped); conversation = `conversation.id` | Activity `{type:"message", text}` |
+| **WhatsApp** | `examples/bridges/whatsapp.ts` | Meta Cloud API `X-Hub-Signature-256` = HMAC-SHA256(app secret, raw body) | `entry[].changes[].value.messages[0].text.body`; conversation = sender `from` | Cloud-API send `{messaging_product, to, type:"text", text:{body}}` |
+| **Twilio** | `examples/bridges/twilio.ts` | `X-Twilio-Signature` = HMAC-SHA1 base64 over the **configured** webhook URL + sorted POST params (URL isn't in `verify`, so it's config) | form `Body`; conversation = `From` | TwiML `<Response><Message>…</Message></Response>` (string) |
+| **Google Chat** | `examples/bridges/googlechat.ts` | shared verification token in `Authorization` (constant-time; full Bearer-JWT/JWKS deferred) | `MESSAGE` event `message.text`; conversation = `space.name` | `{text}` |
 
 Each enforces the same discipline as the SDK: **verify first** (an unverified body is
 never processed → 401), normalize, drive the durable session (adopting the rotated
@@ -95,6 +98,30 @@ public key; `setWebhook` with a `secret_token` for Telegram; configure the Teams
 Outgoing Webhook with its HMAC secret. Production Teams using the Bot Framework (rather
 than an Outgoing Webhook) validates a JWT bearer against Azure AD — a heavier auth path
 left to the integrator.
+
+## Run a bridge forklessly — `iris bridge <module>`
+
+A bridge module can export an `openBridge(opts)` factory (`@irisrun/bridge`'s `OpenBridge`)
+that builds its `PlatformAdapter` from the environment — and `iris bridge <module>
+--base-url <channelUrl>` loads it **by specifier** and serves it in front of a running
+channel, exactly the way `--store`/`--channel` already load a store / in-process channel
+without a fork. The CLI dynamic-imports the module (adding **no** dependency to Iris),
+builds `makePlatformBridge(adapter, { baseUrl })`, and serves a `node:http` endpoint that
+pipes each request to `bridge.handle(headers, rawBody)` (a string reply like Twilio's TwiML
+is sent as `application/xml`; an object reply as JSON). All six reference adapters export
+`openBridge`, reading their config from the environment (`DISCORD_PUBLIC_KEY` /
+`TELEGRAM_SECRET_TOKEN` / `TEAMS_SHARED_SECRET` / `WHATSAPP_APP_SECRET` /
+`TWILIO_AUTH_TOKEN`+`TWILIO_WEBHOOK_URL` / `GOOGLE_CHAT_TOKEN`):
+
+```sh
+iris serve ./image --port 8787 &     # the Iris REST channel
+DISCORD_PUBLIC_KEY=<hex> iris bridge ./examples/bridges/discord.ts --base-url http://127.0.0.1:8787
+```
+
+`OpenBridge` lives in `@irisrun/bridge` (not `@irisrun/sdk`) on purpose: a bridge author
+then still depends on ONLY `@irisrun/bridge` — the import-discipline the examples here
+uphold (`tests/platform-bridges.test.ts` pins it). `iris deploy` does not carry a forkless
+bridge module (`bridge` is a separate verb, not a deploy flag).
 
 ## When to make it first-party instead
 

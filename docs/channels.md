@@ -128,4 +128,31 @@ that demonstrates the moat (Slack, above) beats five that reach it. The
 [bridge pattern](./reference/bridge-pattern.md) is the normative contract, with a fetch-only
 reference bridge (`npm run demo:bridge`).
 
+### Plug & play: `iris bridge <module>`
+
+Six reference bridge adapters ship ready to run, each with real per-platform auth — and
+they're **pluggable by module specifier**, the channel analog of `--store`:
+
+| Platform | Adapter (copy & adapt) | Env config |
+|---|---|---|
+| Discord | `examples/bridges/discord.ts` | `DISCORD_PUBLIC_KEY` |
+| Telegram | `examples/bridges/telegram.ts` | `TELEGRAM_SECRET_TOKEN` |
+| Teams | `examples/bridges/teams.ts` | `TEAMS_SHARED_SECRET` |
+| WhatsApp | `examples/bridges/whatsapp.ts` | `WHATSAPP_APP_SECRET` |
+| Twilio | `examples/bridges/twilio.ts` | `TWILIO_AUTH_TOKEN`, `TWILIO_WEBHOOK_URL` |
+| Google Chat | `examples/bridges/googlechat.ts` | `GOOGLE_CHAT_TOKEN` |
+
+```sh
+iris serve ./image --port 8787 &     # 1) the durable Iris channel
+TELEGRAM_SECRET_TOKEN=<your-secret> \
+  iris bridge ./examples/bridges/telegram.ts --base-url http://127.0.0.1:8787   # 2) the bridge
+# then point the platform's webhook at the bridge (default http://127.0.0.1:8788)
+```
+
+A bridge module just exports `openBridge(opts)` (an `@irisrun/bridge` `OpenBridge`); the
+CLI dynamic-imports it, so it adds **no dependency** to Iris. Your own platform is the
+same shape — write the three-function adapter (`verify` / `parse` / `formatReply`),
+certify it with `runAdapterConformance`, run it with `iris bridge ./my-bridge.ts`. Full
+recipe + the "run a bridge forklessly" section: [bridge pattern](./reference/bridge-pattern.md).
+
 **Next → [Deploy](./deploy.md)**
