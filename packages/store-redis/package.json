@@ -1,0 +1,41 @@
+{
+  "name": "@irisrun/store-redis",
+  "version": "0.3.0",
+  "type": "module",
+  "description": "Iris host store on Redis — a StateStore + Scheduler certified against @irisrun/store-conformance, plugged into the CLI via `--store @irisrun/store-redis --db redis://…`. `redis` (node-redis v4) is a peer dependency (you install it), so Iris's own tree stays zero-dependency.",
+  "exports": {
+    ".": {
+      "iris-src": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@irisrun/core": "^0.3.0",
+    "@irisrun/schedule": "^0.3.0"
+  },
+  "peerDependencies": {
+    "redis": ">=4"
+  },
+  "peerDependenciesMeta": {
+    "redis": {
+      "optional": true
+    }
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xoai/iris.git",
+    "directory": "packages/store-redis"
+  },
+  "homepage": "https://github.com/xoai/iris#readme",
+  "files": [
+    "dist"
+  ]
+}
