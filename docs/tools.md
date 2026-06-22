@@ -67,6 +67,9 @@ mem0 gets its API key exactly the way a subprocess tool does. Details in the
 Tools don't inherit the host's privileges. The sandbox denies network by default and
 brokers credentials so secrets never enter the tool's environment; the docker backend
 gets real per-host **allowlist egress** through a host-side sidecar egress proxy.
+Today that floor lives in `@irisrun/sandbox` as a library — wiring it into the tool loop
+so a tool automatically runs behind it is still in progress; see
+[the sandbox](./guides/sandbox.md) for what's real now and what isn't.
 
 ## When a tool needs a secret
 
