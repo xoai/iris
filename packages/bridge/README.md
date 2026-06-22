@@ -28,7 +28,7 @@ const { status, body } = await bridge.handle(req.headers, rawBody); // verify-fi
 
 For a raw conversation map without the adapter layer, use `makeBridgeSession({ baseUrl })`
 and call `onMessage({ conversationId, text })`. The discord/telegram/teams **reference
-adapters** (`tests/examples/bridges/`) are the worked examples to copy and adapt.
+adapters** (`examples/bridges/`) are the worked examples to copy and adapt.
 
 ## Certify it
 

@@ -18,7 +18,7 @@ node --conditions=iris-src packages/cli/src/cli-main.ts <cmd>
 ```
 
 Substitute whichever form you use. (The same `--conditions=iris-src` runs the in-repo
-demos directly, e.g. `node --conditions=iris-src tests/examples/portability-demo.ts`.)
+demos directly, e.g. `node --conditions=iris-src examples/portability-demo.ts`.)
 
 ## Getting started
 
@@ -39,6 +39,9 @@ Follow these in order — each ends with a **Next →** to the next stop.
 
 How the runtime works, page by page.
 
+- [Stores — durability backends](./stores.md) — where a session's journal lives: pick &
+  plug a store (SQLite · Postgres · MySQL · Redis · Mongo · fs · edge) by name or module
+  specifier, all behind one conformance-certified `StateStore`/`Scheduler` port.
 - [The harness](./harness.md) — the model↔tool loop as swappable **tactics** at five
   **seams**; every decision is journaled, so you re-shape how the agent thinks without
   losing deterministic replay.

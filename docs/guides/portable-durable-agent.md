@@ -95,7 +95,8 @@ Every one is certified against the same `@irisrun/store-conformance` suite (atom
 append, CAS, snapshot/truncate, durable timers/signals). Because they all implement the
 same `StateStore` port, the journal you wrote on one is the journal you read on another —
 which is exactly what makes the cross-host move byte-identical. New backend? Any module
-exporting `openStore({ url })` works with no fork — see [adding a store](../contributing/adding-a-store.md).
+exporting `openStore({ url })` works with no fork — see the [stores reference](../stores.md)
+and the [adding-a-store recipe](../contributing/adding-a-store.md).
 
 ## Going deeper
 

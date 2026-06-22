@@ -249,7 +249,7 @@ Drop the `Accept` header for one buffered JSON reply, or hold a whole conversati
 The install-free portability proof: the **same image** starts on host A (sqlite, long-running), parks at a human-in-the-loop boundary, and resumes on host B (serverless-style, no held process) — same journal, byte-identical output.
 
 ```sh
-node --conditions=iris-src tests/examples/portability-demo.ts        # prints the proof, exits 0 on PASS
+node --conditions=iris-src examples/portability-demo.ts        # prints the proof, exits 0 on PASS
 ```
 
 ```text
@@ -336,7 +336,7 @@ Real *egress* — OCI pushes, live Anthropic calls, `wrangler deploy` / Lambda u
 
 ```sh
 npm test                                 # the whole suite → 1045 passing (6 live-conformance tests gated on API keys)
-node --conditions=iris-src tests/examples/portability-demo.ts          # the cross-host proof (install-free)
+node --conditions=iris-src examples/portability-demo.ts          # the cross-host proof (install-free)
 node tests/smoke/serverless-deploy-smoke.ts   # real Cloudflare DO / Lambda (gated)
 IRIS_SERVE_SMOKE=1 node tests/smoke/serve-streaming-smoke.ts  # real serve: REST + SSE + WS (gated)
 IRIS_PACK_SMOKE=1 node tests/smoke/npm-pack-smoke.ts          # npx iris-runtime init (gated)

@@ -135,17 +135,17 @@ they're **pluggable by module specifier**, the channel analog of `--store`:
 
 | Platform | Adapter (copy & adapt) | Env config |
 |---|---|---|
-| Discord | `tests/examples/bridges/discord.ts` | `DISCORD_PUBLIC_KEY` |
-| Telegram | `tests/examples/bridges/telegram.ts` | `TELEGRAM_SECRET_TOKEN` |
-| Teams | `tests/examples/bridges/teams.ts` | `TEAMS_SHARED_SECRET` |
-| WhatsApp | `tests/examples/bridges/whatsapp.ts` | `WHATSAPP_APP_SECRET` |
-| Twilio | `tests/examples/bridges/twilio.ts` | `TWILIO_AUTH_TOKEN`, `TWILIO_WEBHOOK_URL` |
-| Google Chat | `tests/examples/bridges/googlechat.ts` | `GOOGLE_CHAT_TOKEN` |
+| Discord | `examples/bridges/discord.ts` | `DISCORD_PUBLIC_KEY` |
+| Telegram | `examples/bridges/telegram.ts` | `TELEGRAM_SECRET_TOKEN` |
+| Teams | `examples/bridges/teams.ts` | `TEAMS_SHARED_SECRET` |
+| WhatsApp | `examples/bridges/whatsapp.ts` | `WHATSAPP_APP_SECRET` |
+| Twilio | `examples/bridges/twilio.ts` | `TWILIO_AUTH_TOKEN`, `TWILIO_WEBHOOK_URL` |
+| Google Chat | `examples/bridges/googlechat.ts` | `GOOGLE_CHAT_TOKEN` |
 
 ```sh
 iris serve ./image --port 8787 &     # 1) the durable Iris channel
 TELEGRAM_SECRET_TOKEN=<your-secret> \
-  iris bridge ./tests/examples/bridges/telegram.ts --base-url http://127.0.0.1:8787   # 2) the bridge
+  iris bridge ./examples/bridges/telegram.ts --base-url http://127.0.0.1:8787   # 2) the bridge
 # then point the platform's webhook at the bridge (default http://127.0.0.1:8788)
 ```
 

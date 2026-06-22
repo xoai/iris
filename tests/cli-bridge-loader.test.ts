@@ -26,7 +26,7 @@ test("resolveBridge: a module exporting openBridge is loaded and builds a Platfo
 
 test("resolveBridge: an existing reference bridge example (discord) loads via openBridge", async () => {
   const here = dirname(fileURLToPath(import.meta.url));
-  const spec = pathToFileURL(join(here, "examples", "bridges", "discord.ts")).href;
+  const spec = pathToFileURL(join(here, "..", "examples", "bridges", "discord.ts")).href;
   const open = await resolveBridge(spec);
   const adapter = (await open({ env: { DISCORD_PUBLIC_KEY: "00".repeat(32) } })) as PlatformAdapter<unknown>;
   assert.equal(adapter.name, "discord");
