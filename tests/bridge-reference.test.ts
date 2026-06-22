@@ -9,7 +9,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { makeBridgeSession, runBridgeConformance, register } from "@irisrun/bridge";
-import { makeBridgeDemoChannel } from "./examples/bridge-reference.ts";
+import { makeBridgeDemoChannel } from "../examples/bridge-reference.ts";
 
 // The SDK's own session-discipline conformance (token adoption/rotation, independent
 // conversations, clean restart) against the in-package fake channel — no server.

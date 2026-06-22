@@ -10,13 +10,13 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { runAdapterConformance, register } from "@irisrun/bridge";
-import { makeBridgeDemoChannel } from "./examples/bridge-reference.ts";
-import { makeDiscordBridge, discordAdapter } from "./examples/bridges/discord.ts";
-import { makeTelegramBridge, telegramAdapter } from "./examples/bridges/telegram.ts";
-import { makeTeamsBridge, teamsAdapter } from "./examples/bridges/teams.ts";
-import { makeWhatsappBridge, whatsappAdapter } from "./examples/bridges/whatsapp.ts";
-import { makeTwilioBridge, twilioAdapter } from "./examples/bridges/twilio.ts";
-import { makeGoogleChatBridge, googleChatAdapter } from "./examples/bridges/googlechat.ts";
+import { makeBridgeDemoChannel } from "../examples/bridge-reference.ts";
+import { makeDiscordBridge, discordAdapter } from "../examples/bridges/discord.ts";
+import { makeTelegramBridge, telegramAdapter } from "../examples/bridges/telegram.ts";
+import { makeTeamsBridge, teamsAdapter } from "../examples/bridges/teams.ts";
+import { makeWhatsappBridge, whatsappAdapter } from "../examples/bridges/whatsapp.ts";
+import { makeTwilioBridge, twilioAdapter } from "../examples/bridges/twilio.ts";
+import { makeGoogleChatBridge, googleChatAdapter } from "../examples/bridges/googlechat.ts";
 
 // ── Discord (Ed25519) ────────────────────────────────────────────────────────
 
@@ -381,12 +381,12 @@ test("googlechat bridge: a wrong token is 401; a non-MESSAGE event is ignored", 
 test("platform adapters import no @irisrun/* except the optional @irisrun/bridge SDK", () => {
   const here = dirname(fileURLToPath(import.meta.url));
   const files = [
-    join(here, "examples", "bridges", "discord.ts"),
-    join(here, "examples", "bridges", "telegram.ts"),
-    join(here, "examples", "bridges", "teams.ts"),
-    join(here, "examples", "bridges", "whatsapp.ts"),
-    join(here, "examples", "bridges", "twilio.ts"),
-    join(here, "examples", "bridges", "googlechat.ts"),
+    join(here, "..", "examples", "bridges", "discord.ts"),
+    join(here, "..", "examples", "bridges", "telegram.ts"),
+    join(here, "..", "examples", "bridges", "teams.ts"),
+    join(here, "..", "examples", "bridges", "whatsapp.ts"),
+    join(here, "..", "examples", "bridges", "twilio.ts"),
+    join(here, "..", "examples", "bridges", "googlechat.ts"),
   ];
   for (const f of files) {
     const src = readFileSync(f, "utf8");

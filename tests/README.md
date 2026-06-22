@@ -41,7 +41,7 @@ Runnable, copy-able reference code, each one regression-locked by a `*.test.ts`:
 
 | File | What it shows | Run |
 | --- | --- | --- |
-| `portability-demo.ts` | the cross-host resume proof | `node tests/examples/portability-demo.ts` |
+| `portability-demo.ts` | the cross-host resume proof | `node examples/portability-demo.ts` |
 | `cross-host-journal-demo.ts` | a session migrating fs → sqlite → edge | `npm run demo:cross-host` |
 | `bridge-reference.ts` | a two-turn conversation through the `@irisrun/bridge` SDK | `npm run demo:bridge` |
 | `bridges/` | Discord / Telegram / Teams adapters over the `@irisrun/bridge` SDK (not packages) | see `docs/reference/bridge-pattern.md` |

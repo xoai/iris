@@ -115,7 +115,7 @@ in and the Iris REST channel wire out, so a chat platform reaches a durable sess
 usage: iris bridge <module> --base-url <iris-channel-url> [--port N] [--host H]
 ```
 
-- `<module>` — a module exporting **`openBridge(opts)`** (an `@irisrun/bridge` `OpenBridge`); it builds the platform adapter from the environment. The six shipped reference adapters live at `tests/examples/bridges/<platform>.ts` (copy & adapt — they're examples, not packages, per the [bridge pattern](../reference/bridge-pattern.md)).
+- `<module>` — a module exporting **`openBridge(opts)`** (an `@irisrun/bridge` `OpenBridge`); it builds the platform adapter from the environment. The six shipped reference adapters live at `examples/bridges/<platform>.ts` (copy & adapt — they're examples, not packages, per the [bridge pattern](../reference/bridge-pattern.md)).
 - `--base-url <url>` — **required**: where `iris serve` is listening (e.g. `http://127.0.0.1:8787`).
 - `--port N` (default `8788`), `--host H` (default `127.0.0.1`) — where the bridge itself listens for the platform's webhook.
 - Platform config comes from the **environment** (per adapter): `DISCORD_PUBLIC_KEY` · `TELEGRAM_SECRET_TOKEN` · `TEAMS_SHARED_SECRET` · `WHATSAPP_APP_SECRET` · `TWILIO_AUTH_TOKEN`+`TWILIO_WEBHOOK_URL` · `GOOGLE_CHAT_TOKEN`.
@@ -124,7 +124,7 @@ usage: iris bridge <module> --base-url <iris-channel-url> [--port N] [--host H]
 ```sh
 iris serve ./image --port 8787 &     # 1) the durable Iris channel
 DISCORD_PUBLIC_KEY=<app-public-key> \
-  iris bridge ./tests/examples/bridges/discord.ts --base-url http://127.0.0.1:8787   # 2) the bridge
+  iris bridge ./examples/bridges/discord.ts --base-url http://127.0.0.1:8787   # 2) the bridge
 # point your platform's webhook at the bridge's URL (default http://127.0.0.1:8788)
 ```
 

@@ -80,12 +80,12 @@ first-party packages, so Iris never owns a platform's API drift.
 
 | Platform | File | Inbound auth | Inbound → text | Outbound |
 | --- | --- | --- | --- | --- |
-| **Discord** | `tests/examples/bridges/discord.ts` | Ed25519 over `timestamp + body` vs the app public key (`X-Signature-Ed25519`); PING→PONG | slash command (`type:2`) → `data.options[0].value`; conversation = `channel_id` | interaction response `{type:4, data:{content}}` |
-| **Telegram** | `tests/examples/bridges/telegram.ts` | `X-Telegram-Bot-Api-Secret-Token` (constant-time) | `message.text`; conversation = `message.chat.id` | webhook-response `{method:"sendMessage", chat_id, text}` |
-| **Teams** | `tests/examples/bridges/teams.ts` | Outgoing-Webhook HMAC-SHA256 (base64) `Authorization: HMAC <sig>` | Activity `text` (leading `<at>…</at>` mention stripped); conversation = `conversation.id` | Activity `{type:"message", text}` |
-| **WhatsApp** | `tests/examples/bridges/whatsapp.ts` | Meta Cloud API `X-Hub-Signature-256` = HMAC-SHA256(app secret, raw body) | `entry[].changes[].value.messages[0].text.body`; conversation = sender `from` | Cloud-API send `{messaging_product, to, type:"text", text:{body}}` |
-| **Twilio** | `tests/examples/bridges/twilio.ts` | `X-Twilio-Signature` = HMAC-SHA1 base64 over the **configured** webhook URL + sorted POST params (URL isn't in `verify`, so it's config) | form `Body`; conversation = `From` | TwiML `<Response><Message>…</Message></Response>` (string) |
-| **Google Chat** | `tests/examples/bridges/googlechat.ts` | shared verification token in `Authorization` (constant-time; full Bearer-JWT/JWKS deferred) | `MESSAGE` event `message.text`; conversation = `space.name` | `{text}` |
+| **Discord** | `examples/bridges/discord.ts` | Ed25519 over `timestamp + body` vs the app public key (`X-Signature-Ed25519`); PING→PONG | slash command (`type:2`) → `data.options[0].value`; conversation = `channel_id` | interaction response `{type:4, data:{content}}` |
+| **Telegram** | `examples/bridges/telegram.ts` | `X-Telegram-Bot-Api-Secret-Token` (constant-time) | `message.text`; conversation = `message.chat.id` | webhook-response `{method:"sendMessage", chat_id, text}` |
+| **Teams** | `examples/bridges/teams.ts` | Outgoing-Webhook HMAC-SHA256 (base64) `Authorization: HMAC <sig>` | Activity `text` (leading `<at>…</at>` mention stripped); conversation = `conversation.id` | Activity `{type:"message", text}` |
+| **WhatsApp** | `examples/bridges/whatsapp.ts` | Meta Cloud API `X-Hub-Signature-256` = HMAC-SHA256(app secret, raw body) | `entry[].changes[].value.messages[0].text.body`; conversation = sender `from` | Cloud-API send `{messaging_product, to, type:"text", text:{body}}` |
+| **Twilio** | `examples/bridges/twilio.ts` | `X-Twilio-Signature` = HMAC-SHA1 base64 over the **configured** webhook URL + sorted POST params (URL isn't in `verify`, so it's config) | form `Body`; conversation = `From` | TwiML `<Response><Message>…</Message></Response>` (string) |
+| **Google Chat** | `examples/bridges/googlechat.ts` | shared verification token in `Authorization` (constant-time; full Bearer-JWT/JWKS deferred) | `MESSAGE` event `message.text`; conversation = `space.name` | `{text}` |
 
 Each enforces the same discipline as the SDK: **verify first** (an unverified body is
 never processed → 401), normalize, drive the durable session (adopting the rotated
@@ -115,7 +115,7 @@ is sent as `application/xml`; an object reply as JSON). All six reference adapte
 
 ```sh
 iris serve ./image --port 8787 &     # the Iris REST channel
-DISCORD_PUBLIC_KEY=<hex> iris bridge ./tests/examples/bridges/discord.ts --base-url http://127.0.0.1:8787
+DISCORD_PUBLIC_KEY=<hex> iris bridge ./examples/bridges/discord.ts --base-url http://127.0.0.1:8787
 ```
 
 `OpenBridge` lives in `@irisrun/bridge` (not `@irisrun/sdk`) on purpose: a bridge author

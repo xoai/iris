@@ -227,7 +227,7 @@ you. You provide the HTTP server around it — a dozen lines of `node:http`, no
 dependency beyond the bridge:
 
 ```ts
-// telegram-bridge.ts — copy tests/examples/bridges/telegram.ts beside this file
+// telegram-bridge.ts — copy examples/bridges/telegram.ts beside this file
 import { createServer } from "node:http";
 import { makeTelegramBridge } from "./telegram.ts";
 
@@ -275,7 +275,7 @@ Now a Telegram message hits the bridge, which verifies the
 `X-Telegram-Bot-Api-Secret-Token` header constant-time **before any turn runs** (a bad
 secret is `401`, never a wasted delegation), drives the durable session on `:8787`,
 and replies in the webhook response. The `discord.ts` and `teams.ts` siblings in
-`tests/examples/bridges/` are the same shape for other platforms.
+`examples/bridges/` are the same shape for other platforms.
 
 ## What a delegation does, and how it can end
 

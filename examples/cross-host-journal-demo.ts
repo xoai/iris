@@ -19,11 +19,11 @@ import { FsStateStore, FsScheduler } from "@irisrun/store-fs";
 import { edgeHost } from "@irisrun/store-do";
 import { exportSession, importSession, encodeExport, decodeExport, verifyExport } from "@irisrun/journal-export";
 import { verifySession } from "@irisrun/audit";
-import { TestClock } from "../lib/mem-store.ts";
-import { makeScriptedModel } from "../lib/fake-model.ts";
-import { makeFakeTool } from "../lib/fake-tool.ts";
-import { makeFakeSignal } from "../lib/fake-signal.ts";
-import { FakeDoStorage } from "../lib/fake-do.ts";
+import { TestClock } from "../tests/lib/mem-store.ts";
+import { makeScriptedModel } from "../tests/lib/fake-model.ts";
+import { makeFakeTool } from "../tests/lib/fake-tool.ts";
+import { makeFakeSignal } from "../tests/lib/fake-signal.ts";
+import { FakeDoStorage } from "../tests/lib/fake-do.ts";
 
 const DEF = "sha256:demo-cross-host";
 const INPUT = { messages: [{ role: "user", content: "go" }] };
