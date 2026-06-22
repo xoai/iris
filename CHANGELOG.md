@@ -15,6 +15,21 @@ preserving the zero-external-dependency core.
 
 ### Added
 
+- **Multi-platform `iris deploy --target <name>`** — deploy now scaffolds a
+  turnkey project for **nine targets** across three runtime families, not just
+  Cloudflare: **edge** (`cloudflare` — Workers + Durable Objects); **container**
+  (`render`, `gcp-cloud-run`, `azure-container-apps`, `digitalocean-app`,
+  `docker` — a shared `Dockerfile` running `iris serve` + a per-platform manifest,
+  durable store selected by `IRIS_STORE`, sqlite by default); and **serverless**
+  (`aws-lambda`, `gcp-cloud-functions`, `azure-functions` — a cold-per-turn handler
+  with an external store via `DATABASE_URL`). A new deploy-target registry
+  (`packages/cli/src/deploy-targets.ts`) runs the capability-diff gate per target,
+  so a local-tool agent is routed to a container instead of refused at the edge.
+  `--target` defaults to `cloudflare` (byte-identical to before); `--list-targets`
+  lists them. Real `wrangler deploy` egress stays env-gated; every other target is
+  scaffold-only with a printed deploy command. **Zero new runtime dependencies**
+  (scaffolds are generated strings); `@irisrun/host` and `@irisrun/store-do` are
+  untouched.
 - **HTTP transport + OpenAPI 3.0 → tools generator** — an agent can call an
   HTTP/JSON API as tools, generated from an OpenAPI 3.0 spec (opt-in via
   `openapi.json` + `--openapi` on `build` / `verify` / `run`; off by default →
@@ -74,7 +89,7 @@ preserving the zero-external-dependency core.
 
 ### Hardened
 
-- The full suite stands at **1068 passing** (from 955 at 0.3.0; +6 live-gated
+- The full suite stands at **1088 passing** (from 955 at 0.3.0; +6 live-gated
   conformance tests). Zero new runtime dependencies in Iris's core; the new store
   drivers (`mysql2` / `redis` / `mongodb`) are optional peers, never pulled into
   Iris's own tree.

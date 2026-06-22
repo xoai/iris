@@ -100,3 +100,12 @@ export type {
   ModelPerformerOptions,
   StreamingModelPerformerOptions,
 } from "./providers.ts";
+export {
+  getTarget,
+  listTargets,
+  noopHostFor,
+  DEPLOY_TARGETS,
+  IRIS_VERSION,
+  DEFAULT_COMPAT_DATE,
+} from "./deploy-targets.ts";
+export type { DeployTarget, ScaffoldContext, ScaffoldFile, DeployFamily } from "./deploy-targets.ts";

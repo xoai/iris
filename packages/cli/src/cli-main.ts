@@ -24,6 +24,7 @@ import { cmdEval, loadEvalSuite } from "./eval-cmd.ts";
 import { cmdSchedule } from "./schedule-cmd.ts";
 import { loadSubagents } from "./subagents-cfg.ts";
 import { resolveStore } from "./store.ts";
+import { listTargets } from "./deploy-targets.ts";
 import { cmdAdapterInit } from "./adapter-init.ts";
 import { loadMcpServers } from "./mcp-cfg.ts";
 import { resolveChildModel } from "./child-model.ts";
@@ -577,25 +578,41 @@ async function chatCommand(argv: string[]): Promise<void> {
   }
 }
 
-// `iris deploy <layoutdir> [--out dir] [--name n] [--deploy]` — scaffold a Cloudflare
-// Worker + Durable Object project (runs the capability-diff gate first). Scaffold-only
-// by default; `--deploy` runs `wrangler deploy` but ONLY with IRIS_DEPLOY=1 (the real
-// network egress is env-gated). Host-side.
+// `iris deploy <layoutdir> [--target name] [--out dir] [--name n] [--deploy]` —
+// scaffold a deploy project for the chosen platform (default: cloudflare; see
+// `--list-targets`). Runs the capability-diff gate first. Scaffold-only by
+// default; `--deploy` runs the real `wrangler deploy` (Cloudflare ONLY) but only
+// with IRIS_DEPLOY=1 (env-gated egress). Host-side.
 async function deployCommand(argv: string[]): Promise<void> {
-  const layout = argv[1];
-  if (!layout) {
-    throw new Error("usage: iris deploy <layoutdir> [--out dir] [--name n] [--deploy]");
+  // --list-targets: informational (no image); print the registry and return,
+  // before the layout guard so `iris deploy --list-targets` works.
+  if (argv.includes("--list-targets")) {
+    console.log("iris deploy targets (--target <name>; default cloudflare):");
+    for (const t of listTargets()) console.log(`  ${t.name.padEnd(22)} ${t.family.padEnd(10)} ${t.description}`);
+    return;
   }
-  // Forkless --provider/--channel are run/serve/chat-only (the worker bakes a built-in
-  // provider; cmdDeploy derives the provider from the model-id prefix, which would throw
-  // first). Refuse loudly BEFORE cmdDeploy via the testable guard in iris.ts.
+  const layout = argv[1];
+  // A missing layout — or a leading flag mistaken for one — is a usage error.
+  if (!layout || layout.startsWith("--")) {
+    throw new Error(
+      "usage: iris deploy <layoutdir> [--target <name>] [--out dir] [--name n] [--deploy] [--list-targets]",
+    );
+  }
+  // Forkless --provider/--channel are run/serve/chat-only; refuse loudly first.
   assertDeployFlagsSupported({ provider: flag(argv, "--provider"), channel: flag(argv, "--channel") });
+  const target = flag(argv, "--target");
   const outDir = flag(argv, "--out") ?? "./iris-edge";
   const name = flag(argv, "--name");
   const wantDeploy = argv.includes("--deploy");
+  const isCloudflare = (target ?? "cloudflare") === "cloudflare";
 
   let deploy: { run: (args: string[], cwd: string) => Promise<number> } | undefined;
-  if (wantDeploy) {
+  if (wantDeploy && !isCloudflare) {
+    // Non-edge `--deploy`: pass a never-called runner so cmdDeploy emits the
+    // canonical "only supported for --target cloudflare" refusal (ZERO files,
+    // before any wrangler/env gate runs).
+    deploy = { run: async (): Promise<number> => 0 };
+  } else if (wantDeploy) {
     if (process.env.IRIS_DEPLOY !== "1") {
       throw new Error(
         "iris deploy --deploy: refusing to run `wrangler deploy` without IRIS_DEPLOY=1 — the real Cloudflare egress is env-gated. Omit --deploy to scaffold only.",
@@ -627,6 +644,7 @@ async function deployCommand(argv: string[]): Promise<void> {
   }
 
   const result = await cmdDeploy(layout, {
+    ...(target ? { target } : {}),
     outDir,
     ...(name ? { name } : {}),
     ...(deploy ? { deploy } : {}),

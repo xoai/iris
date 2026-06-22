@@ -6,6 +6,23 @@ This chapter makes that turnkey on one real host, **Cloudflare Durable Objects**
 where a cold edge isolate per turn is the most vivid "resume somewhere else" proof
 Iris has. Cloudflare is the demo; the portability is the point.
 
+`iris deploy --target <name>` scaffolds for **nine targets** across three runtime
+families (`iris deploy --list-targets`):
+
+| Family | Targets | Shape |
+|---|---|---|
+| **edge** | `cloudflare` | Workers + Durable Objects; remote tools only |
+| **container** | `render`, `gcp-cloud-run`, `azure-container-apps`, `digitalocean-app`, `docker` | a `Dockerfile` running `iris serve` + a per-platform manifest; durable store via `IRIS_STORE` (sqlite default) |
+| **serverless** | `aws-lambda`, `gcp-cloud-functions`, `azure-functions` | a cold-per-turn handler with an **external** store via `DATABASE_URL` |
+
+`--target` defaults to `cloudflare`. The capability gate runs per target, so an
+agent that needs **local subprocess tools** is accepted on a container target (a
+full `iris serve` process) but refused on the edge and serverless families (which
+run remote tools only) — the gate routes you to the right host instead of shipping
+something that breaks at runtime. The sections below use Cloudflare; the container
+and serverless scaffolds follow the same gate → scaffold → (manual) deploy shape,
+each printing its platform's deploy command.
+
 ## Scaffold an edge project
 
 ```sh
