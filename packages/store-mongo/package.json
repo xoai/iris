@@ -1,0 +1,41 @@
+{
+  "name": "@irisrun/store-mongo",
+  "version": "0.3.0",
+  "type": "module",
+  "description": "Iris host store on MongoDB — a StateStore + Scheduler certified against @irisrun/store-conformance, plugged into the CLI via `--store @irisrun/store-mongo --db mongodb://…`. `mongodb` is a peer dependency (you install it), so Iris's own tree stays zero-dependency.",
+  "exports": {
+    ".": {
+      "iris-src": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@irisrun/core": "^0.3.0",
+    "@irisrun/schedule": "^0.3.0"
+  },
+  "peerDependencies": {
+    "mongodb": ">=6"
+  },
+  "peerDependenciesMeta": {
+    "mongodb": {
+      "optional": true
+    }
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xoai/iris.git",
+    "directory": "packages/store-mongo"
+  },
+  "homepage": "https://github.com/xoai/iris#readme",
+  "files": [
+    "dist"
+  ]
+}

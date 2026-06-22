@@ -3,7 +3,7 @@
 // the `X-Telegram-Bot-Api-Secret-Token` header (set when you call setWebhook with
 // secret_token), compared constant-time. Imports only @irisrun/bridge + node:crypto.
 import { timingSafeEqual } from "node:crypto";
-import { makePlatformBridge, type PlatformAdapter, type PlatformBridge } from "@irisrun/bridge";
+import { makePlatformBridge, type PlatformAdapter, type PlatformBridge, type OpenBridge } from "@irisrun/bridge";
 
 // Telegram lets the webhook RESPONSE carry a method call — the simplest reply path.
 type TelegramReply = { method: "sendMessage"; chat_id: string; text: string };
@@ -55,3 +55,8 @@ export function makeTelegramBridge(opts: {
     fetchImpl: opts.fetchImpl,
   });
 }
+
+/** Forkless entry for `iris bridge`: reads the webhook secret token from the environment
+ *  (`TELEGRAM_SECRET_TOKEN`). Imports only @irisrun/bridge — the import-discipline holds. */
+export const openBridge: OpenBridge = (o) =>
+  telegramAdapter({ secretToken: (o?.env ?? process.env).TELEGRAM_SECRET_TOKEN ?? "" });

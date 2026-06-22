@@ -4,7 +4,7 @@
 // scheme). Imports only @irisrun/bridge (the SDK) + node:crypto — nothing from the
 // Iris runtime/core, so this still ports to any language with no SDK at all.
 import { createPublicKey, verify as edVerify } from "node:crypto";
-import { makePlatformBridge, type PlatformAdapter, type PlatformBridge } from "@irisrun/bridge";
+import { makePlatformBridge, type PlatformAdapter, type PlatformBridge, type OpenBridge } from "@irisrun/bridge";
 
 // Discord interaction response body (the bridge replies in the HTTP response).
 type DiscordReply = { type: number; data?: { content: string } };
@@ -80,3 +80,8 @@ export function makeDiscordBridge(opts: {
     fetchImpl: opts.fetchImpl,
   });
 }
+
+/** Forkless entry for `iris bridge`: reads the app public key from the environment
+ *  (`DISCORD_PUBLIC_KEY`). Imports only @irisrun/bridge — the import-discipline holds. */
+export const openBridge: OpenBridge = (o) =>
+  discordAdapter({ publicKeyHex: (o?.env ?? process.env).DISCORD_PUBLIC_KEY ?? "" });

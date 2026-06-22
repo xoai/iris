@@ -31,6 +31,9 @@ import type { AgentImage, ImageInspection, RegistryResolver, CapabilityProfile }
 import type { StreamEvent } from "@irisrun/channel-rest";
 import { makeWebHandler } from "@irisrun/channel-web";
 import { resolveChannel } from "./channel.ts";
+import { resolveBridge } from "./bridge.ts";
+import { makePlatformBridge, type PlatformBridge } from "@irisrun/bridge";
+import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { assertDeployable, type HostAdapter } from "@irisrun/host";
 import { edgeHost, type DoStorage } from "@irisrun/store-do";
 import {
@@ -547,6 +550,67 @@ export async function cmdServe(layoutdir: string, opts: CliServeOptions): Promis
 
   const url = await channel.listen(opts.port ?? 8787, opts.host ?? "127.0.0.1");
   return { url, close: (): Promise<void> => channel.close() };
+}
+
+// --- iris bridge: serve a forkless platform bridge in front of a running channel -----
+//
+// `iris bridge <module> --base-url <channelUrl>` makes a chat platform reachable: it
+// dynamic-imports the module's `openBridge` (resolveBridge), builds the verify→parse→drive
+// →format harness with `makePlatformBridge`, and serves a node:http endpoint that pipes
+// each request to `bridge.handle(headers, rawBody)`. The bridge speaks ONLY the REST wire
+// to `--base-url` (where `iris serve` is listening) — no core change, the channel analog of
+// `--store`. The platform code stays a reference example; only the loader is first-party.
+
+export interface CliBridgeOptions {
+  baseUrl: string; // where `iris serve` is listening (the Iris REST channel)
+  port?: number; // default 8788
+  host?: string; // default 127.0.0.1
+  env?: Record<string, string | undefined>; // platform config source (default process.env)
+  fetchImpl?: typeof fetch; // injectable for tests
+}
+
+// Read the raw request body + flatten headers, drive the bridge, write the reply. A STRING
+// body (e.g. Twilio TwiML/XML) is written raw as application/xml; an object as JSON. The
+// body-read idiom mirrors channel-rest's server (for await over the request stream).
+// NOTE: the body is decoded as UTF-8 — all six reference platforms sign UTF-8 JSON/form
+// bodies, so the adapter's HMAC over this string is byte-faithful. A platform that signed a
+// non-UTF-8 body would need the raw bytes threaded through instead.
+async function handleBridgeRequest(bridge: PlatformBridge<unknown>, req: IncomingMessage, res: ServerResponse): Promise<void> {
+  const chunks: Buffer[] = [];
+  for await (const c of req) chunks.push(c as Buffer);
+  const rawBody = Buffer.concat(chunks).toString("utf8");
+  const headers: Record<string, string | undefined> = {};
+  for (const [k, v] of Object.entries(req.headers)) headers[k] = Array.isArray(v) ? v[0] : v;
+  const r = await bridge.handle(headers, rawBody);
+  if (typeof r.body === "string") {
+    res.writeHead(r.status, { "content-type": "application/xml" });
+    res.end(r.body);
+  } else {
+    res.writeHead(r.status, { "content-type": "application/json" });
+    res.end(JSON.stringify(r.body));
+  }
+}
+
+/** `iris bridge`: resolve the bridge module, build it over `--base-url`, and listen. */
+export async function cmdBridge(moduleSpec: string, opts: CliBridgeOptions): Promise<ServeHandle> {
+  const openBridge = await resolveBridge(moduleSpec);
+  const adapter = await openBridge({ env: opts.env ?? process.env });
+  const bridge = makePlatformBridge(adapter, { baseUrl: opts.baseUrl, fetchImpl: opts.fetchImpl });
+  const server = createServer((req, res) => {
+    handleBridgeRequest(bridge, req, res).catch((err) => {
+      if (!res.headersSent) res.writeHead(500, { "content-type": "application/json" });
+      res.end(JSON.stringify({ error: err instanceof Error ? err.message : String(err) }));
+    });
+  });
+  const port = opts.port ?? 8788;
+  const host = opts.host ?? "127.0.0.1";
+  await new Promise<void>((resolve) => server.listen(port, host, () => resolve()));
+  const addr = server.address();
+  const actualPort = typeof addr === "object" && addr ? addr.port : port;
+  return {
+    url: `http://${host}:${actualPort}`,
+    close: () => new Promise<void>((resolve) => server.close(() => resolve())),
+  };
 }
 
 // --- 9e: deploy (Cloudflare Durable Objects — the supported one-command path) -------
