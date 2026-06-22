@@ -7,6 +7,78 @@ packages (`iris-runtime` + the `@irisrun/*` libraries) share one lockstep versio
 
 ## [Unreleased]
 
+Reaching agents *outward*: an agent can now call HTTP/JSON APIs as tools
+(generated from an OpenAPI spec), persist to three more host databases, front
+three more chat platforms via a forkless loader, and run its subprocess tools
+inside the sandbox — every one opt-in and byte-identical when off, every one
+preserving the zero-external-dependency core.
+
+### Added
+
+- **HTTP transport + OpenAPI 3.0 → tools generator** — an agent can call an
+  HTTP/JSON API as tools, generated from an OpenAPI 3.0 spec (opt-in via
+  `openapi.json` + `--openapi` on `build` / `verify` / `run`; off by default →
+  byte-identical). A new `http` transport in `@irisrun/tools` (`node:fetch`; the
+  auth secret rides the `Authorization` header only, never the URL;
+  `AbortController` timeout; 2xx JSON → value). The `http://` ref scheme was added
+  across every drift-guarded surface (contract schemes, the published schema, the
+  `ToolContract` / `LockTool` transport unions) with the conformance corpus kept in
+  agreement. **Subagent tool-transport parity**: subagent children now get
+  subprocess + mcp + http, closing a `no_transport` gap.
+- **MySQL, Redis & MongoDB store adapters** — `@irisrun/store-mysql` (SQL,
+  `FOR UPDATE` fenced append, `mysql2`), `@irisrun/store-redis` (KV, optimistic
+  `WATCH`/`MULTI`/`EXEC`, `redis` v4), and `@irisrun/store-mongo` (document, single-doc
+  `findOneAndUpdate` reservation, `mongodb`) — three peer-dependency-only host stores
+  mirroring `@irisrun/store-postgres`, each a `StateStore` + `Scheduler` certified
+  against `@irisrun/store-conformance` and pluggable via the existing forkless
+  `--store <module>` loader (no CLI change). Drivers are **optional peers** imported via
+  a non-literal specifier, so Iris's tree stays zero-dependency and a missing driver
+  fails loudly naming the install command. Redis/Mongo run the full conformance suite
+  against a faithful fake driver plus an env-gated live smoke; MySQL via unit tests + an
+  env-gated live smoke.
+- **Forkless bridge loader + `iris bridge` command** — channel bridges are now
+  pluggable like stores. A bridge module exports an `OpenBridge` factory
+  (`openBridge() → PlatformAdapter`, config from env); `iris bridge <module>
+  --base-url <channelUrl>` dynamic-imports it, builds `makePlatformBridge`, and serves
+  it in front of a running channel over `node:http` (string replies as XML, objects as
+  JSON) — the channel analog of `--store`, adding no dependency to Iris. New reference
+  bridges **WhatsApp** (`X-Hub-Signature-256`), **Twilio** (`X-Twilio-Signature`) and
+  **Google Chat** (shared token) join the existing Discord / Telegram / Teams examples;
+  all six now load via the command. Bridges stay reference examples (Iris owns no
+  platform API drift) and depend only on `@irisrun/bridge`; only the loader is
+  first-party.
+- **`@irisrun/sandbox` wired into the tool loop via `--sandbox`** — a subprocess
+  tool can now run inside `@irisrun/sandbox`, opt-in via `iris run | serve | chat
+  --sandbox`, off by default (byte-identical when off). A zero-value-off
+  `SandboxExecutor` seam sits on the subprocess transport (dependency-inverted —
+  `@irisrun/tools` never imports `@irisrun/sandbox`); the CLI builds the executor from
+  the Agentfile `sandbox` block and refuses inmemory-for-real / non-node / multi-file
+  tools loudly. Real in-docker execution is a gated docker smoke (single-file node
+  tools); CI verifies the seam without docker.
+- **Connections & Sandbox guides + a dedicated stores page** —
+  `docs/guides/connections.md` (consuming external services as tools — OpenAPI / mcp /
+  grpc / subprocess, the two credential layers, approvals), `docs/guides/sandbox.md`
+  (the security floor as a library + the opt-in wiring), and a new `docs/stores.md`
+  durability-backends page (the store-side counterpart to `channels.md`: the plug-and-play
+  table, one conformance suite, per-substrate notes). `docs/sdk.md` gains an **"Adapter
+  or bridge?"** section + an ASCII diagram clarifying the in-process port adapter vs the
+  external bridge boundary. All reachable through the docs-funnel integrity guard.
+
+### Changed
+
+- **`examples/` relocated to the top level** (was `tests/examples/`) — the bridge
+  reference adapters are user-facing now (`iris bridge ./examples/bridges/<x>.ts` is a
+  documented command), so a path under `tests/` undersold them. Every reference
+  repointed: the test imports, the two `npm run demo:*` scripts, the tsconfig exclude,
+  and all doc / README / CONTRIBUTING paths.
+
+### Hardened
+
+- The full suite stands at **1068 passing** (from 955 at 0.3.0; +6 live-gated
+  conformance tests). Zero new runtime dependencies in Iris's core; the new store
+  drivers (`mysql2` / `redis` / `mongodb`) are optional peers, never pulled into
+  Iris's own tree.
+
 ## [0.3.0] — 2026-06-22
 
 The **forkless adapter ecosystem**: a single-dependency SDK for authoring

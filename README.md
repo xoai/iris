@@ -11,8 +11,7 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/iris-runtime"><img alt="npm version" src="https://img.shields.io/npm/v/iris-runtime?style=for-the-badge&logo=npm&logoColor=white&label=iris-runtime&color=CB3837&labelColor=000000"></a>
   <a href="https://nodejs.org"><img alt="Node ≥ 24" src="https://img.shields.io/badge/node-%E2%89%A5%2024-339933?style=for-the-badge&logo=nodedotjs&logoColor=white&labelColor=000000"></a>
-  <img alt="TypeScript — no build step" src="https://img.shields.io/badge/TypeScript-no%20build%20step-3178C6?style=for-the-badge&logo=typescript&logoColor=white&labelColor=000000">
-  <img alt="tests: 1045 passing" src="https://img.shields.io/badge/tests-1045%20passing-44CC11?style=for-the-badge&labelColor=000000">
+  <img alt="tests: 1068 passing" src="https://img.shields.io/badge/tests-1068%20passing-44CC11?style=for-the-badge&labelColor=000000">
   <a href="LICENSE"><img alt="license: MIT" src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge&labelColor=000000"></a>
 </p>
 
@@ -322,7 +321,7 @@ The full per-package taxonomy is the **[architecture map](docs/architecture.md)*
 
 ## Tested & proven
 
-The unit suite is **install-free, deterministic, zero-dependency** — **1045 passing** on Node 24 (plus **6** live-provider conformance tests gated on API keys), `tsc --noEmit` clean. Every claim here is regression-locked:
+The unit suite is **install-free, deterministic, zero-dependency** — **1068 passing** on Node 24 (plus **6** live-provider conformance tests gated on API keys), `tsc --noEmit` clean. Every claim here is regression-locked:
 
 - **Durability** — CAS + fencing; park/resume across a forced restart; the crash matrix (at-least-once, never double-applied).
 - **Determinism** — replay purity asserted on every step (`IRIS_ASSERT=0` turns it off); a **10,000-session** determinism run; cross-store and **cross-host** resume.
@@ -335,7 +334,7 @@ The unit suite is **install-free, deterministic, zero-dependency** — **1045 pa
 Real *egress* — OCI pushes, live Anthropic calls, `wrangler deploy` / Lambda upload, `npm publish`, OTLP export — stays **env-gated** as smoke tests under `tests/smoke/`, outside the suite.
 
 ```sh
-npm test                                 # the whole suite → 1045 passing (6 live-conformance tests gated on API keys)
+npm test                                 # the whole suite → 1068 passing (6 live-conformance tests gated on API keys)
 node --conditions=iris-src examples/portability-demo.ts          # the cross-host proof (install-free)
 node tests/smoke/serverless-deploy-smoke.ts   # real Cloudflare DO / Lambda (gated)
 IRIS_SERVE_SMOKE=1 node tests/smoke/serve-streaming-smoke.ts  # real serve: REST + SSE + WS (gated)
