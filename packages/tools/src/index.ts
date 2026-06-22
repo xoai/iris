@@ -27,6 +27,9 @@ export type { SubprocessSpec, SubprocessOptions, SandboxExecutor } from "./trans
 export { makeMcpStdioTransport } from "./transports/mcp-stdio.ts";
 export type { McpServerSpec, McpStdioOptions } from "./transports/mcp-stdio.ts";
 
+export { makeHttpTransport } from "./transports/http.ts";
+export type { HttpSpec, HttpOptions } from "./transports/http.ts";
+
 export {
   makeGrpcTransport,
   jsonCodec,

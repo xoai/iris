@@ -10,8 +10,8 @@ export interface ToolContract {
   name: string; // model-visible; build-time collision check (ToolRegistry)
   description: string; // model-visible
   inputSchema: Json; // model-visible (JSON Schema as Json)
-  transport: "in-process" | "subprocess" | "mcp" | "grpc";
-  location: string; // "inproc://id" | "subprocess://cmd" | "mcp://cmd" | "grpc://host:port/svc/method"
+  transport: "in-process" | "subprocess" | "mcp" | "grpc" | "http";
+  location: string; // "inproc://id" | "subprocess://cmd" | "mcp://cmd" | "grpc://host:port/svc/method" | "http://<handle>/<op>"
   retrySafe: boolean; // idempotency posture metadata; descriptive — the
   // harness config is authoritative for the EFFECT's posture
 }

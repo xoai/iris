@@ -55,7 +55,7 @@ Drive an image: one turn, a server, or an interactive REPL.
 the provider selected from the image's model-id prefix).
 
 ```
-usage: iris run <layoutdir> --session <id> [--db <path>] [--store <name|module>] [--provider <module>] [--tools <dir>] [--subagents <file>] [--mcp <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]
+usage: iris run <layoutdir> --session <id> [--db <path>] [--store <name|module>] [--provider <module>] [--tools <dir>] [--subagents <file>] [--mcp <file>] [--openapi <file>] [--sandbox] [--env-file <file>] [--env KEY=VAL] [--secret-files]
 ```
 
 - `--session <id>` — the durable session id (default `default`).
@@ -65,6 +65,8 @@ usage: iris run <layoutdir> --session <id> [--db <path>] [--store <name|module>]
 - `--tools <dir>` — bundled-tools dir (default: the `tools/` sibling of the layout).
 - `--subagents <file>` — subagent map (default `subagents.json` beside the layout).
 - `--mcp <file>` — MCP-server map for the image's `mcp://` tools (default `mcp.json` beside the layout): a JSON array of `{ name, command, args? }` where `name` is the tool's **location handle** (the `mcp://` ref minus scheme, shown by `iris inspect`). The scoped tool env reaches each server. On `run` / `serve` / `chat`.
+- `--openapi <file>` — OpenAPI tool map for the image's `http://` tools (default `openapi.json` beside the layout): a JSON array of `{ name, spec, baseUrl, authSecretEnv? }`. Each operation in the referenced OpenAPI 3.0 spec becomes an `http://<name>/<operationId>` tool; `authSecretEnv` names a secret injected on the `Authorization` header. On `run` / `serve` / `chat`.
+- `--sandbox` — run the image's `subprocess://` tools inside the sandbox declared by its Agentfile `sandbox:` block (off by default — without it, tools run host-side; refuses an `inmemory` backend for real tools). Real in-docker execution requires Docker. On `run` / `serve` / `chat`.
 - `--env-file <file>` / `--env KEY=VAL` — repeatable; supply the tool runtime env.
 - `--secret-files` — materialize resolved secrets to `0600` temp files; tools get `<NAME>_FILE=<path>` instead of the value.
 - `--base-url <url>` — endpoint override (or `IRIS_MODEL_BASE_URL`); not in the usage string but read in `runCommand`.
@@ -73,7 +75,7 @@ usage: iris run <layoutdir> --session <id> [--db <path>] [--store <name|module>]
 WebSocket). Defaults to a no-key echo model so it is demoable immediately.
 
 ```
-usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--store <name|module>] [--model auto|anthropic|openai|echo] [--provider <module>] [--channel <module>] [--web] [--policy <file.json>] [--subagents <file>] [--mcp <file>] [--env-file <file>] [--env KEY=VAL] [--secret-files]
+usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--store <name|module>] [--model auto|anthropic|openai|echo] [--provider <module>] [--channel <module>] [--web] [--policy <file.json>] [--subagents <file>] [--mcp <file>] [--openapi <file>] [--sandbox] [--env-file <file>] [--env KEY=VAL] [--secret-files]
 ```
 
 - `--port N` (default `8787`), `--host H` (default `127.0.0.1`).
@@ -83,21 +85,21 @@ usage: iris serve <layoutdir> [--port N] [--host H] [--db path] [--store <name|m
 - `--channel <module>` — the serving channel: `rest` (default — the built-in REST/SSE/WebSocket transport) or a module exporting `openChannel(opts)`. Complements the [bridge pattern](../reference/bridge-pattern.md) (a bridge is the any-language, no-package path); `--channel` is for an in-process channel. See [adding a channel](../contributing/adding-a-channel.md).
 - `--web` — also serve the web chat UI at `GET /`.
 - `--policy <file.json>` — load a who-may-approve policy + approval inbox (see [Governance](../governance.md)).
-- `--subagents`, `--mcp`, `--env-file`, `--env`, `--secret-files` — as for `run`.
+- `--subagents`, `--mcp`, `--openapi`, `--sandbox`, `--env-file`, `--env`, `--secret-files` — as for `run`.
 - `--base-url <url>` — endpoint override (or `IRIS_MODEL_BASE_URL`); read in `serveCommand`, not in the usage string.
 
 **`iris chat`** — the interactive terminal REPL; a non-safe tool call pauses for inline
 y/n approval.
 
 ```
-usage: iris chat <layoutdir> --session <id> [--db <path>] [--store <name|module>] [--provider <module>] [--tools <dir>] [--subagents <file>] [--mcp <file>] [--policy <file.json>] [--as <id>] [--role <r>] [--env-file <file>] [--env KEY=VAL] [--secret-files] [--fake]
+usage: iris chat <layoutdir> --session <id> [--db <path>] [--store <name|module>] [--provider <module>] [--tools <dir>] [--subagents <file>] [--mcp <file>] [--openapi <file>] [--sandbox] [--policy <file.json>] [--as <id>] [--role <r>] [--env-file <file>] [--env KEY=VAL] [--secret-files] [--fake]
 ```
 
 - `--session <id>` (default `default`), `--db <path>` (default `:memory:` — warns it won't persist).
 - `--policy <file.json>` — who-may-approve policy; without it the local user is the approver.
 - `--as <id>` — principal id (default `local`); `--role <r>` — repeatable role (default `operator`).
 - `--fake` — force the deterministic fake model (replies echo your input); wins over `--provider`.
-- `--provider <module>`, `--tools`, `--subagents`, `--mcp`, `--env-file`, `--env`, `--secret-files` — as for `run`.
+- `--provider <module>`, `--tools`, `--subagents`, `--mcp`, `--openapi`, `--sandbox`, `--env-file`, `--env`, `--secret-files` — as for `run`.
 - `--base-url <url>` — endpoint override (or `IRIS_MODEL_BASE_URL`); read in `chatCommand`, not in the usage string.
 
 ---

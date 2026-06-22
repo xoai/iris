@@ -67,6 +67,9 @@ export {
 } from "./chat.ts";
 export type { ChatDeps, StreamSink, HitlRequest } from "./chat.ts";
 export { loadBundledTools } from "./tools.ts";
+export { loadOpenApiTools } from "./openapi-cfg.ts";
+export type { OpenApiTools } from "./openapi-cfg.ts";
+export { childToolWiring } from "./child-tools.ts";
 export type { BundledTools } from "./tools.ts";
 export {
   baseEnv,

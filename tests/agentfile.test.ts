@@ -55,7 +55,7 @@ test("T1: a tool entry with an inline-behavior field is rejected", () => {
 });
 
 test("T1: a tool ref with an unrecognized scheme is rejected", () => {
-  const bad = { ...VALID, tools: [{ ref: "http://evil/tool" }] };
+  const bad = { ...VALID, tools: [{ ref: "ftp://evil/tool" }] };
   assert.throws(() => validateAgentfile(bad), /scheme/i);
 });
 

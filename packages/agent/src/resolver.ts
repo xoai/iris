@@ -29,3 +29,19 @@ export function makeLocalResolver(
     resolve: (ref) => Promise.resolve(map[refBase(ref)] ?? map[ref] ?? null),
   };
 }
+
+/**
+ * Compose two resolvers: try `a` first, fall back to `b` (first non-null wins).
+ * Lets the builder resolve refs from several sources — e.g. bundled subprocess
+ * tools AND OpenAPI-generated http tools — through one `RegistryResolver`.
+ */
+export function composeResolvers(
+  a: RegistryResolver,
+  b: RegistryResolver,
+): RegistryResolver {
+  return {
+    async resolve(ref) {
+      return (await a.resolve(ref)) ?? (await b.resolve(ref));
+    },
+  };
+}

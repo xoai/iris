@@ -19,7 +19,7 @@ This page is the human-readable companion.
 | `model` | yes | `"<provider>/<model>"` | What the `model_call` performer resolves, e.g. `anthropic/claude-x`. |
 | `instructions` | yes | path | Always-on system prompt — **content embedded by hash** at build. |
 | `skills` | yes (may be `[]`) | path[] | Procedures loaded on demand; embedded by hash. |
-| `tools` | yes (may be `[]`) | `{ ref }[]` | Tool contracts referenced by URI — `mcp://`, `grpc://`, or `subprocess://` (version range allowed, e.g. `@^2`). Pinned by digest. |
+| `tools` | yes (may be `[]`) | `{ ref }[]` | Tool contracts referenced by URI — `mcp://`, `grpc://`, `subprocess://`, or `http://` (version range allowed, e.g. `@^2`). Pinned by digest. |
 | `connections` | yes (may be `[]`) | `{ ref }[]` | Long-lived connections; same ref schemes as `tools`. |
 | `harness.bundle` | no | bundle ref | The tactic bundle — `"default"`, or a domain bundle (e.g. the coding bundle). See [the harness](../harness.md). |
 | `harness.tactics` | no | `{ seam: ref }` | Per-seam tactic overrides (seams: `assembleContext`, `decideNext`, `onToolError`, `shouldCompact`, `gateAction`). |

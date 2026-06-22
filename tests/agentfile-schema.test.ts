@@ -81,7 +81,7 @@ const REJECTS: Array<{ name: string; bad: unknown; match: RegExp }> = [
   { name: "skills not string[]", bad: { ...VALID, skills: [1, 2] }, match: /skills/ },
   { name: "tools not array", bad: { ...VALID, tools: {} }, match: /tools/ },
   { name: "tool missing ref", bad: { ...VALID, tools: [{}] }, match: /tools\[0\]\.ref/ },
-  { name: "bad ref scheme", bad: { ...VALID, tools: [{ ref: "http://evil" }] }, match: /tools\[0\]\.ref/ },
+  { name: "bad ref scheme", bad: { ...VALID, tools: [{ ref: "ftp://evil" }] }, match: /tools\[0\]\.ref/ },
   { name: "inline behavior (code)", bad: { ...VALID, tools: [{ ref: "subprocess://x", code: "y" }] }, match: /tools\[0\]\.code/ },
   { name: "inline behavior (script)", bad: { ...VALID, connections: [{ ref: "mcp://x", script: "y" }] }, match: /connections\[0\]\.script/ },
   { name: "bad tool_locality", bad: { ...VALID, requires: { tool_locality: "in_process" } }, match: /tool_locality/ },
@@ -147,6 +147,7 @@ const ACCEPTS: unknown[] = [
   { ...VALID, requires: { ...VALID.requires, tool_locality: "in-process" } },
   { ...VALID, requires: { ...VALID.requires, tool_locality: "remote" } },
   { ...VALID, tools: [{ ref: "grpc://svc/method" }] },
+  { ...VALID, tools: [{ ref: "http://api/listPets" }] }, // openapi/http operation-tool
   { ...VALID, tools: [{ ref: "mcp://a\nmore" }] }, // scheme on the first segment → both accept
   { ...VALID, harness: {}, requires: {}, sandbox: { backend: "inmemory", network: "deny-all" } },
   // secrets/environment accept cases — valid names + a STRING env value (a numeric

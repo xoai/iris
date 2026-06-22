@@ -19,7 +19,7 @@ export { parseAgentfileYaml, parseYamlValue } from "./yaml.ts";
 
 export { AGENTFILE_SCHEMA, agentfileSchemaJson, checkAgainstSchema } from "./schema.ts";
 
-export { makeLocalResolver, refBase } from "./resolver.ts";
+export { makeLocalResolver, refBase, composeResolvers } from "./resolver.ts";
 export type { RegistryResolver } from "./resolver.ts";
 
 export { resolveLockTools, validateCapabilities } from "./lock.ts";

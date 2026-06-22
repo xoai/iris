@@ -16,7 +16,7 @@ export interface LockTool {
   name: string;
   ref: string;
   contractDigest: string;
-  transport: "mcp" | "grpc" | "subprocess";
+  transport: "mcp" | "grpc" | "subprocess" | "http";
   location: string;
   retrySafe: boolean;
 }

@@ -11,7 +11,8 @@ import { readOciLayout, governingDigest, agentfileSchemaJson } from "@irisrun/ag
 import type { AgentImage } from "@irisrun/agent";
 import { defaultBundle, harnessProgram } from "@irisrun/core";
 import type { Performer, Json, StateStore, Scheduler } from "@irisrun/core";
-import { makeToolPerformer, makeToolRegistry, makeToolInvoker, makeSubprocessTransport, makeMcpStdioTransport } from "@irisrun/tools";
+import { makeToolPerformer, makeToolRegistry, makeToolInvoker, makeSubprocessTransport, makeMcpStdioTransport, makeHttpTransport } from "@irisrun/tools";
+import { composeResolvers } from "@irisrun/agent";
 import type { ToolContract, SandboxExecutor } from "@irisrun/tools";
 import { readFile } from "node:fs/promises";
 import { cmdInit, cmdBuild, cmdInspect, cmdVerify, cmdPush, cmdPull, cmdRun, cmdServe, cmdDeploy, assertDeployFlagsSupported, loadApprovalPolicy, resolveBuildFile, type CliSubagents } from "./iris.ts";
@@ -31,6 +32,8 @@ import type { ApprovalPolicy, Principal } from "@irisrun/auth";
 import { loadBundledTools } from "./tools.ts";
 import { resolveToolEnvForImage, secretFileEnv, type EnvMap } from "./env.ts";
 import { buildSandboxExecutor } from "./sandbox-exec.ts";
+import { loadOpenApiTools } from "./openapi-cfg.ts";
+import { childToolWiring } from "./child-tools.ts";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { echoStreamingPerformer } from "./echo.ts";
@@ -75,9 +78,12 @@ async function bundledToolWiring(
   // Optional MCP servers backing the image's `mcp://` tools (mcp.json beside the
   // layout; `--mcp <file>` overrides). Empty → no `mcp` transport wired (byte-identical).
   const mcpServers = await loadMcpServers(flag(argv, "--mcp") ?? join(dirname(layout), "mcp.json"));
+  // OpenAPI http:// tools (openapi.json beside the layout; --openapi overrides). Empty
+  // config → no `http` transport wired (byte-identical to before).
+  const openapi = await loadOpenApiTools(flag(argv, "--openapi") ?? join(dirname(layout), "openapi.json"));
   // A scoped `toolEnv` (from --env-file/--env + the image's secrets/environment) is the
-  // SAME for every tool — pass it transport-level to BOTH subprocess and mcp servers, so
-  // a declared secret reaches an MCP server. Absent → inherit process.env (byte-identical).
+  // SAME for every tool — pass it transport-level to subprocess, mcp, AND http (so a
+  // declared secret reaches each). Absent → inherit process.env (byte-identical).
   return {
     toolInvoker: makeToolInvoker({
       subprocess: makeSubprocessTransport(bundled.subprocessSpecs, {
@@ -86,6 +92,9 @@ async function bundledToolWiring(
       }),
       ...(Object.keys(mcpServers).length > 0
         ? { mcp: makeMcpStdioTransport(mcpServers, toolEnv ? { env: toolEnv } : {}) }
+        : {}),
+      ...(Object.keys(openapi.httpSpecs).length > 0
+        ? { http: makeHttpTransport(openapi.httpSpecs, toolEnv ? { env: toolEnv } : {}) }
         : {}),
     }),
     safeTools: bundled.safeToolNames,
@@ -200,20 +209,14 @@ async function buildSubagents(
           ...(childModel.apiKey !== undefined ? { apiKey: childModel.apiKey } : {}),
         })
       : makeChatFakeModel(); // keyless: a delegation still runs, echoing the task
-    const bundled = await loadBundledTools(join(dirname(childLayout), "tools"));
-    // INTENTIONAL non-goal (initiative 20260620-agentfile-env-secrets): a SUBAGENT
-    // child's subprocess tools are NOT env-scoped — they inherit the host process.env
-    // (no transport-level `env`), even when the child image declares secrets/environment.
-    // Per-image env scoping is wired for the top-level run/serve/chat path only;
-    // threading a child's resolved env here is deferred (subagents are the separate
-    // feature). This is privilege-BROADENING for the child (it gets more than it
-    // declared), not a leak of the parent's scoped secrets. Recorded in decisions.md.
-    children.set(entry.name, {
-      image,
-      model,
-      toolInvoker: makeToolInvoker({ subprocess: makeSubprocessTransport(bundled.subprocessSpecs) }),
-      safeTools: bundled.safeToolNames,
-    });
+    // A child gets the SAME tool transports as the top-level agent — subprocess + mcp
+    // + http (configs beside its own layout) — via childToolWiring. INTENTIONAL
+    // non-goals (initiative 20260620-agentfile-env-secrets + sandbox-runtime-wiring): a
+    // child's tools are NOT env-scoped (they inherit host process.env — privilege-
+    // BROADENING, not a leak) and `--sandbox` is NOT applied to children (a child
+    // defaults to the inmemory backend, which is refused for real tools). Both deferred.
+    const { toolInvoker, safeTools } = await childToolWiring(childLayout);
+    children.set(entry.name, { image, model, toolInvoker, safeTools });
   }
 
   const makeResolveChild = (_parentSessionId: string) =>
@@ -862,11 +865,14 @@ async function main(argv: string[]): Promise<void> {
       // Resolve the project's bundled tools so scaffolded subprocess:// refs
       // resolve (default tools dir = <agent dir>/tools; --tools overrides).
       const toolsDir = flag(argv, "--tools") ?? join(dirname(file), "tools");
-      const { resolver } = await loadBundledTools(toolsDir);
+      const bundled = await loadBundledTools(toolsDir);
+      // OpenAPI-generated http:// tools resolve here too (openapi.json beside the
+      // Agentfile; --openapi overrides). Empty config → byte-identical to before.
+      const openapi = await loadOpenApiTools(flag(argv, "--openapi") ?? join(dirname(file), "openapi.json"));
       const image = await cmdBuild({
         file,
         out: flag(argv, "--out") ?? "./image",
-        resolver, // bundled tools resolve here; a real external registry is manual
+        resolver: composeResolvers(bundled.resolver, openapi.resolver),
       });
       console.log(JSON.stringify({ imageDigest: image.lock.imageDigest }));
       break;
@@ -884,10 +890,12 @@ async function main(argv: string[]): Promise<void> {
       providersCommand(argv);
       break;
     case "verify": {
-      // verify re-resolves tool refs by ref — supply the same bundled resolver.
+      // verify re-resolves tool refs by ref — supply the same composed resolver
+      // (bundled subprocess tools + OpenAPI http tools) so http:// refs re-resolve.
       const toolsDir = flag(argv, "--tools") ?? "tools";
-      const { resolver } = await loadBundledTools(toolsDir);
-      await cmdVerify(argv[1], { resolver });
+      const bundled = await loadBundledTools(toolsDir);
+      const openapi = await loadOpenApiTools(flag(argv, "--openapi") ?? "openapi.json");
+      await cmdVerify(argv[1], { resolver: composeResolvers(bundled.resolver, openapi.resolver) });
       console.log("iris: verify ok");
       break;
     }

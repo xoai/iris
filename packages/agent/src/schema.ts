@@ -59,12 +59,12 @@ export const AGENTFILE_SCHEMA: { [k: string]: unknown } = {
     tools: {
       type: "array",
       items: { $ref: "#/$defs/contractRef" },
-      description: "Tool CONTRACT refs (mcp/grpc/subprocess), pinned by digest.",
+      description: "Tool CONTRACT refs (mcp/grpc/subprocess/http), pinned by digest.",
     },
     connections: {
       type: "array",
       items: { $ref: "#/$defs/contractRef" },
-      description: "Connection CONTRACT refs (mcp/grpc/subprocess), pinned by digest.",
+      description: "Connection CONTRACT refs (mcp/grpc/subprocess/http), pinned by digest.",
     },
     harness: { $ref: "#/$defs/harness" },
     requires: { $ref: "#/$defs/capabilityProfile" },
@@ -99,8 +99,8 @@ export const AGENTFILE_SCHEMA: { [k: string]: unknown } = {
         ref: {
           type: "string",
           minLength: 1,
-          pattern: "^(mcp|grpc|subprocess)://",
-          description: "Contract ref. Scheme must be mcp, grpc, or subprocess.",
+          pattern: "^(mcp|grpc|subprocess|http)://",
+          description: "Contract ref. Scheme must be mcp, grpc, subprocess, or http.",
         },
         // A tool/connection is a contract referenced by digest, never
         // inlined code. A present code/script/source field validates against the

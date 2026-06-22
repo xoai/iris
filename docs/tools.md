@@ -40,14 +40,15 @@ and the host decides how to reach each tool.
 
 ## The tool boundary
 
-Iris recognizes four transports, from closest to furthest:
+Iris recognizes five transports, from closest to furthest:
 
 | Transport | Where it runs | Use it for |
 |---|---|---|
 | **in-process** | same isolate | pure, trusted helpers |
 | **subprocess** | a child process (what the scaffold uses) | local scripts/CLIs |
 | **MCP** | a Model Context Protocol server | reusable, language-agnostic tools |
-| **gRPC** | a remote service | networked capabilities |
+| **HTTP** | an HTTP/JSON API (often generated from an OpenAPI spec) | REST endpoints |
+| **gRPC** | a remote service | networked capabilities (recognized at build; CLI runtime wiring pending) |
 
 A tool's locality is part of the image's declared capabilities, and the deploy gate
 honors it — an edge host that supports only remote tools will **refuse** an image
@@ -61,6 +62,14 @@ The `name` is the tool's location handle (the `mcp://` ref minus scheme, shown b
 `iris inspect`), and the image's scoped tool env reaches the server — so an MCP memory like
 mem0 gets its API key exactly the way a subprocess tool does. Details in the
 [CLI reference](./reference/cli.md).
+
+**Wiring an OpenAPI API.** Point at an OpenAPI 3.0 spec and each operation becomes an
+`http://<name>/<operationId>` tool, pinned at build with an input schema derived from
+its params + JSON body. List specs in an `openapi.json` beside the image (`--openapi
+<file>` overrides): `[{ "name": "petstore", "spec": "./petstore.json", "baseUrl":
+"https://api.example.com/v1", "authSecretEnv": "API_KEY" }]`. At run time the `http`
+transport calls the endpoint; the named secret rides the `Authorization` header. Full
+walkthrough in [Connecting external services](./guides/connections.md).
 
 ## The sandbox floor
 

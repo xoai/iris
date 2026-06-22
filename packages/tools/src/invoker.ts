@@ -90,7 +90,7 @@ export type LocalityOptions = Partial<Record<ToolLocality, LocalityOption>>;
 const ALLOWED_TRANSPORTS: Record<ToolLocality, ToolContract["transport"][]> = {
   "in-process": ["in-process"],
   local: ["subprocess"],
-  remote: ["mcp", "grpc"],
+  remote: ["mcp", "grpc", "http"],
 };
 
 /**

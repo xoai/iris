@@ -85,6 +85,32 @@ test("T4: builds an image; content embedded by hash; two identical builds → id
   assert.match(a.lock.tools[0].contractDigest, /^[0-9a-f]{64}$/);
 });
 
+test("T4: an http (OpenAPI) tool builds deterministically + pins by contractDigest", async () => {
+  const listPets: ToolContract = {
+    name: "listPets", description: "list pets", inputSchema: { type: "object" },
+    transport: "http", location: "http://petstore/listPets", retrySafe: true,
+  };
+  const httpResolver = makeLocalResolver({ "http://petstore/listPets": listPets });
+  const httpModel = parseAgentfileJson(JSON.stringify({
+    apiVersion: "iris/v1", kind: "Agent", name: "petbot", model: "anthropic/claude-x",
+    instructions: "./instructions.md", skills: [],
+    tools: [{ ref: "http://petstore/listPets" }],
+    connections: [],
+    harness: { bundle: "default" },
+    requires: { tool_locality: "remote" },
+    sandbox: { backend: "inmemory", network: "deny-all" },
+  }));
+  const rf = (p: string): Promise<Uint8Array> =>
+    p === "./instructions.md" ? Promise.resolve(new TextEncoder().encode("hi")) : Promise.reject(new Error(`no file: ${p}`));
+  const a = await buildImage(httpModel, { resolver: httpResolver, readFile: rf });
+  const b = await buildImage(httpModel, { resolver: httpResolver, readFile: rf });
+  assert.equal(a.lock.imageDigest, b.lock.imageDigest, "deterministic digest for an http tool");
+  assert.equal(a.lock.tools.length, 1);
+  assert.equal(a.lock.tools[0].transport, "http");
+  assert.equal(a.lock.tools[0].location, "http://petstore/listPets");
+  assert.match(a.lock.tools[0].contractDigest, /^[0-9a-f]{64}$/);
+});
+
 test("T4: changing embedded content changes the imageDigest", async () => {
   const a = await buildImage(MODEL, { resolver, readFile });
   const readFile2 = (p: string): Promise<Uint8Array> =>

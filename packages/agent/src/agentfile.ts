@@ -42,7 +42,7 @@ export interface AgentfileModel {
 
 // A contract ref must use one of these schemes; anything else (incl. an inline
 // `code`/`script`/`source` field) is inlined behavior and is rejected.
-const CONTRACT_SCHEMES = ["mcp", "grpc", "subprocess"] as const;
+const CONTRACT_SCHEMES = ["mcp", "grpc", "subprocess", "http"] as const;
 const INLINE_BEHAVIOR_FIELDS = ["code", "script", "source"] as const;
 
 // `requires` (the capability profile) is strict-when-present so the runtime

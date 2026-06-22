@@ -8,15 +8,16 @@ and which calls need a human **approval**. This page puts those three in one pla
 
 ## The transports — how a tool reaches a service
 
-An Agentfile tool ref names its transport by scheme; the recognized set is exactly
-`subprocess://`, `mcp://`, and `grpc://` (plus in-process for trusted, bundled
-helpers). For *external* services, three matter:
+An Agentfile tool ref names its transport by scheme; the recognized set is
+`subprocess://`, `mcp://`, `http://`, and `grpc://` (plus in-process for trusted,
+bundled helpers). For *external* services:
 
 | Transport | Reaches | Use it for |
 |---|---|---|
 | `subprocess://` | a local child process | a CLI or script on the host |
 | `mcp://` | a Model Context Protocol server | reusable, language-agnostic tools (the common case) |
-| `grpc://` | a remote gRPC service | a networked capability you already run |
+| `http://` | an HTTP/JSON API | a REST endpoint — usually generated from an OpenAPI spec (below) |
+| `grpc://` | a remote gRPC service | a networked capability (recognized at build; CLI runtime wiring is a known gap — see *Not yet*) |
 
 The ref is part of the image's declared capabilities, and the deploy gate honors
 it — a host that supports only remote tools **refuses** an image that demands local
@@ -46,13 +47,37 @@ way a subprocess tool does (next section). For a worked example — a coding tea
 whose PM pins an `mcp://memory/mem0` tool reachable from Telegram — see the
 [coding-team guide](./coding-team.md).
 
+## Wiring an OpenAPI API (`http://` tools)
+
+Point Iris at an OpenAPI 3.0 spec and **each operation becomes a tool**. List your
+APIs in an `openapi.json` beside the image — `{ name, spec, baseUrl, authSecretEnv? }`:
+
+```json
+[{ "name": "petstore", "spec": "./petstore.json", "baseUrl": "https://api.example.com/v1", "authSecretEnv": "PETS_KEY" }]
+```
+
+At build, each operation (by `operationId`) is pinned as an
+`http://<name>/<operationId>` tool whose input schema is derived from the operation's
+path/query parameters + its JSON request body (local `#/components/schemas/*` `$ref`s
+are resolved inline). At run time the `http` transport calls the endpoint (default
+`openapi.json` beside the layout; `--openapi <file>` overrides):
+
+```sh
+iris serve ./image --openapi openapi.json --env-file .env
+```
+
+The `baseUrl` floats (a deploy-time knob — it isn't part of the pinned digest), and
+the optional `authSecretEnv` names a secret injected **only** on the `Authorization`
+header, never the URL. Today this covers single-spec OpenAPI 3.0 with path/query
+params + a JSON body; `in: header` params, multipart, and OAuth are out of scope.
+
 ## Credentials — two layers, picked by where the tool runs
 
 A connected tool almost always needs a secret. Iris keeps the **value** out of the
 image, the journal, and any error message; *how* it's delivered depends on where
 the tool runs.
 
-- **Host-side tools** (`subprocess://`, `mcp://`, `grpc://`) — **declare the name**
+- **Host-side tools** (`subprocess://`, `mcp://`, `http://`) — **declare the name**
   in the Agentfile and **supply the value at run time**:
 
   ```sh
@@ -62,14 +87,14 @@ the tool runs.
   The Agentfile lists `secrets:` (names only); values come from `--env-file` /
   `--env` / `--secret-files`. A declared secret with no value **refuses to run**,
   loudly. Tools get only the declared env plus a fixed non-secret base — never your
-  whole shell. Full mechanics in [secrets & environment](./secrets.md).
+  whole shell. For an `http://` tool the named secret lands on the `Authorization`
+  header (above). Full mechanics in [secrets & environment](./secrets.md).
 
-- **Untrusted code in a sandbox** — a different layer: the credential is brokered at
-  the *network egress* boundary so the code never holds it (see
-  [the sandbox](./sandbox.md) and its
-  [threat model](../reference/security-sandbox-threat-model.md)). Note the sandbox
-  is a library floor that isn't wired into the tool loop yet, so today the
-  host-side path above is what a connected tool uses.
+- **A sandboxed tool** — opt in with `--sandbox` (see [the sandbox](./sandbox.md)):
+  the tool runs inside the deny-all floor and its credential is brokered at the
+  *network egress* boundary, so the code never holds it (the
+  [threat model](../reference/security-sandbox-threat-model.md) has the guarantees).
+  Without `--sandbox`, a tool runs host-side via the env path above.
 
 ## Approvals — the calls that touch reality
 
@@ -90,14 +115,16 @@ An unauthorized approval is converted to a skip, not honored, and the whole trai
 is replayable from the journal. The gate, the `Principal`/role model, and in-chat
 approvals are the subject of [Governance & approvals](../governance.md).
 
-## Not yet / out of scope
+## Not yet / known gaps
 
 Honest bounds, so omission doesn't read as a feature:
 
-- **No OpenAPI / generic-HTTP transport.** The transport set is exactly
-  in-process · `subprocess` · `mcp` · `grpc`. There is no "point at a
-  `/openapi.json` and get tools" path and no generic HTTP-with-headers transport —
-  `grpc://` is the remote option, and it needs a real gRPC service you run.
+- **Transport wiring gaps.** `subprocess://`, `mcp://`, and `http://` tools run for
+  **both** the top-level agent and delegated **subagent children**. Two gaps remain,
+  both tracked: `--sandbox` isn't applied to a child's tools (children default to the
+  `inmemory` backend, which is refused for real tools), and `grpc://` is recognized at
+  build time but its CLI runtime transport isn't wired yet — a `grpc://` tool builds
+  but won't run via the CLI.
 - **No interactive OAuth.** There is no "sign in to GitHub/Linear" flow, no token
   refresh, no `getToken()` dynamic provider, and no mid-call revocation handling.
   `@irisrun/auth` reasons over a **supplied** `Principal` (`{ id, roles }`); it does
