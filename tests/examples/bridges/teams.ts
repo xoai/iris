@@ -5,7 +5,7 @@
 // @irisrun/bridge + node:crypto. (Full Bot-Framework JWT auth is the heavier production
 // path — documented, not implemented in this reference.)
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { makePlatformBridge, type PlatformAdapter, type PlatformBridge } from "@irisrun/bridge";
+import { makePlatformBridge, type PlatformAdapter, type PlatformBridge, type OpenBridge } from "@irisrun/bridge";
 
 type TeamsReply = { type: "message"; text: string };
 
@@ -66,3 +66,8 @@ export function makeTeamsBridge(opts: {
     fetchImpl: opts.fetchImpl,
   });
 }
+
+/** Forkless entry for `iris bridge`: reads the Outgoing-Webhook base64 shared secret from
+ *  the environment (`TEAMS_SHARED_SECRET`). Imports only @irisrun/bridge. */
+export const openBridge: OpenBridge = (o) =>
+  teamsAdapter({ sharedSecret: (o?.env ?? process.env).TEAMS_SHARED_SECRET ?? "" });

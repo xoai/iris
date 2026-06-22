@@ -5,6 +5,6 @@ export const PACKAGE = "@irisrun/bridge";
 export { makeBridgeSession } from "./session.ts";
 export type { BridgeInbound, BridgeReply, BridgeSession } from "./session.ts";
 export { makePlatformBridge } from "./platform.ts";
-export type { PlatformAdapter, PlatformBridge, PlatformBridgeResult } from "./platform.ts";
+export type { PlatformAdapter, PlatformBridge, PlatformBridgeResult, OpenBridge } from "./platform.ts";
 export { runBridgeConformance, runAdapterConformance, register } from "./conformance.ts";
 export type { ConformanceCase } from "./conformance.ts";
