@@ -1,6 +1,6 @@
 {
   "name": "@irisrun/store-postgres",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "description": "Iris host store on PostgreSQL — a StateStore + Scheduler certified against @irisrun/store-conformance, plugged into the CLI via `--store @irisrun/store-postgres --db postgres://…`. `pg` is a peer dependency (you install it), so Iris's own tree stays zero-dependency.",
   "exports": {
@@ -11,8 +11,8 @@
     }
   },
   "dependencies": {
-    "@irisrun/core": "^0.3.0",
-    "@irisrun/schedule": "^0.3.0"
+    "@irisrun/core": "^0.4.0",
+    "@irisrun/schedule": "^0.4.0"
   },
   "peerDependencies": {
     "pg": ">=8"

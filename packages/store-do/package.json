@@ -1,6 +1,6 @@
 {
   "name": "@irisrun/store-do",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "description": "Edge host adapter that proves portability — the Cloudflare Durable Objects StateStore + Scheduler enforcing the SAME CAS/fencing/hwm/snapshot invariants as the sqlite/fs stores, so the same image resumes the same session on the edge byte-identically. Cold-per-turn isolate + DO-alarm durable timer over a narrow DoStorage abstraction. Install-free: tested against FakeDoStorage; the real isolate is a manual smoke. No @cloudflare/* import.",
   "exports": {
@@ -11,7 +11,7 @@
     }
   },
   "dependencies": {
-    "@irisrun/core": "^0.3.0"
+    "@irisrun/core": "^0.4.0"
   },
   "license": "MIT",
   "engines": {

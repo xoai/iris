@@ -1,6 +1,6 @@
 {
   "name": "@irisrun/store-memory",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "description": "Iris in-memory host adapter — a real StateStore + Scheduler that enforces CAS/fencing/hwm (store B for cross-store resume; fast unit store). Not a determinism bypass.",
   "exports": {
@@ -11,7 +11,7 @@
     }
   },
   "dependencies": {
-    "@irisrun/core": "^0.3.0"
+    "@irisrun/core": "^0.4.0"
   },
   "license": "MIT",
   "engines": {

@@ -1,6 +1,6 @@
 {
   "name": "@irisrun/evals",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "description": "Iris reproducible-eval arbiter (spec 03 §7) — run a deterministic scenario (fresh store + scripted performers per run), then score the recorded session via @irisrun/inspect. The arbiter is reproducibility, not taste: the same case+scorer re-runs byte-identically; a swapped tactic scores differently but reproducibly. Runner is core runTurn; deps @irisrun/core + @irisrun/inspect.",
   "exports": {
@@ -11,8 +11,8 @@
     }
   },
   "dependencies": {
-    "@irisrun/core": "^0.3.0",
-    "@irisrun/inspect": "^0.3.0"
+    "@irisrun/core": "^0.4.0",
+    "@irisrun/inspect": "^0.4.0"
   },
   "license": "MIT",
   "engines": {

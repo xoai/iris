@@ -7,6 +7,8 @@ packages (`iris-runtime` + the `@irisrun/*` libraries) share one lockstep versio
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-06-23
+
 Reaching agents *outward*: an agent can now call HTTP/JSON APIs as tools
 (generated from an OpenAPI spec), persist to three more host databases, front
 three more chat platforms via a forkless loader, and run its subprocess tools
@@ -305,7 +307,8 @@ The CLI publishes as **`iris-runtime`** (binary `iris`); the libraries as
 - **CLI surface** — `init · build · inspect · schema · verify · push · pull · run
   · serve · chat · deploy · audit · eval · schedule`.
 
-[Unreleased]: https://github.com/xoai/iris/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/xoai/iris/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/xoai/iris/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/xoai/iris/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/xoai/iris/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/xoai/iris/releases/tag/v0.1.0

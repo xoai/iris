@@ -1,6 +1,6 @@
 {
   "name": "@irisrun/core",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "description": "Iris portable durability core — pure, imports no host/transport/Node-only API.",
   "exports": {

@@ -1,6 +1,6 @@
 {
   "name": "@irisrun/channel-web",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "description": "Durable, resumable browser sessions — a minimal, zero-dep web chat UI (`iris serve --web`) that persists {sessionId, continuationToken} to localStorage so a tab close/reload resumes the SAME durable session while the server is up. `makeWebHandler` is a host-side pre-POST GET hook serving two static assets (index.html + iris-web.js); the shell talks the iris serve SSE protocol and MIRRORS @irisrun/client-sdk's wire logic (no bundler → no shared import) — a static asset OUTSIDE the tsc include and test glob.",
   "exports": {

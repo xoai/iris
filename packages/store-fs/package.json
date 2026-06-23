@@ -1,6 +1,6 @@
 {
   "name": "@irisrun/store-fs",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "type": "module",
   "description": "Iris serverless-style host adapter — a StateStore + Scheduler over node:fs (cold per-turn, no held process) enforcing the SAME CAS/fencing/hwm/snapshot invariants as the sqlite store. Host B for the cross-host portability proof. Not a determinism bypass.",
   "exports": {
@@ -11,7 +11,7 @@
     }
   },
   "dependencies": {
-    "@irisrun/core": "^0.3.0"
+    "@irisrun/core": "^0.4.0"
   },
   "license": "MIT",
   "engines": {

@@ -2,7 +2,7 @@
   "name": "iris-workspace",
   "private": true,
   "type": "module",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Iris — a portable durability runtime for stateful agents.",
   "license": "MIT",
   "engines": {
