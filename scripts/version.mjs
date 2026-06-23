@@ -43,5 +43,25 @@ for (const dir of readdirSync(pkgsDir)) {
   changed++;
 }
 
+// The CLI bakes a pinned `IRIS_VERSION` constant into generated Dockerfiles /
+// FaaS package.json install lines (packages/cli/src/deploy-targets.ts). A unit
+// test guards it against the cli package version, so it MUST move with the bump —
+// otherwise the next release fails CI on the no-drift guard. Rewrite it here so
+// the constant can never go stale behind a version bump again.
+const deployTargets = join(pkgsDir, "cli", "src", "deploy-targets.ts");
+const IRIS_VERSION_RE = /export const IRIS_VERSION = "[^"]*";/;
+try {
+  const before = readFileSync(deployTargets, "utf8");
+  if (!IRIS_VERSION_RE.test(before)) {
+    console.error(`version: WARNING — IRIS_VERSION constant not found in ${deployTargets} (drift guard will fail)`);
+  } else {
+    const after = before.replace(IRIS_VERSION_RE, `export const IRIS_VERSION = "${version}";`);
+    if (after !== before) writeFileSync(deployTargets, after);
+    console.log(`version: set IRIS_VERSION constant → ${version} (packages/cli/src/deploy-targets.ts)`);
+  }
+} catch {
+  console.error(`version: WARNING — could not read ${deployTargets} to update IRIS_VERSION`);
+}
+
 console.log(`version: set ${changed} packages → ${version} (internal @irisrun/* ranges → ^${version})`);
 console.log(`next:\n  git commit -am "release: v${version}"\n  git tag v${version}\n  git push --follow-tags   # the release workflow builds, tests, and publishes`);

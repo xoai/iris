@@ -22,7 +22,7 @@ import type { ProviderDescriptor } from "./providers.ts";
 // Baked into generated Dockerfiles + FaaS package.json install/dep lines. A unit
 // test (tests/cli-deploy-targets.test.ts) asserts this equals the cli package
 // version so a stale value can never ship broken `npm install -g iris-runtime@X`.
-export const IRIS_VERSION = "0.3.0";
+export const IRIS_VERSION = "0.4.0";
 
 export const DEFAULT_COMPAT_DATE = "2026-01-01";
 

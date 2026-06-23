@@ -165,7 +165,8 @@ test("M2: render emits Dockerfile + entrypoint + render.yaml with the right wiri
   const dockerfile = fs.find("Dockerfile")!;
   assert.match(dockerfile, /FROM node:24-slim/);
   // pins iris-runtime + the store backends + their native drivers (so IRIS_STORE=postgres|redis work)
-  assert.match(dockerfile, /npm install -g iris-runtime@0\.3\.0 @irisrun\/store-postgres@0\.3\.0 @irisrun\/store-redis@0\.3\.0 pg redis/);
+  const v = IRIS_VERSION.replace(/\./g, "\\.");
+  assert.match(dockerfile, new RegExp(`npm install -g iris-runtime@${v} @irisrun/store-postgres@${v} @irisrun/store-redis@${v} pg redis`));
   assert.match(dockerfile, /EXPOSE 8787/);
   assert.match(dockerfile, /iris-entrypoint\.sh/);
 
@@ -241,9 +242,9 @@ test("M3: aws-lambda emits handler + SAM template + package.json with the right 
 
   const pkg = JSON.parse(fs.find("package.json")!) as { dependencies: Record<string, string> };
   assert.ok(pkg.dependencies["@irisrun/host"], "needs @irisrun/host");
-  assert.equal(pkg.dependencies["@irisrun/store-postgres"], "^0.3.0");
+  assert.equal(pkg.dependencies["@irisrun/store-postgres"], `^${IRIS_VERSION}`);
   assert.equal(pkg.dependencies["pg"], "^8", "pg is the required postgres driver");
-  assert.equal(pkg.dependencies["@irisrun/provider-anthropic"], "^0.3.0");
+  assert.equal(pkg.dependencies["@irisrun/provider-anthropic"], `^${IRIS_VERSION}`);
 });
 
 test("M3: every FaaS target emits its expected files and bakes the model id", async () => {
